@@ -1,0 +1,44 @@
+# =========================
+# 1. FRONTEND (Node.js / React / Next.js)
+# =========================
+# Thư viện tải về (rất nặng, tuyệt đối không push)
+node_modules/
+# Thư mục build của Next/React
+.next/
+out/
+build/
+dist/
+# File chứa biến môi trường (bảo mật)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# =========================
+# 2. BACKEND (Java / Spring Boot)
+# =========================
+# Thư mục build của Maven/Gradle
+target/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+# File thực thi và file đã biên dịch
+*.class
+*.log
+*.jar
+*.war
+
+# =========================
+# 3. CẤU HÌNH IDE & HỆ ĐIỀU HÀNH (Rác hệ thống)
+# =========================
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
+Thumbs.db
