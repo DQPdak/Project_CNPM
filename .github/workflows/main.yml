@@ -1,0 +1,47 @@
+name: Manga Project CI/CD
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Kéo mã nguồn
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: 🛠️ Kiểm tra lỗi Backend (Node.js)
+        run: |
+          echo "Bắt đầu kiểm tra Backend..."
+          cd backend
+          npm install
+        # Sau này có lệnh test thì thêm vào đây: npm run test
+
+      - name: 🛠️ Kiểm tra lỗi Frontend (Next.js)
+        run: |
+          echo "Bắt đầu build thử Frontend..."
+          cd frontend
+          npm install
+          npm run build
+
+      - name: ✅ Báo cáo Thành công lên Discord
+        if: success()
+        run: |
+          curl -H "Content-Type: application/json" \
+          -d '{"content": "🟢 **[THÀNH CÔNG]** Có code mới đẩy lên nhánh `main`. Đã kiểm tra Backend và build Next.js thành công không có lỗi! 🚀", "username": "CI/CD Quản Quản"}' \
+          ${{ secrets.DISCORD_WEBHOOK_URL }}
+
+      - name: ❌ Báo cáo Thất bại lên Discord
+        if: failure()
+        run: |
+          curl -H "Content-Type: application/json" \
+          -d '{"content": "🔴 **[CẢNH BÁO LỖI]** Quá trình kiểm tra code bị thất bại! Yêu cầu team kiểm tra lại đoạn code vừa push ngay lập tức! ⚠️", "username": "CI/CD Quản Quản"}' \
+          ${{ secrets.DISCORD_WEBHOOK_URL }}
