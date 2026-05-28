@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
+const connectDB = require("./config/config_mongoDB");
 // const connectDB = require("./config/db");
 
 // Tải cấu hình từ file .env vào hệ thống
@@ -10,7 +11,8 @@ dotenv.config();
 const app = express();
 
 // Kết nối tới cơ sở dữ liệu MongoDB
-// connectDB();
+
+connectDB();
 
 // Cấu hình Middlewares cơ bản
 app.use(cors()); // Cho phép Frontend (port 5173/3000) gọi API sang đây
