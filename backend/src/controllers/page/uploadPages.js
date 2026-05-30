@@ -20,7 +20,7 @@ exports.uploadPages = async (req, res) => {
       const newPage = new Page({
         chapter_id,
         page_number: existingPagesCount + i + 1, // đánh số trang tiếp theo
-        image_url: req.files[i].path, // lưu lại đường dẫn từ Cloudinary trả về
+        file_url: req.files[i].path, // lưu lại đường dẫn từ Cloudinary trả về
         version: 1,
       });
 

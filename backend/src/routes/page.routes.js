@@ -9,7 +9,13 @@ const upload = require("../middlewares/upload.middleware");
 router.post(
   "/upload/:chapter_id/upload",
   upload.array("pages", 50),
-  uploadPages,
+  uploadPages.uploadPages,
 );
 
-router.put("/update/:page_id", upload.single("page"), updatePageVersion);
+router.put(
+  "/update/:page_id",
+  upload.single("page"),
+  updatePageVersion.updatePageVersion,
+);
+
+module.exports = router;

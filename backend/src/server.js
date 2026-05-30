@@ -12,7 +12,11 @@ const dotenv = require("dotenv");
 
 const connectDB = require("./config/config_mongoDB");
 const { connectCloudinary } = require("./config/config_cloudinary");
-// const connectDB = require("./config/db");
+
+// Import các route
+const chapterRoutes = require("./routes/chapter.routes");
+const pageRoutes = require("./routes/page.routes");
+const publishRoutes = require("./routes/publish.routes");
 
 // Tải cấu hình từ file .env vào hệ thống
 dotenv.config();
@@ -29,14 +33,19 @@ app.get("/", (req, res) => {
   res.json({ message: "Chào mừng bạn đến với API Hệ thống Quản lý Manga!" });
 });
 
-// Khởi động server lắng nghe qua cổng được cấu hình
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`=== Server đang chạy mượt mà tại cổng: ${PORT} ===`);
-});
+// Khai báo các API routes
+app.use("/api/chapters", chapterRoutes);
+app.use("/api/pages", pageRoutes);
+app.use("/api/publish", publishRoutes);
 
 // Kết nối tới cơ sở dữ liệu MongoDB
 connectDB();
 
 // Kết nối tới Cloudinary
 connectCloudinary();
+
+// Khởi động server lắng nghe qua cổng được cấu hình
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`=== Server đang chạy mượt mà tại cổng: ${PORT} ===`);
+});
