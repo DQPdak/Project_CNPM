@@ -26,7 +26,7 @@ jobs:
           echo "Bắt đầu kiểm tra Backend..."
           cd backend
           npm install
-          # npm run test
+          npm test
 
       - name: 🛠️ Kiểm tra lỗi Frontend (Next.js)
         run: |
