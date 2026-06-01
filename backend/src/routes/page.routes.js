@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const uploadPages = require("../controllers/page/uploadPages");
 const updatePageVersion = require("../controllers/page/updatePageVersion");
+const approvePage = require("../controllers/page/approvedPage");
 
 // đường dẫn để upload thông qua Cloudinary
 const upload = require("../middlewares/upload.middleware");
@@ -17,5 +18,7 @@ router.put(
   upload.single("page"),
   updatePageVersion.updatePageVersion,
 );
+
+router.put("/approve/:page_id", approvePage.approvePage);
 
 module.exports = router;

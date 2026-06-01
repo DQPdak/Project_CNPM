@@ -85,4 +85,65 @@ describe("Page API - Upload Tests", () => {
     // Kiểm tra Version đã tự động nhảy lên 2 chưa!
     expect(response.body.page.version).toBe(2);
   });
+
+  // Test 1: Chốt trang thành công (Happy Path)
+  it("Nên cập nhật trạng thái trang thành Approved thành công", async () => {
+    // 1. Tạo 1 page giả lập đang chờ duyệt (Ready For Review) và lưu vào DB ảo
+    const fakeChapterId = new mongoose.Types.ObjectId();
+    const page = new Page({
+      chapter_id: fakeChapterId,
+      page_number: 1,
+      file_url: "https://example.com/page1_v2.jpg", // Đã upload bản v2
+      version: 2,
+      status: "Ready For Review",
+    });
+    await page.save();
+
+    // 2. Gửi request PUT để duyệt trang (chốt Final)
+    const response = await request(app)
+      .put(`/api/pages/approve/${page._id}`)
+      .send({ status: "Approved" });
+
+    // 3. Kiểm tra kết quả trả về từ API
+    expect(response.status).toBe(200);
+    expect(response.body.message).toBe("Đã chốt bản Final cho trang này");
+    expect(response.body.page.status).toBe("Approved");
+
+    // 4. Truy vấn lại DB xem đã thực sự thay đổi chưa
+    const updatedPage = await Page.findById(page._id);
+    expect(updatedPage.status).toBe("Approved");
+  });
+
+  // Test 2: Báo lỗi khi gửi status không nằm trong Enum
+  it("Nên báo lỗi 400 khi gửi trạng thái không hợp lệ", async () => {
+    const fakeChapterId = new mongoose.Types.ObjectId();
+    const page = new Page({
+      chapter_id: fakeChapterId,
+      page_number: 2,
+      file_url: "https://example.com/page2_draft.jpg",
+      status: "Draft",
+    });
+    await page.save();
+
+    // Gửi status sai (ví dụ: "Done" hoặc "Hoàn thành")
+    const response = await request(app)
+      .put(`/api/pages/approve/${page._id}`)
+      .send({ status: "Done" });
+
+    expect(response.status).toBe(400);
+    expect(response.body.message).toBe("Trạng thái trang không hợp lệ");
+  });
+
+  // Test 3: Báo lỗi 404 khi ID của Page không tồn tại
+  it("Nên báo lỗi 404 khi không tìm thấy trang truyện", async () => {
+    // Sinh ra một ID đúng định dạng MongoDB nhưng không có thật
+    const fakePageId = new mongoose.Types.ObjectId();
+
+    const response = await request(app)
+      .put(`/api/pages/approve/${fakePageId}`)
+      .send({ status: "Approved" });
+
+    expect(response.status).toBe(404);
+    expect(response.body.message).toBe("Không tìm thấy trang truyện");
+  });
 });
