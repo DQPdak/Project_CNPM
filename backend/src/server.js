@@ -17,6 +17,7 @@ const { connectCloudinary } = require("./config/config_cloudinary");
 const chapterRoutes = require("./routes/chapter.routes");
 const pageRoutes = require("./routes/page.routes");
 const publishRoutes = require("./routes/publish.routes");
+const seriesRoutes = require("./routes/series.routes");
 
 // Tải cấu hình từ file .env vào hệ thống
 dotenv.config();
@@ -37,6 +38,7 @@ app.get("/", (req, res) => {
 app.use("/api/chapters", chapterRoutes);
 app.use("/api/pages", pageRoutes);
 app.use("/api/publish", publishRoutes);
+app.use("/api/series", seriesRoutes);
 
 // Kết nối tới cơ sở dữ liệu MongoDB
 connectDB();
