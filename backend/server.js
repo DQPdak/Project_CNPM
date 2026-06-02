@@ -46,6 +46,15 @@ connectCloudinary();
 
 // Khởi động server lắng nghe qua cổng được cấu hình
 const PORT = process.env.PORT || 5000;
+// ==========================================
+// CODE ĐĂNG KÝ MODULE - TASK 8 (MEMBER 7)
+// ==========================================
+const task8IssueRoutes = require('./routes/task8IssueRoutes');
+const task8RankingRoutes = require('./routes/task8RankingRoutes');
+
+app.use('/api/task8/issues', task8IssueRoutes);
+app.use('/api/task8/rankings', task8RankingRoutes);
+// ==========================================
 app.listen(PORT, () => {
-  console.log(`=== Server đang chạy mượt mà tại cổng: ${PORT} ===`);
+   console.log(`=== Server đang chạy mượt mà tại cổng: ${PORT} ===`);
 });
