@@ -1,5 +1,7 @@
 const Chapter = require("../../models/ChapterModel");
 const Page = require("../../models/PageModel");
+const Task = require("../../models/TaskModel");
+const Annotation = require("../../models/AnnotationModel");
 
 exports.publishChapter = async (req, res) => {
   try {
@@ -14,11 +16,15 @@ exports.publishChapter = async (req, res) => {
     }
     // kiểm tra xem chapter đã có trang nào hay chưa
     const pages = await Page.find({ chapter_id });
+
     if (pages.length === 0) {
       return res.status(400).json({ message: "Chapter chưa có trang nào" });
     }
 
-    // Lọc ra các trang chưa được phê duyệt
+    // Lấy danh sách id của tất cả các trang thuộc chapter này
+    const pageIds = pages.map((page) => page._id);
+
+    // Điều kiện lọc 1: Lọc ra các trang chưa được phê duyệt
     const unapprovedPages = pages.filter((page) => page.status !== "Approved");
     // kiểm tra xem có trang nào chưa được phê duyệt không vì các trang phải được duyệt thì mới đủ điều kiện xuất bản
     if (unapprovedPages.length > 0) {
@@ -28,7 +34,34 @@ exports.publishChapter = async (req, res) => {
       });
     }
 
-    // Nếu tất cả các trang đã được phê duyệt, cập nhật trạng thái của chapter thành "Published"
+    // Điều kiện lọc 2: Lọc ra các trang có task chưa hoàn thành
+    const unfinishedTasks = await Task.find({
+      page_id: { $in: pageIds },
+      status: { $nin: ["Approved", "Paid"] },
+    });
+    if (unfinishedTasks.length > 0) {
+      return res.status(400).json({
+        message:
+          "Không thể xuất bản. Vẫn còn task chưa hoàn thành trên các trang truyện",
+        unfinishedTasks_count: unfinishedTasks.length,
+      });
+    }
+
+    // Điều kiện lọc 3: Lọc ra các trang có annotation chưa được giải quyết
+    const unresolvedAnnotations = await Annotation.find({
+      page_id: { $in: pageIds },
+      status: { $ne: "Resolved" },
+    });
+
+    if (unresolvedAnnotations.length > 0) {
+      return res.status(400).json({
+        message:
+          "Không thể xuất bản. Vẫn còn annotation chưa được giải quyết trên các trang truyện",
+        unresolvedAnnotations_count: unresolvedAnnotations.length,
+      });
+    }
+
+    // Nếu tất cả các điểu kiện trên đều thỏa mãn, cập nhật trạng thái của chapter thành "Published"
     chapter.status = "Published";
     chapter.published_at = new Date();
     if (release_issue_id) {
