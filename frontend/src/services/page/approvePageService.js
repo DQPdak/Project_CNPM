@@ -1,13 +1,11 @@
-const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
+const API_URL =
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
 
 const approvePage = async (pageId) => {
   try {
     const res = await fetch(`${API_URL}/pages/approve/${pageId}`, {
       method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      // API này không cần body vì chỉ việc đổi trạng thái dựa theo pageId trên param
+      headers: { "Content-Type": "application/json" },
     });
 
     const data = await res.json();
@@ -16,17 +14,12 @@ const approvePage = async (pageId) => {
       return {
         success: false,
         status: res.status,
-        message:
-          data.message || "Duyệt trang truyện thất bại, vui lòng kiểm tra lại",
+        message: data.message || "Duyệt trang truyện thất bại",
       };
     }
     return data;
   } catch (err) {
-    return {
-      success: false,
-      message: "Lỗi server khi duyệt trang",
-      error: err,
-    };
+    return { success: false, message: "Lỗi server", error: err };
   }
 };
 

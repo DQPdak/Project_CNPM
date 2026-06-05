@@ -1,16 +1,15 @@
-const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
+const API_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
 
 const uploadPages = async (chapterId, files) => {
   try {
     const formData = new FormData();
     for (let i = 0; i < files.length; i++) {
-      formData.append("pages", files[i]); // "pages" phải khớp với upload.array('pages') ở Backend
+      formData.append("pages", files[i]); 
     }
 
-    const res = await fetch(`${API_URL}/pages//upload/${chapterId}/upload`, {
+    const res = await fetch(`${API_URL}/pages/upload/${chapterId}/upload`, {
       method: "POST",
-      // KHÔNG truyền Content-Type ở đây. Trình duyệt sẽ tự động xử lý FormData!
-      body: formData,
+      body: formData, // FormData tự động set Content-Type
     });
 
     const data = await res.json();
@@ -19,17 +18,12 @@ const uploadPages = async (chapterId, files) => {
       return {
         success: false,
         status: res.status,
-        message:
-          data.message || "Tải lên bản thảo thất bại, vui lòng kiểm tra lại",
+        message: data.message || "Tải lên bản thảo thất bại",
       };
     }
-    return data;
+    return data; 
   } catch (err) {
-    return {
-      success: false,
-      message: "Lỗi server",
-      error: err,
-    };
+    return { success: false, message: "Lỗi server", error: err };
   }
 };
 

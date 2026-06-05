@@ -1,4 +1,5 @@
-const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
+const API_URL =
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
 
 const publishChapter = async (chapterId, releaseIssueId = null) => {
   try {
@@ -6,9 +7,7 @@ const publishChapter = async (chapterId, releaseIssueId = null) => {
 
     const res = await fetch(`${API_URL}/publish/chapter/${chapterId}`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json", // API này chỉ gửi JSON nên CẦN truyền Content-Type
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
 
@@ -18,19 +17,13 @@ const publishChapter = async (chapterId, releaseIssueId = null) => {
       return {
         success: false,
         status: res.status,
-        // Dùng data.message của Backend trả về (Vd: "Không thể xuất bản. Vẫn còn trang truyện chưa được phê duyệt")
-        message:
-          data.message || "Xuất bản Chapter thất bại, vui lòng kiểm tra lại",
-        data: data, // Trả luôn toàn bộ cục data để Frontend biết có bao nhiêu trang/task bị lỗi
+        message: data.message || "Không đủ điều kiện xuất bản",
+        unapprovedPages_count: data.unapprovedPages_count || 0,
       };
     }
     return data;
   } catch (err) {
-    return {
-      success: false,
-      message: "Lỗi server",
-      error: err,
-    };
+    return { success: false, message: "Lỗi server", error: err };
   }
 };
 

@@ -1,13 +1,13 @@
-const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
+const API_URL =
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
 
 const updatePageVersion = async (pageId, file) => {
   try {
     const formData = new FormData();
-    formData.append("page", file); // "page" phải khớp với upload.single('page') ở Backend
+    formData.append("page", file);
 
     const res = await fetch(`${API_URL}/pages/update/${pageId}`, {
       method: "PUT",
-      // Tương tự, KHÔNG truyền Content-Type cho FormData
       body: formData,
     });
 
@@ -17,17 +17,12 @@ const updatePageVersion = async (pageId, file) => {
       return {
         success: false,
         status: res.status,
-        message:
-          data.message || "Cập nhật Version thất bại, vui lòng kiểm tra lại",
+        message: data.message || "Cập nhật Version thất bại",
       };
     }
     return data;
   } catch (err) {
-    return {
-      success: false,
-      message: "Lỗi server",
-      error: err,
-    };
+    return { success: false, message: "Lỗi server", error: err };
   }
 };
 
