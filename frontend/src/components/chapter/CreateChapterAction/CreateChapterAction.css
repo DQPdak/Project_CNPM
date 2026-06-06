@@ -1,0 +1,112 @@
+.btn-create-chapter {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: #4f46e5;
+  color: white;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+.btn-create-chapter:hover:not(:disabled) {
+  background-color: #4338ca;
+}
+.btn-create-chapter:disabled {
+  background-color: #94a3b8;
+  cursor: not-allowed;
+}
+.icon-svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* --- CSS BỔ SUNG CHO MODAL NHẬP TIÊU ĐỀ --- */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  animation: fadeIn 0.2s ease-out;
+}
+.modal-box {
+  background: white;
+  padding: 24px;
+  border-radius: 12px;
+  width: 400px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+.modal-title {
+  margin: 0 0 20px 0;
+  font-size: 20px;
+  color: #0f172a;
+}
+.form-group {
+  margin-bottom: 24px;
+}
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #334155;
+}
+.form-group input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+  box-sizing: border-box;
+  transition: all 0.2s;
+}
+.form-group input:focus {
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+}
+.modal-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+.btn-cancel {
+  padding: 10px 16px;
+  border: none;
+  background: #f1f5f9;
+  color: #475569;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+}
+.btn-cancel:hover {
+  background: #e2e8f0;
+}
+.btn-confirm {
+  padding: 10px 16px;
+  border: none;
+  background: #4f46e5;
+  color: white;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+}
+.btn-confirm:hover {
+  background: #4338ca;
+}
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
