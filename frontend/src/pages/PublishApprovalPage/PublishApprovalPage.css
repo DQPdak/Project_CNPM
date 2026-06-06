@@ -1,0 +1,88 @@
+/* Khung trang tổng */
+.publish-page-container {
+  padding: 24px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* Phần Header */
+.publish-page-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.publish-back-link {
+  text-decoration: none;
+  color: #64748b;
+  display: inline-block;
+  margin-bottom: 16px;
+  transition: color 0.2s;
+}
+
+.publish-back-link:hover {
+  color: #0f172a;
+}
+
+.publish-title {
+  margin: 0;
+  font-size: 28px;
+  color: #0f172a;
+}
+
+.publish-subtitle {
+  color: #64748b;
+  margin-top: 8px;
+  font-size: 15px;
+}
+
+/* Khu vực nút bấm cuối trang */
+.publish-action-area {
+  margin-top: 32px;
+  text-align: center;
+}
+
+/* Base style cho Nút Xuất Bản (To, rõ ràng) */
+.btn-massive-publish {
+  width: 100%;
+  max-width: 400px;
+  padding: 16px 40px;
+  font-size: 18px;
+  font-weight: bold;
+  border-radius: 50px;
+  border: none;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* --- Các trạng thái của nút --- */
+
+/* 1. Trạng thái bình thường hoặc khi báo lỗi (Sẵn sàng bấm) */
+.btn-massive-publish.state-idle,
+.btn-massive-publish.state-failed {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  cursor: pointer;
+  box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.3);
+}
+
+.btn-massive-publish.state-idle:hover,
+.btn-massive-publish.state-failed:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 15px 20px -5px rgba(16, 185, 129, 0.4);
+}
+
+/* 2. Trạng thái Đang quét hoặc Đã thành công (Bị khóa) */
+.btn-massive-publish.state-scanning,
+.btn-massive-publish.state-success {
+  background: #cbd5e1;
+  color: white;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* Ghi chú dưới nút */
+.publish-warning-note {
+  margin-top: 16px;
+  color: #94a3b8;
+  font-size: 14px;
+  font-style: italic;
+}

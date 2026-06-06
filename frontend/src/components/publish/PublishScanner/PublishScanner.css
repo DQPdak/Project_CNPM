@@ -1,0 +1,126 @@
+.scanner-card {
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  padding: 30px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+}
+.scanner-title {
+  margin: 0 0 24px 0;
+  font-size: 18px;
+  color: #0f172a;
+  text-align: center;
+}
+
+/* Thanh tiến độ */
+.progress-bar-container {
+  width: 100%;
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 30px;
+  position: relative;
+}
+.progress-bar-fill {
+  height: 100%;
+  border-radius: 10px;
+  transition: width 0.5s ease-in-out;
+}
+.progress-bar-fill.scanning {
+  background: #3b82f6;
+  box-shadow: 0 0 10px #3b82f6;
+}
+.progress-bar-fill.success {
+  background: #10b981;
+  box-shadow: 0 0 10px #10b981;
+}
+.progress-bar-fill.failed {
+  background: #ef4444;
+  box-shadow: 0 0 10px #ef4444;
+}
+
+/* Danh sách bước */
+.scanner-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.step-item {
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  border-radius: 8px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  transition: all 0.3s;
+  opacity: 0.5;
+}
+
+/* Trạng thái các bước */
+.step-item.state-scanning {
+  opacity: 1;
+  border-color: #3b82f6;
+  background: #eff6ff;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+  transform: scale(1.02);
+}
+.step-item.state-passed {
+  opacity: 1;
+  border-color: #10b981;
+  background: #f0fdf4;
+}
+.step-item.state-failed {
+  opacity: 1;
+  border-color: #ef4444;
+  background: #fef2f2;
+  animation: shake 0.5s;
+}
+
+.step-icon {
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+}
+.step-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.step-content h4 {
+  margin: 0;
+  font-size: 15px;
+  color: #1e293b;
+}
+.step-error-msg {
+  margin: 6px 0 0 0;
+  font-size: 13px;
+  color: #dc2626;
+  font-weight: 600;
+}
+
+/* Hiệu ứng xoay tròn và rung lắc */
+.spinner {
+  display: inline-block;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-5px);
+  }
+  75% {
+    transform: translateX(5px);
+  }
+}
