@@ -1,18 +1,42 @@
 const express = require("express");
-const router = express.Router();
-const creareChapter = require("../controllers/chapter/createChapter");
+const { ROLES } = require("../constants/roles");
+const { requireAuth } = require("../modules/auth/middlewares/requireAuth");
+const { requireRole } = require("../modules/authorization/middlewares/requireRole");
+const {
+  requireChapterScope,
+  requireSeriesScope,
+} = require("../modules/authorization/middlewares/scope");
+const createChapter = require("../controllers/chapter/createChapter");
+const getChapterById = require("../controllers/chapter/getChapterById");
 const getChaptersBySeries = require("../controllers/chapter/getChaptersBySeries");
 const updateChapterStatus = require("../controllers/chapter/updateChapterStatus");
 
-// Route cập nhật trạng thái chapter
+const router = express.Router();
+
+router.use(requireAuth);
+
 router.put(
   "/update-status/:chapter_id",
+  requireRole(ROLES.MANGAKA, ROLES.TANTOU_EDITOR),
+  requireChapterScope("chapter_id", "write"),
   updateChapterStatus.updateChapterStatus,
 );
+router.post(
+  "/create",
+  requireRole(ROLES.MANGAKA, ROLES.TANTOU_EDITOR),
+  createChapter.Chapter,
+);
+router.get(
+  "/series/:series_id",
+  requireRole(ROLES.MANGAKA, ROLES.TANTOU_EDITOR, ROLES.EDITORIAL_BOARD),
+  requireSeriesScope("series_id", "read"),
+  getChaptersBySeries.getChaptersBySeries,
+);
+router.get(
+  "/:chapter_id",
+  requireRole(ROLES.MANGAKA, ROLES.TANTOU_EDITOR, ROLES.EDITORIAL_BOARD),
+  requireChapterScope("chapter_id", "read"),
+  getChapterById.getChapterById,
+);
 
-// Route tạo chapter mới
-router.post("/create", creareChapter.Chapter);
-
-// Route lấy chapters theo series_id
-router.get("/series/:series_id", getChaptersBySeries.getChaptersBySeries);
 module.exports = router;

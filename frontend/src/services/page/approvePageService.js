@@ -1,25 +1,18 @@
-const API_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
+import { apiFetch } from "../apiClient";
 
-const approvePage = async (pageId) => {
+const approvePage = async (pageId, status) => {
   try {
-    const res = await fetch(`${API_URL}/pages/approve/${pageId}`, {
+    return await apiFetch(`/pages/approve/${pageId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status }),
     });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      return {
-        success: false,
-        status: res.status,
-        message: data.message || "Duyệt trang truyện thất bại",
-      };
-    }
-    return data;
-  } catch (err) {
-    return { success: false, message: "Lỗi server", error: err };
+  } catch (error) {
+    return {
+      success: false,
+      status: error.status,
+      message: error.message || "Duyet trang truyen that bai.",
+    };
   }
 };
 

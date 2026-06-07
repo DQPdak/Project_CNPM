@@ -1,25 +1,14 @@
-const API_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
+import { apiFetch } from "../apiClient";
 
 const getChaptersBySeries = async (seriesId) => {
   try {
-    const res = await fetch(`${API_URL}/chapters/series/${seriesId}`, {
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      return {
-        success: false,
-        status: res.status,
-        message: data.message || "Không thể tải danh sách Chapter",
-      };
-    }
-    return data;
-  } catch (err) {
-    return { success: false, message: "Lỗi server", error: err };
+    return await apiFetch(`/chapters/series/${seriesId}`);
+  } catch (error) {
+    return {
+      success: false,
+      status: error.status,
+      message: error.message || "Khong the tai danh sach chapter.",
+    };
   }
 };
 
