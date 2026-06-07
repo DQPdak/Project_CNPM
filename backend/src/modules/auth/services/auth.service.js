@@ -1,7 +1,8 @@
 const User = require("../../../models/UserModel");
 const AuthSession = require("../models/AuthSessionModel");
+const { ROLES } = require("../../../constants/roles");
 const { AUTH_ERROR_CODES } = require("../constants/auth.constants");
-const { comparePassword } = require("../utils/password");
+const { comparePassword, hashPassword } = require("../utils/password");
 const {
   hashToken,
   signAccessToken,
@@ -25,6 +26,20 @@ const sanitizeUser = (user) => ({
   avatar: user.avatar,
   status: user.status,
 });
+
+const validateRole = (role) => Object.values(ROLES).includes(role);
+const validateStatus = (status) =>
+  ["Active", "Inactive", "Suspended"].includes(status);
+
+const validatePasswordPolicy = (password) => {
+  if (typeof password !== "string" || password.length < 8) {
+    throw buildAuthError(
+      400,
+      AUTH_ERROR_CODES.PASSWORD_POLICY_VIOLATION,
+      "Password must be at least 8 characters long.",
+    );
+  }
+};
 
 const assertAccountIsActive = (user) => {
   if (user.status === "Inactive") {
@@ -192,9 +207,80 @@ const getCurrentUserFromAccessToken = async (authorizationHeader) => {
   return sanitizeUser(user);
 };
 
+const listUsers = async () => {
+  const users = await User.find().sort({ createdAt: -1 });
+  return { users: users.map(sanitizeUser) };
+};
+
+const createUser = async ({ name, email, password, role, status = "Active" }) => {
+  if (!name || !email || !password || !role) {
+    throw buildAuthError(
+      400,
+      "AUTH_INVALID_PAYLOAD",
+      "Name, email, password, and role are required.",
+    );
+  }
+
+  if (!validateRole(role)) {
+    throw buildAuthError(400, "AUTH_INVALID_ROLE", "Role is invalid.");
+  }
+
+  if (!validateStatus(status)) {
+    throw buildAuthError(400, "AUTH_INVALID_STATUS", "Status is invalid.");
+  }
+
+  validatePasswordPolicy(password);
+
+  const normalizedEmail = email.trim().toLowerCase();
+  const existingUser = await User.findOne({ email: normalizedEmail });
+  if (existingUser) {
+    throw buildAuthError(
+      409,
+      AUTH_ERROR_CODES.EMAIL_ALREADY_EXISTS,
+      "Email already exists.",
+    );
+  }
+
+  const user = await User.create({
+    name,
+    email: normalizedEmail,
+    password: await hashPassword(password),
+    role,
+    status,
+  });
+
+  return { user: sanitizeUser(user) };
+};
+
+const resetPassword = async ({ userId, newPassword }) => {
+  validatePasswordPolicy(newPassword);
+
+  const user = await User.findById(userId);
+  if (!user) {
+    throw buildAuthError(
+      404,
+      AUTH_ERROR_CODES.USER_NOT_FOUND,
+      "User was not found.",
+    );
+  }
+
+  user.password = await hashPassword(newPassword);
+  await user.save();
+
+  await AuthSession.updateMany(
+    { user_id: user._id, revoked_at: null },
+    { revoked_at: new Date() },
+  );
+
+  return { user: sanitizeUser(user) };
+};
+
 module.exports = {
+  createUser,
   getCurrentUserFromAccessToken,
+  listUsers,
   login,
   logout,
   refresh,
+  resetPassword,
 };

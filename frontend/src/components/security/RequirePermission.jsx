@@ -7,6 +7,7 @@ const PERMISSION_ROLE_MAP = {
   CAN_UPDATE_VERSION: ["Mangaka", "Tantou Editor", "Admin"],
   CAN_APPROVE_PAGE: ["Mangaka", "Tantou Editor", "Admin"],
   CAN_PUBLISH_CHAPTER: ["Editorial Board", "Tantou Editor", "Admin"],
+  CAN_MANAGE_USERS: ["Admin"],
 };
 
 export default function RequirePermission({ required, children }) {

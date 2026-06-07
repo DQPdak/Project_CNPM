@@ -17,6 +17,8 @@ const defaultState = {
   sessionStatus: "unauthenticated",
 };
 
+let refreshPromise = null;
+
 export const useAuthStore = create(
   persist(
     (set, get) => ({
@@ -85,19 +87,19 @@ export const useAuthStore = create(
         return result;
       },
       refreshSession: async () => {
-        const { refreshToken, isRefreshing } = get();
+        const { refreshToken } = get();
 
         if (!refreshToken) {
           throw new Error("Missing refresh token.");
         }
 
-        if (isRefreshing) {
-          return;
+        if (refreshPromise) {
+          return refreshPromise;
         }
 
         set({ isRefreshing: true, sessionStatus: "refreshing" });
 
-        try {
+        refreshPromise = (async () => {
           const result = await refreshRequest(refreshToken);
           set({
             accessToken: result.accessToken,
@@ -106,7 +108,12 @@ export const useAuthStore = create(
             sessionStatus: "authenticated",
           });
           return result;
+        })();
+
+        try {
+          return await refreshPromise;
         } finally {
+          refreshPromise = null;
           set({ isRefreshing: false });
         }
       },

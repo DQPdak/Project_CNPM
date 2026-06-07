@@ -1,5 +1,5 @@
 import React from "react";
-import { Outlet } from "react-router-dom";
+import { Link, Outlet } from "react-router-dom";
 import { useAuthStore } from "../../stores/authStore";
 
 export default function ProtectedLayout() {
@@ -33,6 +33,22 @@ export default function ProtectedLayout() {
           <div style={{ color: "#0f172a", fontWeight: 700 }}>
             {user?.name || "Authenticated User"}
           </div>
+          <nav style={{ display: "flex", gap: "12px", marginTop: "8px" }}>
+            <Link
+              to="/chapter-list"
+              style={{ color: "#334155", fontWeight: 700, textDecoration: "none" }}
+            >
+              Chapters
+            </Link>
+            {user?.role === "Admin" ? (
+              <Link
+                to="/admin/users"
+                style={{ color: "#334155", fontWeight: 700, textDecoration: "none" }}
+              >
+                Users
+              </Link>
+            ) : null}
+          </nav>
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>

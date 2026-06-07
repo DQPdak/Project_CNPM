@@ -4,6 +4,7 @@ import { ToastProvider } from "../contexts/ToastContext";
 import ProtectedLayout from "../components/auth/ProtectedLayout";
 import RequireAuth from "../components/security/RequireAuth";
 import ChapterListPage from "../pages/ChapterListPage/ChapterListPage";
+import AdminUsersPage from "../pages/AdminUsersPage/AdminUsersPage";
 import LoginPage from "../pages/LoginPage/LoginPage";
 import PageManagementPage from "../pages/PageManagementPage/PageManagementPage";
 import PublishApprovalPage from "../pages/PublishApprovalPage/PublishApprovalPage";
@@ -36,6 +37,10 @@ export default function AppRoutes() {
           <Route
             path="/publish-approval/:chapterId"
             element={<PublishApprovalPage />}
+          />
+          <Route
+            path="/admin/users"
+            element={<AdminUsersPage />}
           />
         </Route>
       </Routes>

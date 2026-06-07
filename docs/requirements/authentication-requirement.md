@@ -1,99 +1,129 @@
 # Authentication Module Requirement
 
-## 1. Mục đích
-Module `Authentication` chịu trách nhiệm xác minh danh tính người dùng và quản lý phiên đăng nhập cho toàn hệ thống Manga Editorial & Production Management System.
+## 1. Muc dich
+Module `Authentication` chiu trach nhiem xac minh danh tinh nguoi dung va quan ly phien dang nhap cho toan he thong Manga Editorial & Production Management System.
 
-Mục tiêu là tách riêng phần đăng nhập, đăng xuất, quản lý token, xác thực request và cung cấp thông tin người dùng hiện tại thành một module độc lập để mọi module nghiệp vụ khác có thể dùng chung.
+Muc tieu la tach rieng phan dang nhap, dang xuat, quan ly token, xac thuc request, cung cap thong tin nguoi dung hien tai, va cac tac vu quan tri tai khoan noi bo thanh mot module doc lap de moi module nghiep vu khac co the dung chung.
 
-## 2. Phạm vi
+## 2. Pham vi
 ### 2.1 In scope
-- Đăng nhập bằng `email` và `password`.
-- Đăng xuất.
-- Làm mới access token bằng refresh token.
-- Xác thực request bằng access token.
-- Cung cấp endpoint lấy thông tin user hiện tại.
-- Chặn truy cập nếu tài khoản không hợp lệ hoặc không hoạt động.
+- Dang nhap bang `email` va `password`.
+- Dang xuat.
+- Lam moi access token bang refresh token.
+- Xac thuc request bang access token.
+- Cung cap endpoint lay thong tin user hien tai.
+- Chan truy cap neu tai khoan khong hop le hoac khong hoat dong.
+- Admin tao tai khoan nhan vien.
+- Admin reset mat khau cho nhan vien.
 
 ### 2.2 Out of scope
-- Phân quyền theo role hoặc permission.
+- Phan quyen theo role hoac permission.
+- User tu dang ky tai khoan.
 - Social login.
 - MFA/2FA.
 - Passwordless login.
 - SSO enterprise.
 
 ## 3. Actors
-- Người dùng hệ thống: `Mangaka`, `Assistant`, `Tantou Editor`, `Editorial Board`, `Admin`.
+- Nguoi dung he thong: `Mangaka`, `Assistant`, `Tantou Editor`, `Editorial Board`, `Admin`.
 - Frontend web app.
-- Backend modules cần xác thực request.
+- Backend modules can xac thuc request.
+- Admin quan tri tai khoan noi bo.
 
-## 4. Use cases chính
-### UC-01: Đăng nhập
-User nhập `email` và `password`.
-Hệ thống xác minh tài khoản và trả về token cùng profile cơ bản.
+## 4. Use cases chinh
+### UC-01: Dang nhap
+User nhap `email` va `password`.
+He thong xac minh tai khoan va tra ve token cung profile co ban.
 
-### UC-02: Đăng xuất
-User kết thúc phiên hiện tại.
-Hệ thống vô hiệu hóa refresh token hoặc session tương ứng.
+### UC-02: Dang xuat
+User ket thuc phien hien tai.
+He thong vo hieu hoa refresh token hoac session tuong ung.
 
-### UC-03: Làm mới token
-Client gửi refresh token hợp lệ để lấy access token mới.
+### UC-03: Lam moi token
+Client gui refresh token hop le de lay access token moi.
 
-### UC-04: Xác thực request
-Client gửi access token trong header `Authorization: Bearer <token>`.
-Middleware xác minh token trước khi cho qua các API bảo vệ.
+### UC-04: Xac thuc request
+Client gui access token trong header `Authorization: Bearer <token>`.
+Middleware xac minh token truoc khi cho qua cac API bao ve.
 
-### UC-05: Lấy thông tin user hiện tại
-Frontend gọi endpoint `me` để lấy profile cơ bản sau khi đã đăng nhập.
+### UC-05: Lay thong tin user hien tai
+Frontend goi endpoint `me` de lay profile co ban sau khi da dang nhap.
 
-## 5. Yêu cầu chức năng
-### 5.1 Đăng nhập
-- Nhận `email` và `password`.
-- Kiểm tra email tồn tại.
-- So sánh mật khẩu bằng hashing an toàn.
-- Từ chối tài khoản có `status` khác `Active`.
-- Trả về:
+### UC-06: Admin creates employee account
+Admin tao tai khoan cho nhan vien noi bo.
+He thong luu user voi `role`, `status`, thong tin co ban, va mat khau khoi tao.
+
+### UC-07: Admin resets employee password
+Admin chon tai khoan nhan vien va reset mat khau.
+He thong cap nhat mat khau moi theo chuan hash an toan va vo hieu hoa cac phien dang nhap cu neu ap dung.
+
+## 5. Yeu cau chuc nang
+### 5.1 Dang nhap
+- Nhan `email` va `password`.
+- Kiem tra email ton tai.
+- So sanh mat khau bang hashing an toan.
+- Tu choi tai khoan co `status` khac `Active`.
+- Tra ve:
   - `accessToken`
-  - `refreshToken` nếu dùng refresh flow
+  - `refreshToken` neu dung refresh flow
   - `user`: `id`, `name`, `email`, `role`, `avatar`, `status`
 
-### 5.2 Đăng xuất
-- Cho phép đăng xuất phiên hiện tại.
-- Refresh token của phiên đó phải bị vô hiệu hóa hoặc đánh dấu thu hồi.
+### 5.2 Dang xuat
+- Cho phep dang xuat phien hien tai.
+- Refresh token cua phien do phai bi vo hieu hoa hoac danh dau thu hoi.
 
-### 5.3 Làm mới token
-- Chỉ chấp nhận refresh token hợp lệ, chưa hết hạn, chưa bị thu hồi.
-- Trả access token mới.
-- Có thể xoay refresh token nếu hệ thống áp dụng refresh token rotation.
+### 5.3 Lam moi token
+- Chi chap nhan refresh token hop le, chua het han, chua bi thu hoi.
+- Tra access token moi.
+- Co the xoay refresh token neu he thong ap dung refresh token rotation.
 
-### 5.4 Xác thực request
-- Kiểm tra access token ở mọi API yêu cầu xác thực.
-- Nếu thiếu token, trả `401 Unauthorized`.
-- Nếu token sai, hết hạn hoặc không hợp lệ, trả `401 Unauthorized`.
-- Nếu user không còn tồn tại hoặc bị khóa sau khi token được cấp, request phải bị từ chối.
+### 5.4 Xac thuc request
+- Kiem tra access token o moi API yeu cau xac thuc.
+- Neu thieu token, tra `401 Unauthorized`.
+- Neu token sai, het han, hoac khong hop le, tra `401 Unauthorized`.
+- Neu user khong con ton tai hoac bi khoa sau khi token duoc cap, request phai bi tu choi.
 
 ### 5.5 Endpoint `me`
-- Trả về profile hiện tại của user đã xác thực.
-- Không trả `password` hoặc dữ liệu nhạy cảm.
+- Tra ve profile hien tai cua user da xac thuc.
+- Khong tra `password` hoac du lieu nhay cam.
 
-## 6. Yêu cầu phi chức năng
-- Password phải được hash trước khi lưu.
-- Không lưu password dạng plain text.
-- Token phải có thời hạn rõ ràng.
-- Access token nên ngắn hạn.
-- Refresh token nên dài hạn hơn access token.
-- Module phải dùng lại được cho toàn bộ backend.
-- Cần có test cho login, logout, refresh, verify token và trạng thái tài khoản.
+### 5.6 Admin create user
+- Chi `Admin` duoc phep tao tai khoan nhan vien.
+- Input toi thieu:
+  - `name`
+  - `email`
+  - `role`
+  - `status`
+  - `password` khoi tao hoac co che sinh mat khau tam thoi
+- Email phai duy nhat.
+- Password phai duoc hash truoc khi luu.
+- User moi tao phai duoc dung ngay cho flow login neu `status = Active`.
 
-## 7. API đề xuất
+### 5.7 Admin reset password
+- Chi `Admin` duoc phep reset mat khau cho tai khoan khac.
+- Admin khong can biet mat khau cu cua user.
+- Mat khau moi phai duoc validate theo chinh sach password.
+- Mat khau moi phai duoc hash truoc khi luu.
+- He thong nen revoke toan bo refresh session hien tai cua user do sau khi reset.
+
+## 6. Yeu cau phi chuc nang
+- Password phai duoc hash truoc khi luu.
+- Khong luu password dang plain text.
+- Token phai co thoi han ro rang.
+- Access token nen ngan han.
+- Refresh token nen dai han hon access token.
+- Module phai dung lai duoc cho toan bo backend.
+- Can co test cho login, logout, refresh, verify token, trang thai tai khoan, admin create user, va admin reset password.
+
+## 7. API de xuat
 - `POST /api/auth/login`
 - `POST /api/auth/logout`
 - `POST /api/auth/refresh`
 - `GET /api/auth/me`
+- `POST /api/auth/users`
+- `POST /api/auth/users/:id/reset-password`
 
-Nếu dự án muốn cho phép tự tạo tài khoản:
-- `POST /api/auth/register`
-
-## 8. Data model tối thiểu
+## 8. Data model toi thieu
 ### User
 - `id`
 - `name`
@@ -105,7 +135,7 @@ Nếu dự án muốn cho phép tự tạo tài khoản:
 - `createdAt`
 - `updatedAt`
 
-### Session hoặc RefreshToken
+### Session hoac RefreshToken
 - `id`
 - `userId`
 - `token`
@@ -113,30 +143,33 @@ Nếu dự án muốn cho phép tự tạo tài khoản:
 - `revokedAt`
 - `createdAt`
 
-## 9. Rule hệ thống
-- Không cho tài khoản `Inactive` hoặc `Suspended` đăng nhập.
-- Không cho client tự khai báo danh tính user trong request body để thay cho token.
-- Không dùng header giả lập user cho môi trường production.
-- Nếu token hết hạn, client phải refresh hoặc đăng nhập lại.
+## 9. Rule he thong
+- Khong cho tai khoan `Inactive` hoac `Suspended` dang nhap.
+- Khong cho client tu khai bao danh tinh user trong request body de thay cho token.
+- Khong dung header gia lap user cho moi truong production.
+- Neu token het han, client phai refresh hoac dang nhap lai.
+- Hinh thuc cung cap tai khoan la `Admin-managed only`, khong ho tro self-registration.
 
-## 10. Tích hợp với module khác
-Module `Authentication` là nền tảng cho:
+## 10. Tich hop voi module khac
+Module `Authentication` la nen tang cho:
 - `series`
 - `chapter`
 - `page`
 - `publish`
 - `task8`
-- các dashboard theo role
+- cac dashboard theo role
 
-Mọi module trên phải lấy user hiện tại từ auth context của backend thay vì nhận `user_id` từ frontend như một nguồn tin cậy.
+Moi module tren phai lay user hien tai tu auth context cua backend thay vi nhan `user_id` tu frontend nhu mot nguon tin cay.
 
 ## 11. Acceptance criteria
-- User đăng nhập thành công khi nhập đúng thông tin và account đang `Active`.
-- User không đăng nhập được khi sai mật khẩu hoặc tài khoản bị khóa.
-- Request không có token bị chặn với `401`.
-- Request có token sai hoặc hết hạn bị chặn với `401`.
-- Frontend gọi được `GET /api/auth/me` để lấy profile hiện tại.
-- Các API nghiệp vụ dùng chung middleware xác thực thay vì tự cài riêng.
+- User dang nhap thanh cong khi nhap dung thong tin va account dang `Active`.
+- User khong dang nhap duoc khi sai mat khau hoac tai khoan bi khoa.
+- Request khong co token bi chan voi `401`.
+- Request co token sai hoac het han bi chan voi `401`.
+- Frontend goi duoc `GET /api/auth/me` de lay profile hien tai.
+- Cac API nghiep vu dung chung middleware xac thuc thay vi tu cai rieng.
+- Admin tao duoc tai khoan nhan vien voi role va status hop le.
+- Admin reset duoc mat khau user va user dung mat khau moi dang nhap duoc.
 
 ## 12. MVP priority
 ### P1
@@ -149,14 +182,16 @@ Mọi module trên phải lấy user hiện tại từ auth context của backen
 - Refresh token
 - Change password
 - Session invalidation
+- Admin create employee account
+- Admin reset employee password
 
 ### P3
-- Register
-- Password reset
+- Password reset self-service
 - Session history
 
-## 13. Ghi chú triển khai theo repo hiện tại
-Repo hiện có `User` model ở [backend/src/models/UserModel.js](D:/study/uth/Cnpm/Project_CNPM/backend/src/models/UserModel.js), đã có các trường `email`, `password`, `role`, `status`.
+## 13. Ghi chu trien khai theo repo hien tai
+Repo hien co `User` model o [backend/src/models/UserModel.js](D:/study/uth/Cnpm/Project_CNPM/backend/src/models/UserModel.js), da co cac truong `email`, `password`, `role`, `status`.
 
-Hiện chưa có module auth độc lập. Một số phần trong repo vẫn đang giả lập user hoặc role ở tầng request, nên cần thay bằng middleware xác thực chuẩn của module này.
+Hien chua co self-registration va dieu nay phu hop voi bai toan noi bo. He thong nen duoc thiet ke theo huong tai khoan do `Admin` cap phat, quan ly, va thu hoi.
 
+Mot so phan trong repo van dang gia lap user hoac role o tang request, nen can thay bang middleware xac thuc chuan cua module nay.
