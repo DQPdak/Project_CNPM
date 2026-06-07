@@ -45,8 +45,10 @@ describe("Authentication API", () => {
 
     expect(response.status).toBe(200);
     expect(response.body.accessToken).toBeTruthy();
-    expect(response.body.refreshToken).toBeTruthy();
+    expect(response.body.refreshToken).toBeUndefined();
     expect(response.body.user.email).toBe("auth@example.com");
+    expect(response.headers["set-cookie"][0]).toContain("refresh_token=");
+    expect(response.headers["set-cookie"][0]).toContain("HttpOnly");
 
     const sessions = await AuthSession.find();
     expect(sessions).toHaveLength(1);
@@ -95,28 +97,26 @@ describe("Authentication API", () => {
 
   it("refreshes tokens and revokes the previous refresh token", async () => {
     await createUser();
+    const agent = request.agent(app);
 
-    const loginResponse = await request(app).post("/api/auth/login").send({
+    const loginResponse = await agent.post("/api/auth/login").send({
       email: "auth@example.com",
       password: "password123",
     });
 
-    const refreshResponse = await request(app).post("/api/auth/refresh").send({
-      refreshToken: loginResponse.body.refreshToken,
-    });
+    const firstCookie = loginResponse.headers["set-cookie"][0];
+    const refreshResponse = await agent.post("/api/auth/refresh").send();
 
     expect(refreshResponse.status).toBe(200);
     expect(refreshResponse.body.accessToken).toBeTruthy();
-    expect(refreshResponse.body.refreshToken).toBeTruthy();
-    expect(refreshResponse.body.refreshToken).not.toBe(
-      loginResponse.body.refreshToken,
-    );
+    expect(refreshResponse.body.refreshToken).toBeUndefined();
+    expect(refreshResponse.headers["set-cookie"][0]).toContain("refresh_token=");
+    expect(refreshResponse.headers["set-cookie"][0]).not.toBe(firstCookie);
 
     const secondRefreshResponse = await request(app)
       .post("/api/auth/refresh")
-      .send({
-        refreshToken: loginResponse.body.refreshToken,
-      });
+      .set("Cookie", firstCookie)
+      .send();
 
     expect(secondRefreshResponse.status).toBe(401);
     expect(secondRefreshResponse.body.error.code).toBe("AUTH_REFRESH_INVALID");
@@ -124,21 +124,20 @@ describe("Authentication API", () => {
 
   it("logs out by revoking the refresh token", async () => {
     await createUser();
+    const agent = request.agent(app);
 
-    const loginResponse = await request(app).post("/api/auth/login").send({
+    await agent.post("/api/auth/login").send({
       email: "auth@example.com",
       password: "password123",
     });
 
-    const logoutResponse = await request(app).post("/api/auth/logout").send({
-      refreshToken: loginResponse.body.refreshToken,
-    });
+    const logoutResponse = await agent.post("/api/auth/logout").send();
 
     expect(logoutResponse.status).toBe(200);
+    expect(logoutResponse.headers["set-cookie"][0]).toContain("refresh_token=");
+    expect(logoutResponse.headers["set-cookie"][0]).toContain("Expires=Thu, 01 Jan 1970");
 
-    const refreshResponse = await request(app).post("/api/auth/refresh").send({
-      refreshToken: loginResponse.body.refreshToken,
-    });
+    const refreshResponse = await agent.post("/api/auth/refresh").send();
 
     expect(refreshResponse.status).toBe(401);
     expect(refreshResponse.body.error.code).toBe("AUTH_REFRESH_INVALID");
@@ -246,7 +245,8 @@ describe("Authentication API", () => {
       role: "Assistant",
     });
 
-    const employeeLogin = await request(app).post("/api/auth/login").send({
+    const employeeAgent = request.agent(app);
+    const employeeLogin = await employeeAgent.post("/api/auth/login").send({
       email: "employee@example.com",
       password: "password123",
     });
@@ -276,9 +276,7 @@ describe("Authentication API", () => {
     });
     expect(newPasswordLogin.status).toBe(200);
 
-    const oldRefreshResponse = await request(app).post("/api/auth/refresh").send({
-      refreshToken: employeeLogin.body.refreshToken,
-    });
+    const oldRefreshResponse = await employeeAgent.post("/api/auth/refresh").send();
     expect(oldRefreshResponse.status).toBe(401);
   });
 });

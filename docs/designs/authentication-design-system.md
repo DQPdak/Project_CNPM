@@ -111,6 +111,9 @@ Ly do:
 - Song dai hon access token, vi du 7-30 ngay.
 - Nen hash truoc khi luu DB.
 - Moi refresh token map toi mot session record.
+- Client nhan refresh token qua httpOnly cookie.
+- JavaScript frontend khong doc hoac luu refresh token.
+- Cookie phai bat `httpOnly`; production nen bat `secure` va cau hinh `sameSite` phu hop voi domain frontend/backend.
 
 ### 6.3 Rotation
 Khuyen nghi bat refresh token rotation:
@@ -139,7 +142,6 @@ Success response:
 ```json
 {
   "accessToken": "jwt-access-token",
-  "refreshToken": "refresh-token",
   "user": {
     "id": "user-id",
     "name": "User Name",
@@ -174,8 +176,7 @@ Request body:
 Success response:
 ```json
 {
-  "accessToken": "new-access-token",
-  "refreshToken": "new-refresh-token"
+  "accessToken": "new-access-token"
 }
 ```
 
@@ -390,6 +391,8 @@ Store auth toi thieu:
 - `isAuthenticated`
 - `isRefreshing`
 - `sessionStatus`
+
+Refresh token khong nam trong store. Store chi giu access token trong memory; reload trang se goi refresh endpoint bang httpOnly cookie de lay access token moi.
 
 `sessionStatus` khuyen nghi:
 - `unauthenticated`

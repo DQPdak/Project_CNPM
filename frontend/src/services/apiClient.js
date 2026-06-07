@@ -25,6 +25,7 @@ export const apiFetch = async (path, options = {}) => {
 
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
+    credentials: "include",
     headers: buildHeaders(options.headers, accessToken),
   });
 
@@ -36,6 +37,7 @@ export const apiFetch = async (path, options = {}) => {
       const retriedResponse = await fetch(`${API_BASE_URL}${path}`, {
         ...options,
         _retry: undefined,
+        credentials: "include",
         headers: buildHeaders(options.headers, nextState.accessToken),
       });
 

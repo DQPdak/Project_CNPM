@@ -12,6 +12,7 @@ const parseJson = async (response) => {
 export const loginRequest = async ({ email, password }) => {
   const response = await fetch(`${API_BASE_URL}/auth/login`, {
     method: "POST",
+    credentials: "include",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password }),
   });
@@ -29,11 +30,11 @@ export const loginRequest = async ({ email, password }) => {
   return data;
 };
 
-export const refreshRequest = async (refreshToken) => {
+export const refreshRequest = async () => {
   const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
     method: "POST",
+    credentials: "include",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ refreshToken }),
   });
 
   const data = await parseJson(response);
@@ -71,8 +72,9 @@ export const meRequest = async (accessToken) => {
 export const logoutRequest = async (refreshToken) => {
   const response = await fetch(`${API_BASE_URL}/auth/logout`, {
     method: "POST",
+    credentials: "include",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ refreshToken }),
+    body: JSON.stringify(refreshToken ? { refreshToken } : {}),
   });
 
   if (!response.ok) {

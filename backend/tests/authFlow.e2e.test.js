@@ -18,6 +18,7 @@ afterAll(async () => await closeDB());
 
 describe("Auth flow end-to-end", () => {
   it("supports login, protected resource access, and logout with refresh revocation", async () => {
+    const agent = request.agent(app);
     const password = "password123";
     const user = await User.create({
       name: "Flow User",
@@ -56,7 +57,7 @@ describe("Auth flow end-to-end", () => {
       },
     ]);
 
-    const loginResponse = await request(app).post("/api/auth/login").send({
+    const loginResponse = await agent.post("/api/auth/login").send({
       email: user.email,
       password,
     });
@@ -64,7 +65,8 @@ describe("Auth flow end-to-end", () => {
     expect(loginResponse.status).toBe(200);
     expect(loginResponse.body.user.email).toBe(user.email);
 
-    const { accessToken, refreshToken } = loginResponse.body;
+    const { accessToken } = loginResponse.body;
+    expect(loginResponse.headers["set-cookie"][0]).toContain("refresh_token=");
 
     const meResponse = await request(app)
       .get("/api/auth/me")
@@ -92,14 +94,10 @@ describe("Auth flow end-to-end", () => {
     expect(pagesResponse.status).toBe(200);
     expect(pagesResponse.body.pages).toHaveLength(2);
 
-    const logoutResponse = await request(app).post("/api/auth/logout").send({
-      refreshToken,
-    });
+    const logoutResponse = await agent.post("/api/auth/logout").send();
     expect(logoutResponse.status).toBe(200);
 
-    const refreshResponse = await request(app).post("/api/auth/refresh").send({
-      refreshToken,
-    });
+    const refreshResponse = await agent.post("/api/auth/refresh").send();
     expect(refreshResponse.status).toBe(401);
     expect(refreshResponse.body.error.code).toBe("AUTH_REFRESH_INVALID");
   });

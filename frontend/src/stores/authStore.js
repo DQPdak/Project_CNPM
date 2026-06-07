@@ -1,5 +1,4 @@
 import { create } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware";
 import {
   loginRequest,
   logoutRequest,
@@ -9,7 +8,6 @@ import {
 
 const defaultState = {
   accessToken: null,
-  refreshToken: null,
   user: null,
   initialized: false,
   isAuthenticated: false,
@@ -19,124 +17,101 @@ const defaultState = {
 
 let refreshPromise = null;
 
-export const useAuthStore = create(
-  persist(
-    (set, get) => ({
+if (typeof window !== "undefined") {
+  window.localStorage.removeItem("manga-auth-store");
+}
+
+export const useAuthStore = create((set, get) => ({
+  ...defaultState,
+  setSession: ({ accessToken, user }) =>
+    set({
+      accessToken,
+      user,
+      isAuthenticated: Boolean(accessToken && user),
+      sessionStatus: accessToken && user ? "authenticated" : "unauthenticated",
+    }),
+  clearSession: () =>
+    set({
       ...defaultState,
-      setSession: ({ accessToken, refreshToken, user }) =>
-        set({
-          accessToken,
-          refreshToken,
-          user,
-          isAuthenticated: Boolean(accessToken && user),
-          sessionStatus: accessToken && user ? "authenticated" : "unauthenticated",
-        }),
-      clearSession: () =>
-        set({
-          ...defaultState,
-          initialized: true,
-        }),
-      initializeAuth: async () => {
-        const { accessToken, refreshToken } = get();
+      initialized: true,
+    }),
+  initializeAuth: async () => {
+    const { accessToken } = get();
 
-        if (!accessToken || !refreshToken) {
-          set({ initialized: true, sessionStatus: "unauthenticated" });
-          return;
-        }
-
-        try {
-          const me = await meRequest(accessToken);
-          set({
-            user: me.user,
-            isAuthenticated: true,
-            initialized: true,
-            sessionStatus: "authenticated",
-          });
-        } catch (error) {
-          if (error.status !== 401) {
-            set({ initialized: true, sessionStatus: "unauthenticated" });
-            return;
-          }
-
-          try {
-            await get().refreshSession();
-            const currentAccessToken = get().accessToken;
-            const me = await meRequest(currentAccessToken);
-            set({
-              user: me.user,
-              isAuthenticated: true,
-              initialized: true,
-              sessionStatus: "authenticated",
-            });
-          } catch (refreshError) {
-            get().clearSession();
-          }
-        }
-      },
-      login: async ({ email, password }) => {
-        set({ sessionStatus: "authenticating" });
-        const result = await loginRequest({ email, password });
+    if (accessToken) {
+      try {
+        const me = await meRequest(accessToken);
         set({
-          accessToken: result.accessToken,
-          refreshToken: result.refreshToken,
-          user: result.user,
+          user: me.user,
           isAuthenticated: true,
           initialized: true,
           sessionStatus: "authenticated",
         });
-        return result;
-      },
-      refreshSession: async () => {
-        const { refreshToken } = get();
-
-        if (!refreshToken) {
-          throw new Error("Missing refresh token.");
+        return;
+      } catch (error) {
+        if (error.status !== 401) {
+          set({ initialized: true, sessionStatus: "unauthenticated" });
+          return;
         }
+      }
+    }
 
-        if (refreshPromise) {
-          return refreshPromise;
-        }
+    try {
+      await get().refreshSession();
+      const currentAccessToken = get().accessToken;
+      const me = await meRequest(currentAccessToken);
+      set({
+        user: me.user,
+        isAuthenticated: true,
+        initialized: true,
+        sessionStatus: "authenticated",
+      });
+    } catch (refreshError) {
+      get().clearSession();
+    }
+  },
+  login: async ({ email, password }) => {
+    set({ sessionStatus: "authenticating" });
+    const result = await loginRequest({ email, password });
+    set({
+      accessToken: result.accessToken,
+      user: result.user,
+      isAuthenticated: true,
+      initialized: true,
+      sessionStatus: "authenticated",
+    });
+    return result;
+  },
+  refreshSession: async () => {
+    if (refreshPromise) {
+      return refreshPromise;
+    }
 
-        set({ isRefreshing: true, sessionStatus: "refreshing" });
+    set({ isRefreshing: true, sessionStatus: "refreshing" });
 
-        refreshPromise = (async () => {
-          const result = await refreshRequest(refreshToken);
-          set({
-            accessToken: result.accessToken,
-            refreshToken: result.refreshToken,
-            isAuthenticated: true,
-            sessionStatus: "authenticated",
-          });
-          return result;
-        })();
+    refreshPromise = (async () => {
+      const result = await refreshRequest();
+      set({
+        accessToken: result.accessToken,
+        isAuthenticated: true,
+        sessionStatus: "authenticated",
+      });
+      return result;
+    })();
 
-        try {
-          return await refreshPromise;
-        } finally {
-          refreshPromise = null;
-          set({ isRefreshing: false });
-        }
-      },
-      logout: async () => {
-        const { refreshToken } = get();
-
-        set({ sessionStatus: "logging_out" });
-        try {
-          if (refreshToken) {
-            await logoutRequest(refreshToken);
-          }
-        } finally {
-          get().clearSession();
-        }
-      },
-    }),
-    {
-      name: "manga-auth-store",
-      storage: createJSONStorage(() => localStorage),
-      partialize: (state) => ({
-        accessToken: state.accessToken,
-        refreshToken: state.refreshToken,
-      }),
-    },
-  ),
-);
+    try {
+      return await refreshPromise;
+    } finally {
+      refreshPromise = null;
+      set({ isRefreshing: false });
+    }
+  },
+  logout: async () => {
+    set({ sessionStatus: "logging_out" });
+    try {
+      await logoutRequest();
+    } finally {
+      get().clearSession();
+    }
+  },
+}));

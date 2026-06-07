@@ -143,12 +143,16 @@ He thong cap nhat mat khau moi theo chuan hash an toan va vo hieu hoa cac phien 
 - `revokedAt`
 - `createdAt`
 
+Client khong duoc doc refresh token truc tiep. Refresh token phai duoc gui ve frontend bang httpOnly cookie.
+
 ## 9. Rule he thong
 - Khong cho tai khoan `Inactive` hoac `Suspended` dang nhap.
 - Khong cho client tu khai bao danh tinh user trong request body de thay cho token.
 - Khong dung header gia lap user cho moi truong production.
 - Neu token het han, client phai refresh hoac dang nhap lai.
 - Hinh thuc cung cap tai khoan la `Admin-managed only`, khong ho tro self-registration.
+- Refresh token khong duoc luu trong `localStorage`.
+- Frontend chi giu access token trong memory runtime.
 
 ## 10. Tich hop voi module khac
 Module `Authentication` la nen tang cho:
