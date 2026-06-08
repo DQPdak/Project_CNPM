@@ -1,62 +1,20 @@
 if (process.env.NODE_ENV !== "production") {
   const dns = require("dns");
   dns.setServers(["8.8.8.8", "8.8.4.4"]);
-  console.log(
-    "🛠️ Đang chạy ở máy Local: Đã ép dùng Google DNS để chống lỗi mạng.",
-  );
 }
 
-const express = require("express");
-const cors = require("cors");
 const dotenv = require("dotenv");
-
+const app = require("./app");
 const connectDB = require("./config/config_mongoDB");
 const { connectCloudinary } = require("./config/config_cloudinary");
 
-// Import các route
-const chapterRoutes = require("./routes/chapter.routes");
-const pageRoutes = require("./routes/page.routes");
-const publishRoutes = require("./routes/publish.routes");
-const seriesRoutes = require("./routes/series.routes");
-
-// Tải cấu hình từ file .env vào hệ thống
 dotenv.config();
 
-// Khởi tạo ứng dụng Express
-const app = express();
+const PORT = process.env.PORT || 5000;
 
-// Cấu hình Middlewares cơ bản
-app.use(cors()); // Cho phép Frontend (port 5173/3000) gọi API sang đây
-app.use(express.json()); // Cho phép server đọc và hiểu dữ liệu dạng JSON gửi lên
-
-// Đường link chạy thử nghiệm (Route test)
-app.get("/", (req, res) => {
-  res.json({ message: "Chào mừng bạn đến với API Hệ thống Quản lý Manga!" });
-});
-
-// Khai báo các API routes
-app.use("/api/chapters", chapterRoutes);
-app.use("/api/pages", pageRoutes);
-app.use("/api/publish", publishRoutes);
-app.use("/api/series", seriesRoutes);
-
-// Kết nối tới cơ sở dữ liệu MongoDB
 connectDB();
-
-// Kết nối tới Cloudinary
 connectCloudinary();
 
-// Khởi động server lắng nghe qua cổng được cấu hình
-const PORT = process.env.PORT || 5000;
-// ==========================================
-// CODE ĐĂNG KÝ MODULE - TASK 8 (MEMBER 7)
-// ==========================================
-const task8IssueRoutes = require("./routes/task8IssueRoutes");
-const task8RankingRoutes = require("./routes/task8RankingRoutes");
-
-app.use("/api/task8/issues", task8IssueRoutes);
-app.use("/api/task8/rankings", task8RankingRoutes);
-// ==========================================
 app.listen(PORT, () => {
-  console.log(`=== Server đang chạy mượt mà tại cổng: ${PORT} ===`);
+  console.log(`Server is running on port ${PORT}`);
 });

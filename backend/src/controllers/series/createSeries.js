@@ -1,13 +1,30 @@
 const Series = require("../../models/SeriesModel");
 const SeriesProposal = require("../../models/SeriesProposalModel");
+const { ROLES } = require("../../constants/roles");
 
 exports.createSeries = async (req, res) => {
   try {
-    const { title, description, genre, target_audience, author_id, summary, characters, art_style } =
-      req.body;
+    const {
+      title,
+      description,
+      genre,
+      target_audience,
+      author_id,
+      editor_id,
+      summary,
+      characters,
+      art_style,
+    } = req.body;
 
-    if (!title || !author_id) {
-      return res.status(400).json({ message: "title và author_id là bắt buộc" });
+    if (!title) {
+      return res.status(400).json({ message: "title là bắt buộc" });
+    }
+
+    const resolvedAuthorId =
+      req.user.role === ROLES.ADMIN ? author_id || req.user.id : req.user.id;
+
+    if (!resolvedAuthorId) {
+      return res.status(400).json({ message: "author_id là bắt buộc" });
     }
 
     const series = await Series.create({
@@ -15,7 +32,8 @@ exports.createSeries = async (req, res) => {
       description,
       genre,
       target_audience,
-      author_id,
+      author_id: resolvedAuthorId,
+      editor_id: editor_id || null,
       status: "Draft",
     });
 
@@ -33,12 +51,12 @@ exports.createSeries = async (req, res) => {
       createdAt: -1,
     });
 
-    res.status(201).json({
+    return res.status(201).json({
       message: "Tạo series thành công",
       series,
       proposal,
     });
   } catch (err) {
-    res.status(500).json({ error: "Lỗi server", details: err.message });
+    return res.status(500).json({ error: "Lỗi server", details: err.message });
   }
 };

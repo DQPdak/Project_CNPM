@@ -1,8 +1,11 @@
 import React from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 import { ToastProvider } from "../contexts/ToastContext";
-
+import ProtectedLayout from "../components/auth/ProtectedLayout";
+import RequireAuth from "../components/security/RequireAuth";
 import ChapterListPage from "../pages/ChapterListPage/ChapterListPage";
+import AdminUsersPage from "../pages/AdminUsersPage/AdminUsersPage";
+import LoginPage from "../pages/LoginPage/LoginPage";
 import PageManagementPage from "../pages/PageManagementPage/PageManagementPage";
 import PublishApprovalPage from "../pages/PublishApprovalPage/PublishApprovalPage";
 
@@ -10,17 +13,37 @@ export default function AppRoutes() {
   return (
     <ToastProvider>
       <Routes>
-        <Route path="/" element={<Navigate to="/chapter-list" />} />
-        <Route path="/chapter-list" element={<ChapterListPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/" element={<Navigate to="/chapter-list" replace />} />
         <Route
-          path="/page-management/:chapterId"
+          element={
+            <RequireAuth>
+              <ProtectedLayout />
+            </RequireAuth>
+          }
+        >
+          <Route
+            path="/chapter-list"
+            element={<ChapterListPage />}
+          />
+          <Route
+            path="/chapter-list/:seriesId"
+            element={<ChapterListPage />}
+          />
+          <Route
+            path="/page-management/:chapterId"
             element={<PageManagementPage />}
           />
           <Route
             path="/publish-approval/:chapterId"
             element={<PublishApprovalPage />}
           />
-        </Routes>
+          <Route
+            path="/admin/users"
+            element={<AdminUsersPage />}
+          />
+        </Route>
+      </Routes>
     </ToastProvider>
   );
 }

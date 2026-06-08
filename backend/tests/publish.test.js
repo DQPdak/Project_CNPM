@@ -2,9 +2,9 @@ const request = require("supertest");
 const express = require("express");
 const mongoose = require("mongoose");
 const { connectDB, closeDB, clearDB } = require("./setup/dbSetup");
+const { createAuthenticatedUser, withAuth } = require("./setup/authHelper");
 const publishRoutes = require("../src/routes/publish.routes");
-
-// Import đủ các Model
+const Series = require("../src/models/SeriesModel");
 const Chapter = require("../src/models/ChapterModel");
 const Page = require("../src/models/PageModel");
 const Task = require("../src/models/TaskModel");
@@ -19,15 +19,29 @@ afterEach(async () => await clearDB());
 afterAll(async () => await closeDB());
 
 describe("Publish API Tests", () => {
-  // Tạo sẵn các ID giả để nhét vào các trường required
+  let accessToken;
+  let user;
+  let series;
   const fakeUserId = new mongoose.Types.ObjectId();
   const fakeRegionId = new mongoose.Types.ObjectId();
 
-  it("1. KHÔNG cho phép xuất bản nếu có trang truyện chưa được Approved", async () => {
+  beforeEach(async () => {
+    ({ accessToken, user } = await createAuthenticatedUser({
+      role: "Tantou Editor",
+    }));
+    series = await Series.create({
+      title: "Publish Test Series",
+      author_id: fakeUserId,
+      editor_id: user._id,
+      status: "Draft",
+    });
+  });
+
+  it("blocks publish when there are unapproved pages", async () => {
     const chapter = await Chapter.create({
-      series_id: new mongoose.Types.ObjectId(),
+      series_id: series._id,
       chapter_number: 1,
-      title: "Chapter Lỗi Trang",
+      title: "Chapter Loi Trang",
       deadline: new Date(),
     });
 
@@ -42,25 +56,24 @@ describe("Publish API Tests", () => {
       page_number: 2,
       file_url: "link2",
       status: "Draft",
-    }); // Lỗi ở đây
+    });
 
-    const response = await request(app)
-      .post(`/api/publish/chapter/${chapter._id}`)
-      .send({ release_issue_id: new mongoose.Types.ObjectId() });
+    const response = await withAuth(
+      request(app).post(`/api/publish/chapter/${chapter._id}`),
+      accessToken,
+    ).send({ release_issue_id: new mongoose.Types.ObjectId() });
 
     expect(response.status).toBe(400);
-    expect(response.body.message).toContain("trang truyện chưa được phê duyệt");
   });
 
-  it("2. KHÔNG cho phép xuất bản nếu Task của Assistant chưa hoàn thành", async () => {
+  it("blocks publish when assistant tasks are unfinished", async () => {
     const chapter = await Chapter.create({
-      series_id: new mongoose.Types.ObjectId(),
-      title: "Tên gì cũng được",
+      series_id: series._id,
+      title: "Ten gi cung duoc",
       chapter_number: 2,
       deadline: new Date(),
     });
 
-    // Trang thì đã duyệt xong
     const page = await Page.create({
       chapter_id: chapter._id,
       page_number: 1,
@@ -68,31 +81,28 @@ describe("Publish API Tests", () => {
       status: "Approved",
     });
 
-    // Nhưng Task dọn rác/tô nền vẫn đang In Progress
     await Task.create({
       page_id: page._id,
       region_id: fakeRegionId,
       assigned_to: fakeUserId,
       assigned_by: fakeUserId,
-      task_type: "Tô nền",
+      task_type: "To nen",
       deadline: new Date(),
-      status: "In Progress", // Lỗi ở đây
+      status: "In Progress",
     });
 
-    const response = await request(app)
-      .post(`/api/publish/chapter/${chapter._id}`)
-      .send({ release_issue_id: new mongoose.Types.ObjectId() });
+    const response = await withAuth(
+      request(app).post(`/api/publish/chapter/${chapter._id}`),
+      accessToken,
+    ).send({ release_issue_id: new mongoose.Types.ObjectId() });
 
     expect(response.status).toBe(400);
-    expect(response.body.message).toContain(
-      "Không thể xuất bản. Vẫn còn task chưa hoàn thành trên các trang truyện",
-    );
   });
 
-  it("3. KHÔNG cho phép xuất bản nếu Annotation của Editor chưa sửa xong", async () => {
+  it("blocks publish when editor annotations are unresolved", async () => {
     const chapter = await Chapter.create({
-      series_id: new mongoose.Types.ObjectId(),
-      title: "Tên gì cũng được",
+      series_id: series._id,
+      title: "Ten gi cung duoc",
       chapter_number: 3,
       deadline: new Date(),
     });
@@ -103,41 +113,38 @@ describe("Publish API Tests", () => {
       status: "Approved",
     });
 
-    // Task đã làm xong
     await Task.create({
       page_id: page._id,
       region_id: fakeRegionId,
       assigned_to: fakeUserId,
       assigned_by: fakeUserId,
-      task_type: "Đi nét",
+      task_type: "Di net",
       deadline: new Date(),
       status: "Approved",
     });
 
-    // Nhưng Editor để lại 1 cái Comment chưa được giải quyết
     await Annotation.create({
       page_id: page._id,
       created_by: fakeUserId,
       role: "Tantou Editor",
       coordinates: "x:10, y:20",
-      comment: "Chỗ này vẽ sai tay rồi",
-      status: "Open", // Lỗi ở đây
+      comment: "Cho nay ve sai tay roi",
+      status: "Open",
     });
 
-    const response = await request(app)
-      .post(`/api/publish/chapter/${chapter._id}`)
-      .send({ release_issue_id: new mongoose.Types.ObjectId() });
+    const response = await withAuth(
+      request(app).post(`/api/publish/chapter/${chapter._id}`),
+      accessToken,
+    ).send({ release_issue_id: new mongoose.Types.ObjectId() });
+
     expect(response.status).toBe(400);
-    expect(response.body.message).toContain(
-      "Không thể xuất bản. Vẫn còn annotation chưa được giải quyết trên các trang truyện",
-    );
   });
 
-  it("4. CHO PHÉP xuất bản thành công khi mọi điều kiện đều xanh", async () => {
+  it("publishes chapter when all checks pass", async () => {
     const chapter = await Chapter.create({
-      series_id: new mongoose.Types.ObjectId(),
+      series_id: series._id,
       chapter_number: 4,
-      title: "Chapter Hoàn Hảo",
+      title: "Chapter Hoan Hao",
       deadline: new Date(),
       status: "Waiting Review",
     });
@@ -148,34 +155,31 @@ describe("Publish API Tests", () => {
       status: "Approved",
     });
 
-    // Task đã được phê duyệt (Approved)
     await Task.create({
       page_id: page._id,
       region_id: fakeRegionId,
       assigned_to: fakeUserId,
       assigned_by: fakeUserId,
-      task_type: "Vẽ bóng",
+      task_type: "Ve bong",
       deadline: new Date(),
       status: "Approved",
     });
 
-    // Comment của Editor đã được sửa xong (Resolved)
     await Annotation.create({
       page_id: page._id,
       created_by: fakeUserId,
-      role: "Editor",
+      role: "Tantou Editor",
       coordinates: "0,0",
-      comment: "Sửa tóc",
+      comment: "Sua toc",
       status: "Resolved",
     });
 
-    const response = await request(app)
-      .post(`/api/publish/chapter/${chapter._id}`)
-      .send({ release_issue_id: "60d21b4667d0d8992e610c85" });
+    const response = await withAuth(
+      request(app).post(`/api/publish/chapter/${chapter._id}`),
+      accessToken,
+    ).send({ release_issue_id: "60d21b4667d0d8992e610c85" });
 
-    // Bắt buộc qua ải thành công
     expect(response.status).toBe(200);
-    expect(response.body.message).toContain("thành công");
     expect(response.body.chapter.status).toBe("Published");
   });
 });

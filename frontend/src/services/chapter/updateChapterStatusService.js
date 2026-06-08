@@ -1,31 +1,17 @@
-const API_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
+import { apiFetch } from "../apiClient";
 
 const updateChapterStatus = async (chapterId, newStatus) => {
   try {
-    const res = await fetch(`${API_URL}/chapters/update-status/${chapterId}`, {
+    return await apiFetch(`/chapters/update-status/${chapterId}`, {
       method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status: newStatus }),
     });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      return {
-        success: false,
-        status: res.status,
-        message: data.message || "Cập nhật trạng thái Chapter thất bại",
-      };
-    }
-    return data;
-  } catch (err) {
+  } catch (error) {
     return {
       success: false,
-      message: "Lỗi server khi cập nhật trạng thái",
-      error: err,
+      status: error.status,
+      message: error.message || "Cap nhat trang thai chapter that bai.",
     };
   }
 };

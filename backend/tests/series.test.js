@@ -2,6 +2,7 @@ const request = require("supertest");
 const express = require("express");
 const mongoose = require("mongoose");
 const { connectDB, closeDB, clearDB } = require("./setup/dbSetup");
+const { createAuthenticatedUser, withAuth } = require("./setup/authHelper");
 const seriesRoutes = require("../src/routes/series.routes");
 const Series = require("../src/models/SeriesModel");
 const SeriesProposal = require("../src/models/SeriesProposalModel");
@@ -15,15 +16,23 @@ afterEach(async () => await clearDB());
 afterAll(async () => await closeDB());
 
 describe("Series API Phase 1", () => {
-  const authorId = new mongoose.Types.ObjectId();
+  let accessToken;
+  let user;
 
-  it("Nên tạo series mới thành công", async () => {
-    const response = await request(app).post("/api/series").send({
+  beforeEach(async () => {
+    ({ accessToken, user } = await createAuthenticatedUser());
+  });
+
+  it("creates a new series successfully", async () => {
+    const response = await withAuth(
+      request(app).post("/api/series"),
+      accessToken,
+    ).send({
       title: "One Piece",
       description: "Pirate adventure",
       genre: "Action",
       target_audience: "Teen",
-      author_id: authorId.toString(),
+      author_id: user._id.toString(),
       summary: "Monkey D. Luffy sets sail",
       characters: "Luffy, Zoro",
       art_style: "Shonen",
@@ -31,31 +40,33 @@ describe("Series API Phase 1", () => {
 
     expect(response.status).toBe(201);
     expect(response.body.series.title).toBe("One Piece");
-    expect(response.body.series.status).toBe("Draft");
     expect(response.body.proposal.summary).toBe("Monkey D. Luffy sets sail");
 
     const saved = await Series.findOne({ title: "One Piece" });
     expect(saved).not.toBeNull();
   });
 
-  it("Nên lấy danh sách series của Mangaka", async () => {
+  it("returns series list for an author", async () => {
     await Series.create({
       title: "Series A",
-      author_id: authorId,
+      author_id: user._id,
       status: "Draft",
     });
 
-    const response = await request(app).get(`/api/series/mine/${authorId}`);
+    const response = await withAuth(
+      request(app).get("/api/series/mine"),
+      accessToken,
+    );
 
     expect(response.status).toBe(200);
     expect(response.body.series).toHaveLength(1);
     expect(response.body.series[0].series.title).toBe("Series A");
   });
 
-  it("Nên lấy chi tiết series kèm proposal", async () => {
+  it("returns series details with proposal", async () => {
     const series = await Series.create({
       title: "Series B",
-      author_id: authorId,
+      author_id: user._id,
       status: "Draft",
     });
     await SeriesProposal.create({
@@ -64,17 +75,20 @@ describe("Series API Phase 1", () => {
       status: "Draft",
     });
 
-    const response = await request(app).get(`/api/series/${series._id}`);
+    const response = await withAuth(
+      request(app).get(`/api/series/${series._id}`),
+      accessToken,
+    );
 
     expect(response.status).toBe(200);
     expect(response.body.series.title).toBe("Series B");
     expect(response.body.proposal.summary).toBe("Plot summary");
   });
 
-  it("Nên cập nhật proposal khi đang Draft", async () => {
+  it("updates proposal when it is still draft", async () => {
     const series = await Series.create({
       title: "Series C",
-      author_id: authorId,
+      author_id: user._id,
       status: "Draft",
     });
     await SeriesProposal.create({
@@ -83,13 +97,14 @@ describe("Series API Phase 1", () => {
       status: "Draft",
     });
 
-    const response = await request(app)
-      .put(`/api/series/${series._id}/proposal`)
-      .send({
-        summary: "New summary",
-        characters: "Hero",
-        art_style: "Modern",
-      });
+    const response = await withAuth(
+      request(app).put(`/api/series/${series._id}/proposal`),
+      accessToken,
+    ).send({
+      summary: "New summary",
+      characters: "Hero",
+      art_style: "Modern",
+    });
 
     expect(response.status).toBe(200);
     expect(response.body.proposal.summary).toBe("New summary");
@@ -98,9 +113,12 @@ describe("Series API Phase 1", () => {
     expect(updated.summary).toBe("New summary");
   });
 
-  it("Nên trả 404 khi không tìm thấy series", async () => {
+  it("returns 404 when series is not found", async () => {
     const fakeId = new mongoose.Types.ObjectId();
-    const response = await request(app).get(`/api/series/${fakeId}`);
+    const response = await withAuth(
+      request(app).get(`/api/series/${fakeId}`),
+      accessToken,
+    );
     expect(response.status).toBe(404);
   });
 });

@@ -1,115 +1,120 @@
-import React, { useState, useEffect } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-
-// Import API Services
 import approvePage from "../../services/page/approvePageService";
+import getPagesByChapter from "../../services/page/getPagesByChapterService";
+import getChapterById from "../../services/chapter/getChapterByIdService";
 import updatePageVersion from "../../services/page/updatePageVersionService";
-import updateChapterStatus from "../../services/chapter/updateChapterStatusService"; // <-- IMPORT API NÀY VÀO ĐÂY
-
-// Import UI Components
+import updateChapterStatus from "../../services/chapter/updateChapterStatusService";
 import RequirePermission from "../../components/security/RequirePermission";
 import UploadPagesDropzone from "../../components/page/UploadPagesDropzone/UploadPagesDropzone";
 import PageGallery from "../../components/page/PageGallery/PageGallery";
 import { useToast } from "../../contexts/ToastContext";
 import Loading from "../../common/Loading/Loading";
 
+const CHAPTER_STATUS_OPTIONS = [
+  "Draft",
+  "In Production",
+  "Waiting Review",
+  "Approved",
+];
+
 export default function PageManagementPage() {
   const { chapterId } = useParams();
   const toast = useToast();
-
-  // State quản lý danh sách trang
   const [pages, setPages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-
-  // ==========================================
-  // STATE MỚI: QUẢN LÝ THÔNG TIN CHAPTER
-  // ==========================================
   const [chapterInfo, setChapterInfo] = useState({
-    title: "Đang tải...",
+    _id: chapterId,
+    series_id: null,
+    title: "Dang tai...",
     status: "Loading",
   });
   const [selectedChapterStatus, setSelectedChapterStatus] = useState("");
   const [isUpdatingChapter, setIsUpdatingChapter] = useState(false);
 
-  // Hàm load dữ liệu ban đầu
-  const fetchPagesAndChapterInfo = async () => {
+  const fetchPagesAndChapterInfo = useCallback(async () => {
     setIsLoading(true);
 
-    // 1. Tạm mock data cho Danh sách Trang
-    setPages([
-      { _id: "p1", page_number: 1, status: "Draft", image_url: "" },
-      { _id: "p2", page_number: 2, status: "In Progress", image_url: "" },
-      { _id: "p3", page_number: 3, status: "Ready For Review", image_url: "" },
-      { _id: "p4", page_number: 4, status: "Approved", image_url: "" },
+    const [chapterResult, pagesResult] = await Promise.all([
+      getChapterById(chapterId),
+      getPagesByChapter(chapterId),
     ]);
 
-    // 2. Tạm mock data cho Thông tin Chapter (Sau này bạn gọi API getChapterById ở đây)
-    setChapterInfo({ title: "Chương 1: Sự khởi đầu", status: "In Progress" });
-    setSelectedChapterStatus("In Progress");
+    if (chapterResult.success === false) {
+      toast.error("Khong the tai chapter: " + chapterResult.message);
+    } else {
+      const chapter = chapterResult.chapter;
+      setChapterInfo(chapter);
+      setSelectedChapterStatus(chapter?.status || "");
+    }
+
+    if (pagesResult.success === false) {
+      toast.error("Khong the tai danh sach trang: " + pagesResult.message);
+      setPages([]);
+    } else {
+      setPages(pagesResult.pages || []);
+    }
 
     setIsLoading(false);
-  };
+  }, [chapterId, toast]);
 
   useEffect(() => {
     fetchPagesAndChapterInfo();
-  }, [chapterId]);
+  }, [fetchPagesAndChapterInfo]);
 
-  // ==========================================
-  // LOGIC MỚI: CẬP NHẬT TRẠNG THÁI CHAPTER
-  // ==========================================
   const handleUpdateChapterStatus = async () => {
+    if (!selectedChapterStatus) {
+      return;
+    }
+
     setIsUpdatingChapter(true);
+    const result = await updateChapterStatus(chapterId, selectedChapterStatus);
 
-    // Gọi API thật của bạn (Đang comment để dùng Mock test UI trước)
-    // const result = await updateChapterStatus(chapterId, selectedChapterStatus);
-
-    // Mock API Delay 0.5s
-    await new Promise((resolve) => setTimeout(resolve, 500));
-
-    // Giả lập thành công
-    setChapterInfo((prev) => ({ ...prev, status: selectedChapterStatus }));
-    toast.success(
-      `Đã cập nhật trạng thái Chapter thành: ${selectedChapterStatus}`,
-    );
+    if (result.success === false) {
+      toast.error("Khong the cap nhat chapter: " + result.message);
+    } else {
+      setChapterInfo((prev) => ({ ...prev, status: result.chapter?.status || selectedChapterStatus }));
+      toast.success(`Da cap nhat chapter thanh ${selectedChapterStatus}.`);
+    }
 
     setIsUpdatingChapter(false);
   };
 
-  // --- Các hàm cũ của Page ---
   const handleUploadSuccess = () => fetchPagesAndChapterInfo();
 
   const handleStatusChange = async (pageId, newStatus) => {
     setIsLoading(true);
     const result = await approvePage(pageId, newStatus);
-    setIsLoading(false);
-    if (result.success === false) toast.error(`Lỗi: ` + result.message);
-    else {
-      toast.success(`Đã cập nhật: ${newStatus}`);
-      fetchPagesAndChapterInfo();
+    if (result.success === false) {
+      toast.error("Khong the cap nhat trang: " + result.message);
+    } else {
+      toast.success(`Da cap nhat trang thai trang thanh ${newStatus}.`);
+      await fetchPagesAndChapterInfo();
     }
+    setIsLoading(false);
   };
 
   const handleUpdateVersion = async (pageId, file) => {
     setIsLoading(true);
     const result = await updatePageVersion(pageId, file);
-    setIsLoading(false);
-    if (result.success === false) toast.error("Lỗi: " + result.message);
-    else {
-      toast.success("Đã tải lên phiên bản mới!");
-      fetchPagesAndChapterInfo();
+    if (result.success === false) {
+      toast.error("Khong the tai len phien ban moi: " + result.message);
+    } else {
+      toast.success("Da tai len phien ban moi.");
+      await fetchPagesAndChapterInfo();
     }
+    setIsLoading(false);
   };
+
+  const backSeriesId = chapterInfo.series_id || "";
 
   return (
     <div style={{ padding: "24px", maxWidth: "1200px", margin: "0 auto" }}>
-      {isLoading && <Loading text="Đang xử lý..." />}
+      {isLoading && <Loading text="Dang xu ly..." />}
 
-      {/* ==========================================
-          HEADER MỚI: HIỂN THỊ TIÊU ĐỀ & ĐỔI TRẠNG THÁI
-      ========================================== */}
       <header style={{ marginBottom: "30px" }}>
         <Link
-          to={`/series/1/chapters`}
+          to={backSeriesId ? `/chapter-list/${backSeriesId}` : "/chapter-list"}
           style={{
             textDecoration: "none",
             color: "#64748b",
@@ -117,7 +122,7 @@ export default function PageManagementPage() {
             marginBottom: "12px",
           }}
         >
-          ← Quay lại danh sách Chapter
+          Quay lai danh sach chapter
         </Link>
 
         <div
@@ -127,9 +132,10 @@ export default function PageManagementPage() {
             alignItems: "flex-end",
             borderBottom: "1px solid #e2e8f0",
             paddingBottom: "16px",
+            gap: "16px",
+            flexWrap: "wrap",
           }}
         >
-          {/* Bên trái: Tiêu đề và Trạng thái */}
           <div>
             <h1 style={{ margin: 0, fontSize: "28px", color: "#0f172a" }}>
               {chapterInfo.title}
@@ -141,12 +147,11 @@ export default function PageManagementPage() {
                 fontSize: "15px",
               }}
             >
-              Trạng thái Chapter:{" "}
+              Trang thai chapter:{" "}
               <strong style={{ color: "#3b82f6" }}>{chapterInfo.status}</strong>
             </p>
           </div>
 
-          {/* Bên phải: Nút đổi trạng thái (Chỉ dành cho Editor) */}
           <RequirePermission required="CAN_APPROVE_PAGE">
             <div
               style={{
@@ -165,7 +170,7 @@ export default function PageManagementPage() {
                   marginBottom: "8px",
                 }}
               >
-                ĐIỀU CHỈNH CHAPTER
+                DIEU CHINH CHAPTER
               </span>
               <div style={{ display: "flex", gap: "8px" }}>
                 <select
@@ -177,16 +182,13 @@ export default function PageManagementPage() {
                   }}
                   value={selectedChapterStatus}
                   onChange={(e) => setSelectedChapterStatus(e.target.value)}
-                  disabled={
-                    isUpdatingChapter || chapterInfo.status === "Published"
-                  }
+                  disabled={isUpdatingChapter || chapterInfo.status === "Published"}
                 >
-                  <option value="Draft">Draft (Bản nháp)</option>
-                  <option value="In Progress">In Progress (Đang làm)</option>
-                  <option value="Ready For Review">
-                    Ready For Review (Chờ duyệt)
-                  </option>
-                  <option value="Approved">Approved (Đã duyệt đạt)</option>
+                  {CHAPTER_STATUS_OPTIONS.map((status) => (
+                    <option key={status} value={status}>
+                      {status}
+                    </option>
+                  ))}
                 </select>
                 <button
                   style={{
@@ -199,11 +201,9 @@ export default function PageManagementPage() {
                     cursor: isUpdatingChapter ? "not-allowed" : "pointer",
                   }}
                   onClick={handleUpdateChapterStatus}
-                  disabled={
-                    isUpdatingChapter || chapterInfo.status === "Published"
-                  }
+                  disabled={isUpdatingChapter || chapterInfo.status === "Published"}
                 >
-                  {isUpdatingChapter ? "Đang lưu..." : "Cập nhật"}
+                  {isUpdatingChapter ? "Dang luu..." : "Cap nhat"}
                 </button>
               </div>
             </div>
@@ -211,7 +211,6 @@ export default function PageManagementPage() {
         </div>
       </header>
 
-      {/* Khu vực Upload (Mangaka) */}
       <RequirePermission required="CAN_UPLOAD_PAGE">
         <UploadPagesDropzone
           chapterId={chapterId}
@@ -219,7 +218,6 @@ export default function PageManagementPage() {
         />
       </RequirePermission>
 
-      {/* Lưới ảnh */}
       <div
         style={{
           background: "white",

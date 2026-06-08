@@ -1,25 +1,42 @@
-// File cấu hình database cho các bài test, đảm bảo rằng chúng ta đang sử dụng một database riêng biệt để tránh ảnh hưởng đến dữ liệu thực tế của ứng dụng.
+const fs = require("fs");
+const path = require("path");
 const mongoose = require("mongoose");
 const { MongoMemoryServer } = require("mongodb-memory-server");
 
 let mongoServer;
+const mongoBinaryDir = path.resolve(__dirname, "../../.cache/mongodb-binaries");
 
-// Bật Server DB Ảo
+const ensureMongoBinaryDir = () => {
+  fs.mkdirSync(mongoBinaryDir, { recursive: true });
+  process.env.MONGOMS_DOWNLOAD_DIR = mongoBinaryDir;
+  process.env.MONGOMS_PREFER_GLOBAL_PATH = "false";
+};
+
 const connectDB = async () => {
-  mongoServer = await MongoMemoryServer.create();
+  ensureMongoBinaryDir();
+  mongoServer = await MongoMemoryServer.create({
+    binary: { downloadDir: mongoBinaryDir },
+  });
   const uri = mongoServer.getUri();
   await mongoose.connect(uri);
 };
 
-// Tắt Server DB Ảo
 const closeDB = async () => {
-  await mongoose.connection.dropDatabase();
-  await mongoose.disconnect();
-  await mongoServer.stop();
+  if (mongoose.connection.readyState !== 0) {
+    await mongoose.connection.dropDatabase();
+    await mongoose.disconnect();
+  }
+
+  if (mongoServer) {
+    await mongoServer.stop();
+  }
 };
 
-// Xóa sạch rác (data) sau mỗi hàm test
 const clearDB = async () => {
+  if (mongoose.connection.readyState === 0) {
+    return;
+  }
+
   const collections = mongoose.connection.collections;
   for (const key in collections) {
     await collections[key].deleteMany();

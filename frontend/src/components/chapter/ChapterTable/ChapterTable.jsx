@@ -3,13 +3,12 @@ import { Link } from "react-router-dom";
 import "./ChapterTable.css";
 
 export default function ChapterTable({ chapters }) {
-  // Trạng thái trống (Empty State) cực kỳ quan trọng cho UX
   if (!chapters || chapters.length === 0) {
     return (
       <div className="empty-state">
-        <span className="empty-icon">📁</span>
-        <h3>Chưa có Chapter nào</h3>
-        <p>Mangaka hãy bấm nút "Tạo Chapter Mới" ở góc trên để bắt đầu nhé!</p>
+        <span className="empty-icon">No data</span>
+        <h3>Chua co chapter nao</h3>
+        <p>Hay tao chapter dau tien de bat dau quy trinh san xuat.</p>
       </div>
     );
   }
@@ -19,10 +18,10 @@ export default function ChapterTable({ chapters }) {
       <table className="custom-table">
         <thead>
           <tr>
-            <th width="15%">Số Chương</th>
-            <th width="35%">Tiêu đề Chapter</th>
-            <th width="15%">Trạng thái</th>
-            <th width="35%">Khu vực làm việc</th>
+            <th width="15%">So chuong</th>
+            <th width="35%">Tieu de chapter</th>
+            <th width="15%">Trang thai</th>
+            <th width="35%">Khu vuc lam viec</th>
           </tr>
         </thead>
         <tbody>
@@ -30,7 +29,7 @@ export default function ChapterTable({ chapters }) {
             <tr key={chap._id} className="table-row">
               <td>
                 <span className="chapter-number-badge">
-                  Chương {chap.chapter_number}
+                  Chuong {chap.chapter_number}
                 </span>
               </td>
               <td className="chapter-title">{chap.title}</td>
@@ -43,16 +42,14 @@ export default function ChapterTable({ chapters }) {
               </td>
               <td>
                 <div className="action-links">
-                  {/* Link đi đến Module 4 */}
-                  <Link to={`/chapter/${chap._id}/pages`} className="link-mod4">
-                    Quản lý Bản thảo
+                  <Link to={`/page-management/${chap._id}`} className="link-mod4">
+                    Quan ly ban thao
                   </Link>
-                  {/* Link đi đến Module 10 */}
                   <Link
-                    to={`/chapter/${chap._id}/publish`}
+                    to={`/publish-approval/${chap._id}`}
                     className="link-mod10"
                   >
-                    Trạm Xuất bản
+                    Tram xuat ban
                   </Link>
                 </div>
               </td>
