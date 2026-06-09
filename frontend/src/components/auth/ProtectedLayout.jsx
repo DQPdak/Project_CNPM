@@ -2,87 +2,238 @@ import React from "react";
 import { Link, Outlet } from "react-router-dom";
 import { useAuthStore } from "../../stores/authStore";
 
+// Cấu hình menu động theo Role
+const ROLE_MENUS = {
+  Mangaka: [
+    { name: "Series của tôi", path: "/mangaka/series", icon: "📚" },
+    { name: "Tạo Chapter mới", path: "/mangaka/chapter/create", icon: "📝" },
+    { name: "Quản lý Task Trợ lý", path: "/mangaka/tasks", icon: "📋" },
+    { name: "Ranking Series", path: "/mangaka/ranking", icon: "🏆" },
+  ],
+  Assistant: [
+    { name: "Công việc của tôi", path: "/assistant/tasks", icon: "🛠️" },
+    { name: "Thu nhập hàng tháng", path: "/assistant/income", icon: "💰" },
+  ],
+  TantouEditor: [
+    { name: "Series phụ trách", path: "/editor/series", icon: "📁" },
+    { name: "Biên tập & Phản hồi", path: "/editor/feedbacks", icon: "🖍️" },
+    { name: "Tiến độ Studio", path: "/editor/progress", icon: "📊" },
+  ],
+  EditorialBoard: [
+    { name: "Duyệt Series Mới", path: "/board/reviews", icon: "⚖️" },
+    { name: "Quản lý Phát hành", path: "/board/releases", icon: "📅" },
+    { name: "Bảng xếp hạng (Ranking)", path: "/board/ranking", icon: "📈" },
+  ],
+  Admin: [
+    { name: "Quản lý User", path: "/admin/users", icon: "👥" }, // Giữ lại route admin của bạn
+    { name: "Hệ thống Series", path: "/admin/series", icon: "⚙️" },
+    { name: "Cấu hình Hệ thống", path: "/admin/settings", icon: "🔧" },
+    { name: "System Logs", path: "/admin/logs", icon: "🗄️" },
+  ],
+};
+
+// Cấu hình menu chung cho mọi user
+const COMMON_MENUS = [
+  { name: "Tổng quan (Dashboard)", path: "/dashboard", icon: "🏠" },
+  { name: "Danh sách Chapters", path: "/chapter-list", icon: "📖" }, // Giữ lại route chapter-list của bạn
+  { name: "Thông báo", path: "/notifications", icon: "🔔" },
+];
+
 export default function ProtectedLayout() {
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
 
+  // Lấy role hiện tại, mặc định nếu không có thì để trống
+  const userRole = user?.role || "";
+  const dynamicMenus = ROLE_MENUS[userRole] || [];
+
   return (
-    <div style={{ minHeight: "100vh", background: "#f8fafc" }}>
-      <header
+    <div style={{ display: "flex", minHeight: "100vh", background: "#f1f5f9" }}>
+      {/* SIDEBAR BÊN TRÁI */}
+      <aside
         style={{
+          width: "260px",
+          background: "#1e293b",
+          color: "#f8fafc",
           display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          padding: "16px 24px",
-          borderBottom: "1px solid #e2e8f0",
-          background: "#ffffff",
+          flexDirection: "column",
+          position: "fixed",
+          top: 0,
+          left: 0,
+          height: "100vh",
+          boxShadow: "2px 0 8px rgba(0,0,0,0.1)",
+          fontFamily: "system-ui, -apple-system, sans-serif",
+          zIndex: 1000,
         }}
       >
-        <div>
+        {/* Logo Hệ thống */}
+        <div
+          style={{
+            padding: "24px 20px",
+            borderBottom: "1px solid #334155",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
           <div
             style={{
-              fontSize: "12px",
-              textTransform: "uppercase",
-              letterSpacing: "0.08em",
-              color: "#a16207",
+              fontSize: "1.2rem",
               fontWeight: 700,
+              color: "#38bdf8",
+              textTransform: "uppercase",
+              letterSpacing: "0.05em",
             }}
           >
-            Manga Editorial System
+            MangaSys
           </div>
-          <div style={{ color: "#0f172a", fontWeight: 700 }}>
-            {user?.name || "Authenticated User"}
-          </div>
-          <nav style={{ display: "flex", gap: "12px", marginTop: "8px" }}>
-            <Link
-              to="/chapter-list"
-              style={{ color: "#334155", fontWeight: 700, textDecoration: "none" }}
-            >
-              Chapters
-            </Link>
-            {user?.role === "Admin" ? (
-              <Link
-                to="/admin/users"
-                style={{ color: "#334155", fontWeight: 700, textDecoration: "none" }}
-              >
-                Users
-              </Link>
-            ) : null}
-          </nav>
-        </div>
-
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
           <span
             style={{
-              padding: "6px 10px",
-              borderRadius: "999px",
-              background: "#e2e8f0",
-              color: "#334155",
-              fontSize: "13px",
-              fontWeight: 600,
+              fontSize: "0.7rem",
+              backgroundColor: "#38bdf8",
+              color: "#0f172a",
+              padding: "4px 8px",
+              borderRadius: "12px",
+              fontWeight: "bold",
             }}
           >
-            {user?.role || "Unknown role"}
+            {userRole || "Unknown"}
           </span>
+        </div>
+
+        {/* Thông tin User */}
+        <div
+          style={{ padding: "16px 20px", borderBottom: "1px solid #334155" }}
+        >
+          <div style={{ fontSize: "0.85rem", color: "#cbd5e1" }}>Xin chào,</div>
+          <div
+            style={{
+              fontWeight: "bold",
+              fontSize: "1rem",
+              color: "#ffffff",
+              marginTop: "4px",
+            }}
+          >
+            {user?.name || "Authenticated User"}
+          </div>
+        </div>
+
+        {/* Khu vực danh sách Menu */}
+        <nav style={{ flex: 1, overflowY: "auto", padding: "20px 12px" }}>
+          {/* Menu Chung */}
+          <div style={{ marginBottom: "24px" }}>
+            <p
+              style={{
+                fontSize: "0.75rem",
+                textTransform: "uppercase",
+                letterSpacing: "0.05em",
+                color: "#94a3b8",
+                marginBottom: "8px",
+                paddingLeft: "12px",
+                fontWeight: 600,
+              }}
+            >
+              Chung
+            </p>
+            {COMMON_MENUS.map((item, idx) => (
+              <Link
+                key={idx}
+                to={item.path}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  padding: "12px",
+                  color: "#cbd5e1",
+                  textDecoration: "none",
+                  borderRadius: "8px",
+                  marginBottom: "4px",
+                  fontWeight: 500,
+                }}
+              >
+                <span style={{ marginRight: "12px", fontSize: "1.2rem" }}>
+                  {item.icon}
+                </span>
+                <span>{item.name}</span>
+              </Link>
+            ))}
+          </div>
+
+          {/* Menu Động Theo Role */}
+          {dynamicMenus.length > 0 && (
+            <div style={{ marginBottom: "24px" }}>
+              <p
+                style={{
+                  fontSize: "0.75rem",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
+                  color: "#94a3b8",
+                  marginBottom: "8px",
+                  paddingLeft: "12px",
+                  fontWeight: 600,
+                }}
+              >
+                Khu vực làm việc
+              </p>
+              {dynamicMenus.map((item, idx) => (
+                <Link
+                  key={idx}
+                  to={item.path}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    padding: "12px",
+                    color: "#cbd5e1",
+                    textDecoration: "none",
+                    borderRadius: "8px",
+                    marginBottom: "4px",
+                    fontWeight: 500,
+                  }}
+                >
+                  <span style={{ marginRight: "12px", fontSize: "1.2rem" }}>
+                    {item.icon}
+                  </span>
+                  <span>{item.name}</span>
+                </Link>
+              ))}
+            </div>
+          )}
+        </nav>
+
+        {/* Nút Đăng xuất ở cuối Sidebar */}
+        <div style={{ padding: "16px 12px", borderTop: "1px solid #334155" }}>
           <button
             type="button"
             onClick={() => logout()}
             style={{
+              display: "flex",
+              alignItems: "center",
+              width: "100%",
+              padding: "12px",
+              background: "none",
               border: "none",
-              borderRadius: "8px",
-              background: "#111827",
-              color: "#ffffff",
-              padding: "10px 14px",
-              fontWeight: 700,
+              color: "#fca5a5",
               cursor: "pointer",
+              borderRadius: "8px",
+              fontSize: "0.95rem",
+              fontWeight: 600,
+              textAlign: "left",
             }}
           >
-            Dang xuat
+            <span style={{ marginRight: "12px", fontSize: "1.2rem" }}>🚪</span>
+            <span>Đăng xuất</span>
           </button>
         </div>
-      </header>
+      </aside>
 
-      <main style={{ padding: "24px" }}>
+      {/* KHU VỰC NỘI DUNG CHÍNH (Đẩy sang phải 260px để không bị Sidebar đè) */}
+      <main
+        style={{
+          flex: 1,
+          marginLeft: "260px",
+          padding: "32px",
+          minHeight: "100vh",
+        }}
+      >
         <Outlet />
       </main>
     </div>
