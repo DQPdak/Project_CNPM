@@ -1,3 +1,10 @@
+jest.mock("../src/middlewares/upload.middleware", () => ({
+  single: () => (req, res, next) => {
+    req.file = { path: "https://res.cloudinary.com/mock/cover.jpg" };
+    next();
+  },
+}));
+
 const request = require("supertest");
 const express = require("express");
 const mongoose = require("mongoose");
@@ -120,5 +127,60 @@ describe("Series API Phase 1", () => {
       accessToken,
     );
     expect(response.status).toBe(404);
+  });
+});
+
+describe("Series API Phase 3 - Upload cover", () => {
+  let accessToken;
+  let user;
+
+  beforeEach(async () => {
+    ({ accessToken, user } = await createAuthenticatedUser());
+  });
+
+  it("uploads cover image to proposal", async () => {
+    const series = await Series.create({
+      title: "Cover Series",
+      author_id: user._id,
+      status: "Draft",
+    });
+    await SeriesProposal.create({
+      series_id: series._id,
+      summary: "Summary",
+      status: "Draft",
+    });
+
+    const response = await withAuth(
+      request(app).post(`/api/series/${series._id}/proposal/upload-cover`),
+      accessToken,
+    ).attach("cover", Buffer.from("cover-image"), "cover.jpg");
+
+    expect(response.status).toBe(200);
+    expect(response.body.cover_image).toBe(
+      "https://res.cloudinary.com/mock/cover.jpg",
+    );
+
+    const proposal = await SeriesProposal.findOne({ series_id: series._id });
+    expect(proposal.cover_image).toBe("https://res.cloudinary.com/mock/cover.jpg");
+  });
+
+  it("rejects cover upload when proposal is not editable", async () => {
+    const series = await Series.create({
+      title: "Locked Series",
+      author_id: user._id,
+      status: "Draft",
+    });
+    await SeriesProposal.create({
+      series_id: series._id,
+      summary: "Summary",
+      status: "Submitted",
+    });
+
+    const response = await withAuth(
+      request(app).post(`/api/series/${series._id}/proposal/upload-cover`),
+      accessToken,
+    ).attach("cover", Buffer.from("cover-image"), "cover.jpg");
+
+    expect(response.status).toBe(400);
   });
 });
