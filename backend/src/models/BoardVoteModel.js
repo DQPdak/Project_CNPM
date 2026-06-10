@@ -28,6 +28,11 @@ const boardVoteSchema = new mongoose.Schema(
     comment: {
       type: String, // Lời phê/góp ý của thành viên hội đồng
     },
+    vote_context: {
+      type: String,
+      enum: ["initial_review", "lifecycle"],
+      default: "initial_review",
+    },
   },
   { timestamps: true },
 );

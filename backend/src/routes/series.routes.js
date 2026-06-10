@@ -7,6 +7,7 @@ const createSeries = require("../controllers/series/createSeries");
 const getMySeries = require("../controllers/series/getMySeries");
 const getSeriesById = require("../controllers/series/getSeriesById");
 const upsertProposal = require("../controllers/series/upsertProposal");
+const submitProposal = require("../controllers/series/submitProposal");
 const uploadCover = require("../controllers/series/uploadCover");
 const upload = require("../middlewares/upload.middleware");
 
@@ -28,6 +29,12 @@ router.put(
   requireRole(ROLES.MANGAKA),
   requireSeriesScope("id", "write"),
   upsertProposal.upsertProposal,
+);
+router.post(
+  "/:id/proposal/submit",
+  requireRole(ROLES.MANGAKA),
+  requireSeriesScope("id", "write"),
+  submitProposal.submitProposal,
 );
 router.post(
   "/:id/proposal/upload-cover",
