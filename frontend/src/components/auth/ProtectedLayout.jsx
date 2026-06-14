@@ -14,18 +14,20 @@ const ROLE_MENUS = {
     { name: "Công việc của tôi", path: "/assistant/tasks", icon: "🛠️" },
     { name: "Thu nhập hàng tháng", path: "/assistant/income", icon: "💰" },
   ],
-  TantouEditor: [
+  "Tantou Editor": [
     { name: "Series phụ trách", path: "/editor/series", icon: "📁" },
     { name: "Biên tập & Phản hồi", path: "/editor/feedbacks", icon: "🖍️" },
     { name: "Tiến độ Studio", path: "/editor/progress", icon: "📊" },
+    { name: "Ranking Series", path: "/editor/ranking", icon: "📈" },
   ],
-  EditorialBoard: [
+  "Editorial Board": [
     { name: "Duyệt Series Mới", path: "/board/reviews", icon: "⚖️" },
     { name: "Quản lý Phát hành", path: "/board/releases", icon: "📅" },
     { name: "Bảng xếp hạng (Ranking)", path: "/board/ranking", icon: "📈" },
   ],
   Admin: [
     { name: "Quản lý User", path: "/admin/users", icon: "👥" }, // Giữ lại route admin của bạn
+    { name: "Ranking & Vote", path: "/admin/ranking", icon: "📈" },
     { name: "Hệ thống Series", path: "/admin/series", icon: "⚙️" },
     { name: "Cấu hình Hệ thống", path: "/admin/settings", icon: "🔧" },
     { name: "System Logs", path: "/admin/logs", icon: "🗄️" },

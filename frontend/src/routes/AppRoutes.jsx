@@ -8,6 +8,7 @@ import AdminUsersPage from "../pages/AdminUsersPage/AdminUsersPage";
 import LoginPage from "../pages/LoginPage/LoginPage";
 import PageManagementPage from "../pages/PageManagementPage/PageManagementPage";
 import PublishApprovalPage from "../pages/PublishApprovalPage/PublishApprovalPage";
+import RankingDashboardPage from "../pages/RankingDashboardPage/RankingDashboardPage";
 
 export default function AppRoutes() {
   return (
@@ -37,6 +38,26 @@ export default function AppRoutes() {
           <Route
             path="/publish-approval/:chapterId"
             element={<PublishApprovalPage />}
+          />
+          <Route
+            path="/board/releases"
+            element={<RankingDashboardPage />}
+          />
+          <Route
+            path="/board/ranking"
+            element={<RankingDashboardPage />}
+          />
+          <Route
+            path="/mangaka/ranking"
+            element={<RankingDashboardPage />}
+          />
+          <Route
+            path="/editor/ranking"
+            element={<RankingDashboardPage />}
+          />
+          <Route
+            path="/admin/ranking"
+            element={<RankingDashboardPage />}
           />
           <Route
             path="/admin/users"
