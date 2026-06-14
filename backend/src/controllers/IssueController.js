@@ -1,24 +1,55 @@
 const RankingService = require("../services/RankingService");
+const ReleaseIssue = require("../models/ReleaseIssueModel");
 const xlsx = require('xlsx');
 
-// Tạo Kỳ phát hành mới kèm Validate đầu vào [cite: 151, 154]
-const createReleaseIssue = (req, res) => {
-    const { id, name, releaseDate, seriesList, type } = req.body;
-    const issues = RankingService.getReleaseIssues();
+// Tạo Kỳ phát hành mới kèm Validate đầu vào
+const createReleaseIssue = async (req, res) => {
+    try {
+        const { id, name, releaseDate, seriesList, type } = req.body;
 
-    // Kiểm tra dữ liệu: Không trùng kỳ [cite: 154]
-    const isDuplicate = issues.some(issue => issue.id === id || issue.name === name);
-    if (isDuplicate) {
-        return res.status(400).json({ error: "Kỳ phát hành hoặc tên kỳ này đã tồn tại!" });
+        // Kiểm tra dữ liệu: Không trùng kỳ
+        const isDuplicate = await ReleaseIssue.findOne({
+            $or: [{ custom_id: id }, { title: name }]
+        });
+        if (isDuplicate) {
+            return res.status(400).json({ error: "Kỳ phát hành hoặc tên kỳ này đã tồn tại!" });
+        }
+
+        // Giải quyết seriesList thành ObjectIds
+        const resolvedSeriesIds = [];
+        for (const sId of (seriesList || [])) {
+            const objId = await RankingService.resolveSeriesId(sId);
+            if (objId) {
+                resolvedSeriesIds.push(objId);
+            }
+        }
+
+        const newIssue = await ReleaseIssue.create({
+            custom_id: id,
+            title: name,
+            release_date: new Date(releaseDate),
+            type,
+            series_list: resolvedSeriesIds,
+            status: "Planned"
+        });
+
+        res.status(201).json({
+            message: "Tạo kỳ phát hành thành công!",
+            data: {
+                id: newIssue.custom_id,
+                name: newIssue.title,
+                releaseDate: newIssue.release_date,
+                type: newIssue.type,
+                status: newIssue.status
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ error: "Lỗi hệ thống khi tạo kỳ phát hành: " + error.message });
     }
-
-    const newIssue = { id, name, releaseDate, seriesList, type };
-    issues.push(newIssue);
-    res.status(201).json({ message: "Tạo kỳ phát hành thành công!", data: newIssue });
 };
 
-// Xử lý Import dữ liệu bình chọn từ Excel/CSV [cite: 56, 153]
-const importVoteData = (req, res) => {
+// Xử lý Import dữ liệu bình chọn từ Excel/CSV
+const importVoteData = async (req, res) => {
     const { issueId } = req.params;
     if (!req.file) {
         return res.status(400).json({ error: "Vui lòng đính kèm file Excel hoặc CSV mẫu." });
@@ -32,10 +63,10 @@ const importVoteData = (req, res) => {
         const rawData = xlsx.utils.sheet_to_json(sheet);
 
         const validVotes = [];
-        const seriesStore = RankingService.getSeriesStore();
+        const seriesStore = await RankingService.getSeriesStore();
 
         for (const row of rawData) {
-            // Kiểm tra series hợp lệ và số phiếu hợp lệ [cite: 154]
+            // Kiểm tra series hợp lệ và số phiếu hợp lệ
             const seriesExists = seriesStore.some(s => s.id === row.seriesId);
             if (!seriesExists) {
                 return res.status(400).json({ error: `Mã truyện (Series ID) ${row.seriesId} không tồn tại trên hệ thống.` });
@@ -52,11 +83,13 @@ const importVoteData = (req, res) => {
             });
         }
 
-        // Thực thi thuật toán xếp hạng [cite: 57]
-        const result = RankingService.calculateRankingAndTrends(issueId, validVotes);
+        // Thực thi thuật toán xếp hạng và lưu DB
+        const result = await RankingService.calculateRankingAndTrends(issueId, validVotes);
+        
+        // Trả về kết quả sau cùng
         res.status(200).json({ message: "Import dữ liệu độc giả và xử lý xếp hạng thành công!", data: result });
     } catch (error) {
-        res.status(500).json({ error: "Lỗi hệ thống khi đọc cấu trúc file: " + error.message });
+        res.status(500).json({ error: "Lỗi hệ thống khi đọc cấu trúc file hoặc xử lý xếp hạng: " + error.message });
     }
 };
 

@@ -25,9 +25,13 @@ const rankingSchema = new mongoose.Schema(
     }, // Điểm xếp hạng tổng hợp
     trend: {
       type: String,
-      enum: ["Up", "Down", "Stable", "New"],
-      default: "New",
+      enum: ["UP", "DOWN", "STABLE", "NEW"],
+      default: "NEW",
     }, // Xu hướng so với kỳ trước
+    cancellationWarning: {
+      type: Boolean,
+      default: false,
+    }, // Cảnh báo nguy cơ hủy/giam hang
   },
   { timestamps: true },
 );

@@ -15,7 +15,7 @@ const readerVoteSchema = new mongoose.Schema(
     chapter_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Chapter",
-      required: true,
+      required: false,
     },
     vote_count: {
       type: Number,
@@ -25,6 +25,14 @@ const readerVoteSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     }, // Điểm trung bình đánh giá
+    views: {
+      type: Number,
+      default: 0,
+    }, // Số lượt xem từ dữ liệu import
+    comments: {
+      type: Number,
+      default: 0,
+    }, // Số bình luận từ dữ liệu import
     rank: {
       type: Number,
     }, // Thứ hạng của chương/series trong kỳ phát hành này
