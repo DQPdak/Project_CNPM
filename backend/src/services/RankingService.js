@@ -8,7 +8,7 @@ let seriesDataStore = [
 ];
 let voteHistory = [];
 
-class Task8RankingService {
+class RankingService {
     // Thuật toán tính điểm, xếp hạng, Trend & Cảnh báo hủy 
     static calculateRankingAndTrends(issueId, rawVotes) {
         let processedVotes = rawVotes.map(vote => {
@@ -67,4 +67,4 @@ class Task8RankingService {
     static getReleaseIssues() { return releaseIssues; }
 }
 
-module.exports = Task8RankingService;
+module.exports = RankingService;

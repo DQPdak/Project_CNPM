@@ -1,12 +1,12 @@
-const Task8RankingService = require("../services/task8RankingService");
+const RankingService = require("../services/RankingService");
 const { ROLES } = require("../constants/roles");
 
 const getLeaderboard = (req, res) => {
   const { role, id: userId } = req.user;
   const { issueId, genre, authorId } = req.query;
 
-  let records = Task8RankingService.getVoteHistory();
-  const seriesStore = Task8RankingService.getSeriesStore();
+  let records = RankingService.getVoteHistory();
+  const seriesStore = RankingService.getSeriesStore();
 
   if (role === ROLES.MANGAKA) {
     const mySeriesIds = seriesStore
@@ -48,7 +48,7 @@ const getLeaderboard = (req, res) => {
 
 const getPerformanceChartData = (req, res) => {
   const { seriesId } = req.params;
-  const records = Task8RankingService.getVoteHistory();
+  const records = RankingService.getVoteHistory();
 
   const chartData = records
     .filter((record) => record.seriesId === seriesId)

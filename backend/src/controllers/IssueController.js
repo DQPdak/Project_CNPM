@@ -1,10 +1,10 @@
-const Task8RankingService = require('../services/task8RankingService');
+const RankingService = require("../services/RankingService");
 const xlsx = require('xlsx');
 
 // Tạo Kỳ phát hành mới kèm Validate đầu vào [cite: 151, 154]
 const createReleaseIssue = (req, res) => {
     const { id, name, releaseDate, seriesList, type } = req.body;
-    const issues = Task8RankingService.getReleaseIssues();
+    const issues = RankingService.getReleaseIssues();
 
     // Kiểm tra dữ liệu: Không trùng kỳ [cite: 154]
     const isDuplicate = issues.some(issue => issue.id === id || issue.name === name);
@@ -32,7 +32,7 @@ const importVoteData = (req, res) => {
         const rawData = xlsx.utils.sheet_to_json(sheet);
 
         const validVotes = [];
-        const seriesStore = Task8RankingService.getSeriesStore();
+        const seriesStore = RankingService.getSeriesStore();
 
         for (const row of rawData) {
             // Kiểm tra series hợp lệ và số phiếu hợp lệ [cite: 154]
@@ -53,7 +53,7 @@ const importVoteData = (req, res) => {
         }
 
         // Thực thi thuật toán xếp hạng [cite: 57]
-        const result = Task8RankingService.calculateRankingAndTrends(issueId, validVotes);
+        const result = RankingService.calculateRankingAndTrends(issueId, validVotes);
         res.status(200).json({ message: "Import dữ liệu độc giả và xử lý xếp hạng thành công!", data: result });
     } catch (error) {
         res.status(500).json({ error: "Lỗi hệ thống khi đọc cấu trúc file: " + error.message });

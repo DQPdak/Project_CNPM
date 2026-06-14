@@ -1,4 +1,4 @@
-const checkTask8Role = (allowedRoles) => {
+const checkRole = (allowedRoles) => {
   return (req, res, next) => {
     const userRole = req.user && req.user.role;
 
@@ -19,4 +19,4 @@ const checkTask8Role = (allowedRoles) => {
   };
 };
 
-module.exports = { checkTask8Role };
+module.exports = { checkRole };

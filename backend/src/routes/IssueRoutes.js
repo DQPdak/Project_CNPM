@@ -4,8 +4,8 @@ const { requireAuth } = require("../modules/auth/middlewares/requireAuth");
 const {
   createReleaseIssue,
   importVoteData,
-} = require("../controllers/task8IssueController");
-const { checkTask8Role } = require("../middlewares/task8AuthMiddleware");
+} = require("../controllers/IssueController");
+const { checkRole } = require("../middlewares/AuthMiddleware");
 
 const router = express.Router();
 const storage = multer.memoryStorage();
@@ -13,10 +13,10 @@ const upload = multer({ storage });
 
 router.use(requireAuth);
 
-router.post("/", checkTask8Role(["Editorial Board", "Admin"]), createReleaseIssue);
+router.post("/", checkRole(["Editorial Board", "Admin"]), createReleaseIssue);
 router.post(
   "/:issueId/import-votes",
-  checkTask8Role(["Editorial Board", "Admin"]),
+  checkRole(["Editorial Board", "Admin"]),
   upload.single("file"),
   importVoteData,
 );
