@@ -56,6 +56,14 @@ class RankingService {
   // Chuyển đổi ObjectId của Series trong DB thành mã ID ngắn S1-S4 cho Frontend
   static async getShortId(seriesObjectId) {
     if (!seriesObjectId) return "Unknown";
+
+    if (SHORT_ID_MAP[seriesObjectId]) {
+      return seriesObjectId;
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(seriesObjectId)) {
+      return seriesObjectId.toString();
+    }
     
     const series = await Series.findById(seriesObjectId);
     if (!series) return seriesObjectId.toString();

@@ -19,6 +19,18 @@ const buildHeaders = (headers = {}, accessToken) => {
   return finalHeaders;
 };
 
+const getErrorMessage = (data) => {
+  if (!data) {
+    return "Request failed.";
+  }
+
+  if (typeof data.error === "string") {
+    return data.error;
+  }
+
+  return data.error?.message || data.message || data.details || "Request failed.";
+};
+
 export const apiFetch = async (path, options = {}) => {
   const state = useAuthStore.getState();
   const accessToken = state.accessToken;
@@ -43,11 +55,7 @@ export const apiFetch = async (path, options = {}) => {
 
       const retriedData = await parseResponse(retriedResponse);
       if (!retriedResponse.ok) {
-        const error = new Error(
-          retriedData?.error?.message ||
-            retriedData?.message ||
-            "Request failed.",
-        );
+        const error = new Error(getErrorMessage(retriedData));
         error.status = retriedResponse.status;
         error.data = retriedData;
         throw error;
@@ -62,9 +70,7 @@ export const apiFetch = async (path, options = {}) => {
 
   const data = await parseResponse(response);
   if (!response.ok) {
-    const error = new Error(
-      data?.error?.message || data?.message || "Request failed.",
-    );
+    const error = new Error(getErrorMessage(data));
     error.status = response.status;
     error.data = data;
     throw error;
