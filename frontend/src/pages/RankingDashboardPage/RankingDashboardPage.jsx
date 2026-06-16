@@ -1,5 +1,6 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useLocation } from "react-router-dom";
 import {
   AlertTriangle,
   BarChart3,
@@ -65,6 +66,8 @@ export default function RankingDashboardPage() {
   const [isCreating, setIsCreating] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
 
+  const location = useLocation();
+  const isReleasesView = location.pathname.includes("/releases");
   const canManage = MANAGE_ROLES.includes(user?.role);
 
   const topSeries = leaderboard[0];
@@ -180,230 +183,236 @@ export default function RankingDashboardPage() {
   return (
     <RequirePermission required="CAN_VIEW_RANKING">
       <div className="ranking-page">
-        {isLoading && <Loading text="Dang tai bang xep hang..." />}
+        {isLoading && <Loading text="Đang tải dữ liệu..." />}
 
         <header className="ranking-page__header">
           <div>
-            <p className="ranking-page__eyebrow">Module 11 & 12</p>
-            <h1>Ky phat hanh, Vote & Bang xep hang</h1>
+            <h1>{isReleasesView ? "Quản lý Phát hành & Bình chọn" : "Bảng xếp hạng Series"}</h1>
             <p>
-              Nhap du lieu binh chon doc gia, tinh tong diem, theo doi xu huong
-              va canh bao series co nguy co giam hang.
+              {isReleasesView
+                ? "Tạo các kỳ phát hành mới và nhập (import) dữ liệu bình chọn của độc giả từ file Excel/CSV."
+                : "Theo dõi xếp hạng, điểm số, xu hướng và hiệu suất của các series manga qua các kỳ phát hành."}
             </p>
           </div>
-          <button
-            className="ranking-page__refresh"
-            type="button"
-            onClick={fetchLeaderboard}
-          >
-            <RefreshCcw size={18} />
-            Lam moi
-          </button>
+          {!isReleasesView && (
+            <button
+              className="ranking-page__refresh"
+              type="button"
+              onClick={fetchLeaderboard}
+            >
+              <RefreshCcw size={18} />
+              Làm mới
+            </button>
+          )}
         </header>
 
-        <section className="ranking-metrics" aria-label="Thong ke ranking">
-          <MetricCard
-            icon={<Trophy size={22} />}
-            label="Top series"
-            value={topSeries?.seriesName || "Chua co du lieu"}
-            detail={topSeries ? `Rank #${topSeries.currentRank}` : "Import vote de bat dau"}
-          />
-          <MetricCard
-            icon={<BarChart3 size={22} />}
-            label="Tong vote"
-            value={numberFormatter.format(totalVotes)}
-            detail={`${leaderboard.length} series trong bang`}
-          />
-          <MetricCard
-            icon={<LineChart size={22} />}
-            label="Diem TB"
-            value={averageScore ? averageScore.toFixed(2) : "0"}
-            detail="Tinh theo totalScore"
-          />
-          <MetricCard
-            icon={<AlertTriangle size={22} />}
-            label="Canh bao"
-            value={riskCount}
-            detail="Series co nguy co huy/giam hang"
-            tone={riskCount ? "danger" : "normal"}
-          />
-        </section>
-
-        <div className="ranking-grid">
-          {canManage ? (
-            <section className="ranking-panel">
-              <div className="ranking-panel__title">
-                <CalendarPlus size={20} />
-                <h2>Tao ky phat hanh</h2>
-              </div>
-              <form className="ranking-form" onSubmit={handleCreateIssue}>
-                <Field label="Ma ky">
-                  <input
-                    value={issueForm.id}
-                    onChange={(event) => updateIssueForm("id", event.target.value)}
-                    placeholder="ISSUE-2026-01"
-                    required
-                  />
-                </Field>
-                <Field label="Ten ky">
-                  <input
-                    value={issueForm.name}
-                    onChange={(event) =>
-                      updateIssueForm("name", event.target.value)
-                    }
-                    placeholder="Weekly Jump 01"
-                    required
-                  />
-                </Field>
-                <div className="ranking-form__row">
-                  <Field label="Ngay phat hanh">
+        {isReleasesView ? (
+          <div className="ranking-grid">
+            {canManage ? (
+              <section className="ranking-panel">
+                <div className="ranking-panel__title">
+                  <CalendarPlus size={20} />
+                  <h2>Tạo kỳ phát hành mới</h2>
+                </div>
+                <form className="ranking-form" onSubmit={handleCreateIssue}>
+                  <Field label="Mã kỳ phát hành">
                     <input
-                      type="date"
-                      value={issueForm.releaseDate}
+                      value={issueForm.id}
+                      onChange={(event) => updateIssueForm("id", event.target.value)}
+                      placeholder="ISSUE-2026-01"
+                      required
+                    />
+                  </Field>
+                  <Field label="Tên kỳ phát hành">
+                    <input
+                      value={issueForm.name}
                       onChange={(event) =>
-                        updateIssueForm("releaseDate", event.target.value)
+                        updateIssueForm("name", event.target.value)
+                      }
+                      placeholder="Weekly Jump 01"
+                      required
+                    />
+                  </Field>
+                  <div className="ranking-form__row">
+                    <Field label="Ngày phát hành">
+                      <input
+                        type="date"
+                        value={issueForm.releaseDate}
+                        onChange={(event) =>
+                          updateIssueForm("releaseDate", event.target.value)
+                        }
+                        required
+                      />
+                    </Field>
+                    <Field label="Loại kỳ phát hành">
+                      <select
+                        value={issueForm.type}
+                        onChange={(event) =>
+                          updateIssueForm("type", event.target.value)
+                        }
+                      >
+                        {ISSUE_TYPES.map((type) => (
+                          <option key={type} value={type}>
+                            {type}
+                          </option>
+                        ))}
+                      </select>
+                    </Field>
+                  </div>
+                  <div className="ranking-form__series">
+                    <span>Manga trong kỳ phát hành</span>
+                    <div>
+                      {SERIES_OPTIONS.map((series) => (
+                        <label key={series.id}>
+                          <input
+                            type="checkbox"
+                            checked={issueForm.seriesList.includes(series.id)}
+                            onChange={() => toggleSeries(series.id)}
+                          />
+                          {series.name}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                  <button type="submit" disabled={isCreating}>
+                    <CalendarPlus size={18} />
+                    {isCreating ? "Đang xử lý..." : "Tạo kỳ phát hành"}
+                  </button>
+                </form>
+              </section>
+            ) : null}
+
+            {canManage ? (
+              <section className="ranking-panel">
+                <div className="ranking-panel__title">
+                  <FileSpreadsheet size={20} />
+                  <h2>Nhập dữ liệu bình chọn độc giả</h2>
+                </div>
+                <form className="ranking-form" onSubmit={handleImportVotes}>
+                  <Field label="Mã kỳ phát hành cần nhập">
+                    <input
+                      value={importForm.issueId}
+                      onChange={(event) =>
+                        setImportForm((current) => ({
+                          ...current,
+                          issueId: event.target.value,
+                        }))
+                      }
+                      placeholder="ISSUE-2026-01"
+                      required
+                    />
+                  </Field>
+                  <Field label="Tập tin Excel/CSV">
+                    <input
+                      type="file"
+                      accept=".csv,.xlsx,.xls"
+                      onChange={(event) =>
+                        setImportForm((current) => ({
+                          ...current,
+                          file: event.target.files?.[0] || null,
+                        }))
                       }
                       required
                     />
                   </Field>
-                  <Field label="Loai ky">
-                    <select
-                      value={issueForm.type}
-                      onChange={(event) =>
-                        updateIssueForm("type", event.target.value)
-                      }
-                    >
-                      {ISSUE_TYPES.map((type) => (
-                        <option key={type} value={type}>
-                          {type}
-                        </option>
-                      ))}
-                    </select>
-                  </Field>
-                </div>
-                <div className="ranking-form__series">
-                  <span>Series trong ky</span>
-                  <div>
-                    {SERIES_OPTIONS.map((series) => (
-                      <label key={series.id}>
-                        <input
-                          type="checkbox"
-                          checked={issueForm.seriesList.includes(series.id)}
-                          onChange={() => toggleSeries(series.id)}
-                        />
-                        {series.name}
-                      </label>
-                    ))}
+                  <div className="ranking-sample">
+                    <span>Cấu trúc CSV mẫu:</span>
+                    <code>seriesId,votes,avgScore,comments,views</code>
                   </div>
-                </div>
-                <button type="submit" disabled={isCreating}>
-                  <CalendarPlus size={18} />
-                  {isCreating ? "Dang tao..." : "Tao ky phat hanh"}
-                </button>
-              </form>
+                  <button type="submit" disabled={isImporting}>
+                    <Upload size={18} />
+                    {isImporting ? "Đang xử lý..." : "Tải lên & Xử lý xếp hạng"}
+                  </button>
+                </form>
+              </section>
+            ) : null}
+          </div>
+        ) : (
+          <>
+            <section className="ranking-metrics" aria-label="Thống kê xếp hạng">
+              <MetricCard
+                icon={<Trophy size={22} />}
+                label="Manga dẫn đầu"
+                value={topSeries?.seriesName || "Chưa có dữ liệu"}
+                detail={topSeries ? `Thứ hạng #${topSeries.currentRank}` : "Nhập vote để bắt đầu"}
+              />
+              <MetricCard
+                icon={<BarChart3 size={22} />}
+                label="Tổng số phiếu"
+                value={numberFormatter.format(totalVotes)}
+                detail={`${leaderboard.length} series trong bảng`}
+              />
+              <MetricCard
+                icon={<LineChart size={22} />}
+                label="Điểm trung bình"
+                value={averageScore ? averageScore.toFixed(2) : "0"}
+                detail="Tính theo điểm tổng hợp"
+              />
+              <MetricCard
+                icon={<AlertTriangle size={22} />}
+                label="Nhóm cảnh báo"
+                value={riskCount}
+                detail="Series có nguy cơ hủy/giảm hạng"
+                tone={riskCount ? "danger" : "normal"}
+              />
             </section>
-          ) : null}
 
-          {canManage ? (
-            <section className="ranking-panel">
-              <div className="ranking-panel__title">
-                <FileSpreadsheet size={20} />
-                <h2>Import vote</h2>
+            <section className="ranking-panel ranking-panel--wide">
+              <div className="ranking-toolbar">
+                <div className="ranking-panel__title">
+                  <Filter size={20} />
+                  <h2>Bảng xếp hạng Manga</h2>
+                </div>
+                <div className="ranking-filters">
+                  <input
+                    value={filters.issueId}
+                    onChange={(event) => updateFilters("issueId", event.target.value)}
+                    placeholder="Lọc theo mã kỳ"
+                  />
+                  <select
+                    value={filters.genre}
+                    onChange={(event) => updateFilters("genre", event.target.value)}
+                  >
+                    <option value="">Tất cả thể loại</option>
+                    <option value="Shonen">Shonen</option>
+                    <option value="Action">Action</option>
+                    <option value="Mystery">Mystery</option>
+                  </select>
+                  <input
+                    value={filters.authorId}
+                    onChange={(event) => updateFilters("authorId", event.target.value)}
+                    placeholder="Author ID"
+                  />
+                  <button type="button" onClick={fetchLeaderboard}>
+                    Áp dụng lọc
+                  </button>
+                </div>
               </div>
-              <form className="ranking-form" onSubmit={handleImportVotes}>
-                <Field label="Ma ky can import">
-                  <input
-                    value={importForm.issueId}
-                    onChange={(event) =>
-                      setImportForm((current) => ({
-                        ...current,
-                        issueId: event.target.value,
-                      }))
-                    }
-                    placeholder="ISSUE-2026-01"
-                    required
-                  />
-                </Field>
-                <Field label="File Excel/CSV">
-                  <input
-                    type="file"
-                    accept=".csv,.xlsx,.xls"
-                    onChange={(event) =>
-                      setImportForm((current) => ({
-                        ...current,
-                        file: event.target.files?.[0] || null,
-                      }))
-                    }
-                    required
-                  />
-                </Field>
-                <div className="ranking-sample">
-                  <span>CSV mau:</span>
-                  <code>seriesId,votes,avgScore,comments,views</code>
-                </div>
-                <button type="submit" disabled={isImporting}>
-                  <Upload size={18} />
-                  {isImporting ? "Dang import..." : "Import va tinh hang"}
-                </button>
-              </form>
+
+              <LeaderboardTable rows={leaderboard} />
             </section>
-          ) : null}
-        </div>
 
-        <section className="ranking-panel ranking-panel--wide">
-          <div className="ranking-toolbar">
-            <div className="ranking-panel__title">
-              <Filter size={20} />
-              <h2>Bang xep hang Top Series</h2>
-            </div>
-            <div className="ranking-filters">
-              <input
-                value={filters.issueId}
-                onChange={(event) => updateFilters("issueId", event.target.value)}
-                placeholder="Loc theo ma ky"
-              />
-              <select
-                value={filters.genre}
-                onChange={(event) => updateFilters("genre", event.target.value)}
-              >
-                <option value="">Tat ca the loai</option>
-                <option value="Shonen">Shonen</option>
-                <option value="Action">Action</option>
-                <option value="Mystery">Mystery</option>
-              </select>
-              <input
-                value={filters.authorId}
-                onChange={(event) => updateFilters("authorId", event.target.value)}
-                placeholder="Author ID"
-              />
-              <button type="button" onClick={fetchLeaderboard}>
-                Ap dung
-              </button>
-            </div>
-          </div>
-
-          <LeaderboardTable rows={leaderboard} />
-        </section>
-
-        <section className="ranking-panel ranking-panel--wide">
-          <div className="ranking-toolbar">
-            <div className="ranking-panel__title">
-              <LineChart size={20} />
-              <h2>Bieu do hieu suat</h2>
-            </div>
-            <select
-              value={chartSeriesId}
-              onChange={(event) => setChartSeriesId(event.target.value)}
-            >
-              {SERIES_OPTIONS.map((series) => (
-                <option key={series.id} value={series.id}>
-                  {series.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <PerformanceChart data={chartData} seriesName={selectedSeriesName} />
-        </section>
+            <section className="ranking-panel ranking-panel--wide">
+              <div className="ranking-toolbar">
+                <div className="ranking-panel__title">
+                  <LineChart size={20} />
+                  <h2>Biểu đồ hiệu suất</h2>
+                </div>
+                <select
+                  value={chartSeriesId}
+                  onChange={(event) => setChartSeriesId(event.target.value)}
+                >
+                  {SERIES_OPTIONS.map((series) => (
+                    <option key={series.id} value={series.id}>
+                      {series.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <PerformanceChart data={chartData} seriesName={selectedSeriesName} />
+            </section>
+          </>
+        )}
       </div>
     </RequirePermission>
   );
@@ -435,7 +444,7 @@ function LeaderboardTable({ rows }) {
   if (!rows.length) {
     return (
       <div className="ranking-empty">
-        Chua co du lieu ranking. Hay tao ky phat hanh va import file vote.
+        Chưa có dữ liệu xếp hạng. Vui lòng tạo kỳ phát hành và tải file bình chọn lên.
       </div>
     );
   }
@@ -445,14 +454,14 @@ function LeaderboardTable({ rows }) {
       <table className="ranking-table">
         <thead>
           <tr>
-            <th>Hang</th>
-            <th>Series</th>
-            <th>Ky</th>
-            <th>Vote</th>
-            <th>Diem TB</th>
-            <th>Tong diem</th>
-            <th>Xu huong</th>
-            <th>Canh bao</th>
+            <th>Thứ hạng</th>
+            <th>Manga</th>
+            <th>Kỳ phát hành</th>
+            <th>Số phiếu</th>
+            <th>Điểm TB</th>
+            <th>Điểm tổng hợp</th>
+            <th>Xu hướng</th>
+            <th>Trạng thái</th>
           </tr>
         </thead>
         <tbody>
@@ -474,9 +483,9 @@ function LeaderboardTable({ rows }) {
               </td>
               <td>
                 {row.cancellationWarning ? (
-                  <span className="ranking-warning">At risk</span>
+                  <span className="ranking-warning">Có nguy cơ</span>
                 ) : (
-                  <span className="ranking-safe">On track</span>
+                  <span className="ranking-safe">Ổn định</span>
                 )}
               </td>
             </tr>
@@ -500,8 +509,7 @@ function PerformanceChart({ data, seriesName }) {
   if (!data.length) {
     return (
       <div className="ranking-empty">
-        Chua co lich su hieu suat cho {seriesName}. Import it nhat mot ky de xem
-        bieu do.
+        Chưa có lịch sử hiệu suất cho {seriesName}. Nhập ít nhất một kỳ để xem biểu đồ.
       </div>
     );
   }
@@ -542,7 +550,7 @@ function PerformanceChart({ data, seriesName }) {
       </svg>
       <div className="ranking-chart__legend">
         <span>{seriesName}</span>
-        <span>Duong bieu dien theo totalScore tung ky</span>
+        <span>Đường biểu diễn điểm tổng hợp qua các kỳ</span>
       </div>
     </div>
   );
