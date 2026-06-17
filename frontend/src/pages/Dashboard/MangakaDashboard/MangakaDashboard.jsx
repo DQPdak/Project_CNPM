@@ -6,7 +6,6 @@ const MangakaDashboard = () => {
   return (
     <div className="dashboard-wrapper">
       <h1 className="dashboard-title">Màn hình làm việc Mangaka</h1>
-
       <div className="dashboard-grid">
         <div className="main-column">
           <div className="card">
@@ -19,25 +18,18 @@ const MangakaDashboard = () => {
             </div>
           </div>
         </div>
-
         <div className="space-y-6">
           <div className="widget-mangaka">
             <h2 className="widget-title">Thứ hạng tác phẩm</h2>
             <p className="widget-desc">
-              Cập nhật dựa trên lượt bình chọn từ kỳ phát hành mới nhất.
+              Cập nhật dựa trên bình chọn kỳ phát hành mới nhất.
             </p>
-
             <div className="ranking-item">
-              <span className="font-medium text-gray-700 text-sm">
-                Series A
-              </span>
-              <span className="text-green-600 font-bold text-sm">
-                Hạng 3 (↑2)
-              </span>
+              <span>Series A</span>
+              <span className="text-status">Hạng 3 (↑2)</span>
             </div>
-
             <Link to="/mangaka/ranking" className="btn-indigo">
-              Xem biểu đồ chi tiết →
+              Xem bảng chi tiết
             </Link>
           </div>
         </div>
@@ -45,5 +37,4 @@ const MangakaDashboard = () => {
     </div>
   );
 };
-
 export default MangakaDashboard;

@@ -1,31 +1,44 @@
 @reference "../../../index.css";
+
 .dashboard-wrapper {
-  @apply p-6 max-w-7xl mx-auto;
+  @apply max-w-7xl mx-auto space-y-8 font-sans;
 }
 .dashboard-title {
-  @apply text-3xl font-extrabold text-gray-900 mb-6;
+  @apply text-3xl lg:text-4xl font-black text-black uppercase tracking-tight border-b-4 border-black inline-block pb-2 mb-4;
 }
 .dashboard-grid-2 {
-  @apply grid grid-cols-1 md:grid-cols-3 gap-6;
+  @apply grid grid-cols-1 md:grid-cols-3 gap-8;
 }
+
+/* Trợ lý: Cột Task màu Cam nổi bật */
 .task-column {
-  @apply md:col-span-2 bg-white p-6 shadow-md rounded-xl border border-gray-100;
+  @apply md:col-span-2 bg-[#FF5C00] border-4 border-black p-6 lg:p-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)];
 }
 .income-column {
-  @apply bg-white p-6 shadow-md rounded-xl border border-gray-100;
+  @apply bg-white border-4 border-black p-6 lg:p-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)];
 }
+
 .card-title {
-  @apply text-xl font-bold text-gray-800 mb-4;
+  @apply text-2xl font-black uppercase mb-2 border-b-2 border-black inline-block pb-1 text-black;
 }
+.task-column .card-title {
+  @apply text-white border-white;
+}
+
 .card-desc {
-  @apply text-gray-500 mb-4;
+  @apply text-gray-800 font-bold mt-4 mb-6 text-sm lg:text-base;
 }
+.task-column .card-desc {
+  @apply text-black;
+}
+
 .placeholder-box {
-  @apply border border-dashed border-gray-200 rounded-lg h-32 flex items-center justify-center text-gray-400;
+  @apply border-4 border-dashed border-black bg-white h-40 flex items-center justify-center text-black font-black uppercase tracking-wider hover:bg-[#FFD000] transition-colors cursor-pointer;
 }
+
 .income-amount {
-  @apply text-3xl font-black text-emerald-600 my-4;
+  @apply text-4xl lg:text-5xl font-black text-[#23A094] my-6 drop-shadow-[2px_2px_0px_rgba(0,0,0,1)];
 }
 .income-status {
-  @apply text-xs text-gray-400;
+  @apply inline-block bg-yellow-200 border-2 border-black px-3 py-1 text-xs font-black uppercase text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)];
 }
