@@ -1,0 +1,44 @@
+@reference "../../../index.css";
+.dashboard-wrapper {
+  @apply p-6 max-w-7xl mx-auto;
+}
+.dashboard-title {
+  @apply text-3xl font-extrabold text-gray-900 mb-6;
+}
+.dashboard-grid {
+  @apply grid grid-cols-1 lg:grid-cols-3 gap-6;
+}
+.main-column {
+  @apply lg:col-span-2 space-y-6;
+}
+.card {
+  @apply bg-white p-6 shadow-md rounded-xl border border-gray-100;
+}
+.card-title {
+  @apply text-xl font-bold text-gray-800 mb-4;
+}
+.card-desc {
+  @apply text-gray-500 mb-4;
+}
+.placeholder-box {
+  @apply border border-dashed border-gray-200 rounded-lg h-32 flex items-center justify-center text-gray-400;
+}
+
+.widget-board {
+  @apply bg-gradient-to-br from-amber-50 to-orange-50 p-6 shadow-md rounded-xl border border-amber-100;
+}
+.widget-title-amber {
+  @apply text-lg font-bold text-amber-900 mb-2;
+}
+.widget-desc-amber {
+  @apply text-xs text-amber-700 mb-4;
+}
+.ranking-list {
+  @apply space-y-2 mb-4 text-xs font-medium text-gray-700;
+}
+.ranking-item-amber {
+  @apply bg-white p-2 rounded shadow-sm flex justify-between;
+}
+.btn-amber {
+  @apply w-full inline-flex justify-center items-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-amber-600 hover:bg-amber-700 focus:outline-none;
+}

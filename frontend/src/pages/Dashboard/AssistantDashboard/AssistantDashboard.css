@@ -1,0 +1,31 @@
+@reference "../../../index.css";
+.dashboard-wrapper {
+  @apply p-6 max-w-7xl mx-auto;
+}
+.dashboard-title {
+  @apply text-3xl font-extrabold text-gray-900 mb-6;
+}
+.dashboard-grid-2 {
+  @apply grid grid-cols-1 md:grid-cols-3 gap-6;
+}
+.task-column {
+  @apply md:col-span-2 bg-white p-6 shadow-md rounded-xl border border-gray-100;
+}
+.income-column {
+  @apply bg-white p-6 shadow-md rounded-xl border border-gray-100;
+}
+.card-title {
+  @apply text-xl font-bold text-gray-800 mb-4;
+}
+.card-desc {
+  @apply text-gray-500 mb-4;
+}
+.placeholder-box {
+  @apply border border-dashed border-gray-200 rounded-lg h-32 flex items-center justify-center text-gray-400;
+}
+.income-amount {
+  @apply text-3xl font-black text-emerald-600 my-4;
+}
+.income-status {
+  @apply text-xs text-gray-400;
+}

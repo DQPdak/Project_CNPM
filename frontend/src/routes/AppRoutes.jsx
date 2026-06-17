@@ -9,13 +9,12 @@ import LoginPage from "../pages/LoginPage/LoginPage";
 import PageManagementPage from "../pages/PageManagementPage/PageManagementPage";
 import PublishApprovalPage from "../pages/PublishApprovalPage/PublishApprovalPage";
 import RankingDashboardPage from "../pages/RankingDashboardPage/RankingDashboardPage";
-
+import DashboardIndex from "../pages/Dashboard/DashboardIndex";
 export default function AppRoutes() {
   return (
     <ToastProvider>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/" element={<Navigate to="/chapter-list" replace />} />
         <Route
           element={
             <RequireAuth>
@@ -23,14 +22,9 @@ export default function AppRoutes() {
             </RequireAuth>
           }
         >
-          <Route
-            path="/chapter-list"
-            element={<ChapterListPage />}
-          />
-          <Route
-            path="/chapter-list/:seriesId"
-            element={<ChapterListPage />}
-          />
+          <Route path="/" element={<DashboardIndex />} />
+          <Route path="/chapter-list" element={<ChapterListPage />} />
+          <Route path="/chapter-list/:seriesId" element={<ChapterListPage />} />
           <Route
             path="/page-management/:chapterId"
             element={<PageManagementPage />}
@@ -39,30 +33,12 @@ export default function AppRoutes() {
             path="/publish-approval/:chapterId"
             element={<PublishApprovalPage />}
           />
-          <Route
-            path="/board/releases"
-            element={<RankingDashboardPage />}
-          />
-          <Route
-            path="/board/ranking"
-            element={<RankingDashboardPage />}
-          />
-          <Route
-            path="/mangaka/ranking"
-            element={<RankingDashboardPage />}
-          />
-          <Route
-            path="/editor/ranking"
-            element={<RankingDashboardPage />}
-          />
-          <Route
-            path="/admin/ranking"
-            element={<RankingDashboardPage />}
-          />
-          <Route
-            path="/admin/users"
-            element={<AdminUsersPage />}
-          />
+          <Route path="/board/releases" element={<RankingDashboardPage />} />
+          <Route path="/board/ranking" element={<RankingDashboardPage />} />
+          <Route path="/mangaka/ranking" element={<RankingDashboardPage />} />
+          <Route path="/editor/ranking" element={<RankingDashboardPage />} />
+          <Route path="/admin/ranking" element={<RankingDashboardPage />} />
+          <Route path="/admin/users" element={<AdminUsersPage />} />
         </Route>
       </Routes>
     </ToastProvider>

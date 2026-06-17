@@ -1,0 +1,42 @@
+@reference "../../../index.css";
+/* Có thể tái sử dụng các class chung như .dashboard-wrapper, .dashboard-title... ở file CSS chung nếu muốn, ở đây tách riêng theo yêu cầu */
+.dashboard-wrapper {
+  @apply p-6 max-w-7xl mx-auto;
+}
+.dashboard-title {
+  @apply text-3xl font-extrabold text-gray-900 mb-6;
+}
+.dashboard-grid {
+  @apply grid grid-cols-1 lg:grid-cols-3 gap-6;
+}
+.main-column {
+  @apply lg:col-span-2 space-y-6;
+}
+.card {
+  @apply bg-white p-6 shadow-md rounded-xl border border-gray-100;
+}
+.card-title {
+  @apply text-xl font-bold text-gray-800 mb-4;
+}
+.card-desc {
+  @apply text-gray-500 mb-4;
+}
+.placeholder-box {
+  @apply border border-dashed border-gray-200 rounded-lg h-32 flex items-center justify-center text-gray-400;
+}
+
+.widget-editor {
+  @apply bg-gradient-to-br from-blue-50 to-cyan-50 p-6 shadow-md rounded-xl border border-blue-100;
+}
+.widget-title-blue {
+  @apply text-lg font-bold text-blue-900 mb-2;
+}
+.widget-desc-blue {
+  @apply text-xs text-blue-700 mb-4;
+}
+.ranking-item-blue {
+  @apply bg-white p-3 rounded-lg shadow-sm border border-blue-100 flex justify-between text-sm mb-4;
+}
+.btn-blue {
+  @apply w-full inline-flex justify-center items-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none;
+}
