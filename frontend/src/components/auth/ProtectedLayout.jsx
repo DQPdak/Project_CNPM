@@ -36,7 +36,7 @@ const ROLE_MENUS = {
 
 // Cấu hình menu chung cho mọi user
 const COMMON_MENUS = [
-  { name: "Tổng quan (Dashboard)", path: "/dashboard", icon: "🏠" },
+  { name: "Tổng quan (Dashboard)", path: "/", icon: "🏠" },
   { name: "Danh sách Chapters", path: "/chapter-list", icon: "📖" }, // Giữ lại route chapter-list của bạn
   { name: "Thông báo", path: "/notifications", icon: "🔔" },
 ];
