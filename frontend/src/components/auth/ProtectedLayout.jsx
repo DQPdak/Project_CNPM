@@ -1,241 +1,143 @@
 import React from "react";
-import { Link, Outlet } from "react-router-dom";
+import { Link, Outlet, useLocation } from "react-router-dom";
 import { useAuthStore } from "../../stores/authStore";
 
-// Cấu hình menu động theo Role
+// Cấu hình menu động theo Role (Giữ nguyên logic 100%)
 const ROLE_MENUS = {
   Mangaka: [
-    { name: "Series của tôi", path: "/mangaka/series", icon: "📚" },
-    { name: "Tạo Chapter mới", path: "/mangaka/chapter/create", icon: "📝" },
-    { name: "Quản lý Task Trợ lý", path: "/mangaka/tasks", icon: "📋" },
-    { name: "Ranking Series", path: "/mangaka/ranking", icon: "🏆" },
+    { name: "Series của tôi", path: "/mangaka/series" },
+    { name: "Tạo Chapter mới", path: "/mangaka/chapter/create" },
+    { name: "Quản lý Task Trợ lý", path: "/mangaka/tasks" },
+    { name: "Ranking Series", path: "/mangaka/ranking" },
   ],
   Assistant: [
-    { name: "Công việc của tôi", path: "/assistant/tasks", icon: "🛠️" },
-    { name: "Thu nhập hàng tháng", path: "/assistant/income", icon: "💰" },
+    { name: "Công việc của tôi", path: "/assistant/tasks" },
+    { name: "Thu nhập hàng tháng", path: "/assistant/income" },
   ],
   "Tantou Editor": [
-    { name: "Series phụ trách", path: "/editor/series", icon: "📁" },
-    { name: "Biên tập & Phản hồi", path: "/editor/feedbacks", icon: "🖍️" },
-    { name: "Tiến độ Studio", path: "/editor/progress", icon: "📊" },
-    { name: "Ranking Series", path: "/editor/ranking", icon: "📈" },
+    { name: "Series phụ trách", path: "/editor/series" },
+    { name: "Biên tập & Phản hồi", path: "/editor/feedbacks" },
+    { name: "Tiến độ Studio", path: "/editor/progress" },
+    { name: "Ranking Series", path: "/editor/ranking" },
   ],
   "Editorial Board": [
-    { name: "Duyệt Series Mới", path: "/board/reviews", icon: "⚖️" },
-    { name: "Quản lý Phát hành", path: "/board/releases", icon: "📅" },
-    { name: "Bảng xếp hạng (Ranking)", path: "/board/ranking", icon: "📈" },
+    { name: "Duyệt Series Mới", path: "/board/reviews" },
+    { name: "Quản lý Phát hành", path: "/board/releases" },
+    { name: "Bảng xếp hạng (Ranking)", path: "/board/ranking" },
   ],
   Admin: [
-    { name: "Quản lý User", path: "/admin/users", icon: "👥" }, // Giữ lại route admin của bạn
-    { name: "Ranking & Vote", path: "/admin/ranking", icon: "📈" },
-    { name: "Hệ thống Series", path: "/admin/series", icon: "⚙️" },
-    { name: "Cấu hình Hệ thống", path: "/admin/settings", icon: "🔧" },
-    { name: "System Logs", path: "/admin/logs", icon: "🗄️" },
+    { name: "Quản lý User", path: "/admin/users" },
+    { name: "Ranking & Vote", path: "/admin/ranking" },
+    { name: "Hệ thống Series", path: "/admin/series" },
+    { name: "Cấu hình Hệ thống", path: "/admin/settings" },
+    { name: "System Logs", path: "/admin/logs" },
   ],
 };
 
 // Cấu hình menu chung cho mọi user
 const COMMON_MENUS = [
-  { name: "Tổng quan (Dashboard)", path: "/", icon: "🏠" },
-  { name: "Danh sách Chapters", path: "/chapter-list", icon: "📖" }, // Giữ lại route chapter-list của bạn
-  { name: "Thông báo", path: "/notifications", icon: "🔔" },
+  { name: "Trang chủ", path: "/" },
+  { name: "Danh sách Chapters", path: "/chapter-list" },
+  { name: "Thông báo", path: "/notifications" },
 ];
 
 export default function ProtectedLayout() {
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
+  const location = useLocation();
 
-  // Lấy role hiện tại, mặc định nếu không có thì để trống
   const userRole = user?.role || "";
   const dynamicMenus = ROLE_MENUS[userRole] || [];
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh", background: "#f1f5f9" }}>
-      {/* SIDEBAR BÊN TRÁI */}
-      <aside
-        style={{
-          width: "260px",
-          background: "#1e293b",
-          color: "#f8fafc",
-          display: "flex",
-          flexDirection: "column",
-          position: "fixed",
-          top: 0,
-          left: 0,
-          height: "100vh",
-          boxShadow: "2px 0 8px rgba(0,0,0,0.1)",
-          fontFamily: "system-ui, -apple-system, sans-serif",
-          zIndex: 1000,
-        }}
-      >
+    <div className="flex min-h-screen bg-[#F4F4F0] font-sans text-black selection:bg-[#FF90E8] selection:text-black">
+      {/* SIDEBAR BÊN TRÁI - NEO BRUTALISM */}
+      <aside className="w-[260px] bg-white border-r-4 border-black flex flex-col fixed top-0 left-0 h-screen z-50">
         {/* Logo Hệ thống */}
-        <div
-          style={{
-            padding: "24px 20px",
-            borderBottom: "1px solid #334155",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          <div
-            style={{
-              fontSize: "1.2rem",
-              fontWeight: 700,
-              color: "#38bdf8",
-              textTransform: "uppercase",
-              letterSpacing: "0.05em",
-            }}
-          >
+        <div className="p-5 border-b-4 border-black flex items-center justify-between bg-[#FFD000]">
+          <div className="text-xl font-black uppercase tracking-widest text-black">
             MangaSys
           </div>
-          <span
-            style={{
-              fontSize: "0.7rem",
-              backgroundColor: "#38bdf8",
-              color: "#0f172a",
-              padding: "4px 8px",
-              borderRadius: "12px",
-              fontWeight: "bold",
-            }}
-          >
+          <span className="text-[10px] bg-white border-2 border-black text-black px-2 py-0.5 font-black uppercase tracking-wider shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
             {userRole || "Unknown"}
           </span>
         </div>
 
         {/* Thông tin User */}
-        <div
-          style={{ padding: "16px 20px", borderBottom: "1px solid #334155" }}
-        >
-          <div style={{ fontSize: "0.85rem", color: "#cbd5e1" }}>Xin chào,</div>
-          <div
-            style={{
-              fontWeight: "bold",
-              fontSize: "1rem",
-              color: "#ffffff",
-              marginTop: "4px",
-            }}
-          >
+        <div className="p-4 border-b-4 border-black bg-[#FF90E8]">
+          <div className="text-[10px] font-black text-black uppercase tracking-widest">
+            Xin chào,
+          </div>
+          <div className="font-black text-lg text-black mt-0.5 truncate">
             {user?.name || "Authenticated User"}
           </div>
         </div>
 
-        {/* Khu vực danh sách Menu */}
-        <nav style={{ flex: 1, overflowY: "auto", padding: "20px 12px" }}>
+        {/* Khu vực danh sách Menu - Đã ẩn hoàn toàn thanh cuộn (Scrollbar) */}
+        <nav className="flex-1 overflow-y-auto p-4 bg-white [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           {/* Menu Chung */}
-          <div style={{ marginBottom: "24px" }}>
-            <p
-              style={{
-                fontSize: "0.75rem",
-                textTransform: "uppercase",
-                letterSpacing: "0.05em",
-                color: "#94a3b8",
-                marginBottom: "8px",
-                paddingLeft: "12px",
-                fontWeight: 600,
-              }}
-            >
+          <div className="mb-6">
+            <p className="text-[11px] font-black uppercase tracking-widest text-black mb-2 px-1">
               Chung
             </p>
-            {COMMON_MENUS.map((item, idx) => (
-              <Link
-                key={idx}
-                to={item.path}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  padding: "12px",
-                  color: "#cbd5e1",
-                  textDecoration: "none",
-                  borderRadius: "8px",
-                  marginBottom: "4px",
-                  fontWeight: 500,
-                }}
-              >
-                <span style={{ marginRight: "12px", fontSize: "1.2rem" }}>
-                  {item.icon}
-                </span>
-                <span>{item.name}</span>
-              </Link>
-            ))}
+            {COMMON_MENUS.map((item, idx) => {
+              const isActive = location.pathname === item.path;
+              return (
+                <Link
+                  key={idx}
+                  to={item.path}
+                  className={`flex items-center p-2.5 text-black font-bold border-2 transition-all mb-1.5 ${
+                    isActive
+                      ? "border-black bg-[#23A094] text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] -translate-y-[2px]"
+                      : "border-transparent hover:border-black hover:bg-[#23A094] hover:text-white hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-[2px]"
+                  }`}
+                >
+                  <span className="tracking-wide text-sm">{item.name}</span>
+                </Link>
+              );
+            })}
           </div>
 
           {/* Menu Động Theo Role */}
           {dynamicMenus.length > 0 && (
-            <div style={{ marginBottom: "24px" }}>
-              <p
-                style={{
-                  fontSize: "0.75rem",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.05em",
-                  color: "#94a3b8",
-                  marginBottom: "8px",
-                  paddingLeft: "12px",
-                  fontWeight: 600,
-                }}
-              >
+            <div className="mb-6">
+              <p className="text-[11px] font-black uppercase tracking-widest text-black mb-2 px-1">
                 Khu vực làm việc
               </p>
-              {dynamicMenus.map((item, idx) => (
-                <Link
-                  key={idx}
-                  to={item.path}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    padding: "12px",
-                    color: "#cbd5e1",
-                    textDecoration: "none",
-                    borderRadius: "8px",
-                    marginBottom: "4px",
-                    fontWeight: 500,
-                  }}
-                >
-                  <span style={{ marginRight: "12px", fontSize: "1.2rem" }}>
-                    {item.icon}
-                  </span>
-                  <span>{item.name}</span>
-                </Link>
-              ))}
+              {dynamicMenus.map((item, idx) => {
+                const isActive = location.pathname === item.path;
+                return (
+                  <Link
+                    key={idx}
+                    to={item.path}
+                    className={`flex items-center p-2.5 text-black font-bold border-2 transition-all mb-1.5 ${
+                      isActive
+                        ? "border-black bg-[#23A094] text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] -translate-y-[2px]"
+                        : "border-transparent hover:border-black hover:bg-[#23A094] hover:text-white hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-[2px]"
+                    }`}
+                  >
+                    <span className="tracking-wide text-sm">{item.name}</span>
+                  </Link>
+                );
+              })}
             </div>
           )}
         </nav>
 
-        {/* Nút Đăng xuất ở cuối Sidebar */}
-        <div style={{ padding: "16px 12px", borderTop: "1px solid #334155" }}>
+        {/* Nút Đăng xuất nhỏ gọn ở cuối Sidebar */}
+        <div className="p-3 border-t-4 border-black bg-[#F4F4F0]">
           <button
             type="button"
             onClick={() => logout()}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              width: "100%",
-              padding: "12px",
-              background: "none",
-              border: "none",
-              color: "#fca5a5",
-              cursor: "pointer",
-              borderRadius: "8px",
-              fontSize: "0.95rem",
-              fontWeight: 600,
-              textAlign: "left",
-            }}
+            className="flex items-center justify-center w-full py-2 px-3 bg-[#FF5C00] border-2 border-black text-white font-black text-xs uppercase tracking-wider shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] transition-all active:shadow-none"
           >
-            <span style={{ marginRight: "12px", fontSize: "1.2rem" }}>🚪</span>
-            <span>Đăng xuất</span>
+            Đăng xuất 🚪
           </button>
         </div>
       </aside>
 
-      {/* KHU VỰC NỘI DUNG CHÍNH (Đẩy sang phải 260px để không bị Sidebar đè) */}
-      <main
-        style={{
-          flex: 1,
-          marginLeft: "260px",
-          padding: "32px",
-          minHeight: "100vh",
-        }}
-      >
+      {/* KHU VỰC NỘI DUNG CHÍNH */}
+      <main className="flex-1 ml-[260px] p-8 lg:p-12 min-h-screen">
         <Outlet />
       </main>
     </div>
