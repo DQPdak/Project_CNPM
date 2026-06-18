@@ -1,88 +1,62 @@
+@reference "../../index.css";
+
 /* Khung trang tổng */
 .publish-page-container {
-  padding: 24px;
-  max-width: 800px;
-  margin: 0 auto;
+  @apply max-w-[800px] mx-auto space-y-8 font-sans px-4 lg:px-8 py-10;
 }
 
 /* Phần Header */
 .publish-page-header {
-  text-align: center;
-  margin-bottom: 40px;
+  @apply text-center mb-10 border-b-4 border-black pb-8;
 }
-
 .publish-back-link {
-  text-decoration: none;
-  color: #64748b;
-  display: inline-block;
-  margin-bottom: 16px;
-  transition: color 0.2s;
+  @apply inline-block mb-6 text-black font-black uppercase tracking-wider border-2 border-black bg-white px-4 py-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:bg-[#FFD000] transition-all;
 }
-
-.publish-back-link:hover {
-  color: #0f172a;
-}
-
 .publish-title {
-  margin: 0;
-  font-size: 28px;
-  color: #0f172a;
+  @apply text-4xl lg:text-5xl font-black text-black uppercase tracking-tight m-0;
 }
-
 .publish-subtitle {
-  color: #64748b;
-  margin-top: 8px;
-  font-size: 15px;
+  @apply text-black font-bold mt-4 text-sm lg:text-base uppercase tracking-wider;
+}
+.publish-badge {
+  @apply bg-white px-2 py-0.5 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)];
 }
 
-/* Khu vực nút bấm cuối trang */
+/* Khu vực cuối trang */
 .publish-action-area {
-  margin-top: 32px;
-  text-align: center;
+  @apply mt-12 text-center flex flex-col items-center gap-6;
 }
 
-/* Base style cho Nút Xuất Bản (To, rõ ràng) */
+/* Base style cho Nút Xuất bản (Neo-Brutalism) */
 .btn-massive-publish {
-  width: 100%;
-  max-width: 400px;
-  padding: 16px 40px;
-  font-size: 18px;
-  font-weight: bold;
-  border-radius: 50px;
-  border: none;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  @apply w-full max-w-[400px] py-6 px-8 text-xl lg:text-2xl font-black uppercase tracking-widest border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-all;
 }
 
-/* --- Các trạng thái của nút --- */
+/* --- Các trạng thái --- */
+/* 1. Trạng thái bình thường */
+.btn-massive-publish.state-idle {
+  @apply bg-[#FFD000] text-black cursor-pointer hover:-translate-y-1 hover:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none;
+}
 
-/* 1. Trạng thái bình thường hoặc khi báo lỗi (Sẵn sàng bấm) */
-.btn-massive-publish.state-idle,
+/* 2. Trạng thái Thất bại */
 .btn-massive-publish.state-failed {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  color: white;
-  cursor: pointer;
-  box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.3);
+  @apply bg-[#FF5C00] text-white cursor-pointer hover:-translate-y-1 hover:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none;
 }
 
-.btn-massive-publish.state-idle:hover,
-.btn-massive-publish.state-failed:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 15px 20px -5px rgba(16, 185, 129, 0.4);
+/* 3. Trạng thái Đang quét */
+.btn-massive-publish.state-scanning {
+  @apply bg-[#F4F4F0] text-black cursor-wait opacity-80;
 }
 
-/* 2. Trạng thái Đang quét hoặc Đã thành công (Bị khóa) */
-.btn-massive-publish.state-scanning,
+/* 4. Trạng thái Thành công */
 .btn-massive-publish.state-success {
-  background: #cbd5e1;
-  color: white;
-  cursor: not-allowed;
-  box-shadow: none;
+  @apply bg-[#23A094] text-white cursor-not-allowed;
 }
 
-/* Ghi chú dưới nút */
+/* Ghi chú cảnh báo */
+.publish-warning-box {
+  @apply bg-black text-white p-4 font-black uppercase tracking-wider transform -rotate-1 border-4 border-black shadow-[6px_6px_0px_0px_rgba(255,92,0,1)];
+}
 .publish-warning-note {
-  margin-top: 16px;
-  color: #94a3b8;
-  font-size: 14px;
-  font-style: italic;
+  @apply m-0 text-sm lg:text-base;
 }

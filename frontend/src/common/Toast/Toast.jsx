@@ -2,7 +2,7 @@ import React from "react";
 import "./Toast.css";
 
 export default function Toast({ type, message }) {
-  const icons = { success: "✅", error: "❌", info: "ℹ️" };
+  const icons = { success: "✅", error: "🚨", info: "💡" };
 
   return (
     <div className={`toast-box toast-${type}`}>

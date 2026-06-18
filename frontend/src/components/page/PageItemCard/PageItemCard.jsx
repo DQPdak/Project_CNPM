@@ -21,28 +21,20 @@ export default function PageItemCard({
     e.target.value = null;
   };
 
-  // Hàm helper để render màu sắc và text cho đúng trạng thái
+  // Đồng bộ Tiếng Việt hoàn toàn
   const renderStatusBadge = (status) => {
     switch (status) {
       case "Draft":
-        return (
-          <div className="page-status-badge status-draft">📝 Bản nháp</div>
-        );
+        return <div className="page-status-badge status-draft">Bản nháp</div>;
       case "In Progress":
         return (
-          <div className="page-status-badge status-progress">
-            ⏳ Đang xử lý / Cần sửa
-          </div>
+          <div className="page-status-badge status-progress">Đang xử lý</div>
         );
       case "Ready For Review":
-        return (
-          <div className="page-status-badge status-review">
-            🔍 Chờ kiểm duyệt
-          </div>
-        );
+        return <div className="page-status-badge status-review">Chờ duyệt</div>;
       case "Approved":
         return (
-          <div className="page-status-badge status-approved">✅ Đã duyệt</div>
+          <div className="page-status-badge status-approved">Đã duyệt</div>
         );
       default:
         return <div className="page-status-badge status-draft">{status}</div>;
@@ -53,7 +45,6 @@ export default function PageItemCard({
     <div className="page-card">
       <div className="page-number-badge">Trang {page.page_number}</div>
 
-      {/* Hiển thị Badge trạng thái */}
       {renderStatusBadge(page.status)}
 
       <div className="page-image-container">
@@ -68,44 +59,32 @@ export default function PageItemCard({
       </div>
 
       <div className="page-actions">
-        {/* ==========================================
-            QUYỀN MANGAKA (UPDATE_VERSION) 
-            - Được tải file mới nếu đang là Draft hoặc In Progress
-            - Được gửi đi Review
-        ========================================== */}
         <RequirePermission required="CAN_UPDATE_VERSION">
           {(page.status === "Draft" || page.status === "In Progress") && (
-            <>
-              <div className="actions">
-                <button
-                  className="btn-action btn-reupload"
-                  onClick={handleUpdateClick}
-                >
-                  Tải lên bản mới
-                </button>
-                <input
-                  type="file"
-                  hidden
-                  ref={fileInputRef}
-                  accept="image/*"
-                  onChange={handleFileChange}
-                />
-
-                <button
-                  className="btn-action btn-submit-review"
-                  onClick={() => onChangeStatus(page._id, "Ready For Review")}
-                >
-                  Gửi đi Kiểm duyệt
-                </button>
-              </div>
-            </>
+            <div className="actions-wrapper">
+              <button
+                className="btn-action btn-reupload"
+                onClick={handleUpdateClick}
+              >
+                Tải bản mới
+              </button>
+              <input
+                type="file"
+                hidden
+                ref={fileInputRef}
+                accept="image/*"
+                onChange={handleFileChange}
+              />
+              <button
+                className="btn-action btn-submit-review"
+                onClick={() => onChangeStatus(page._id, "Ready For Review")}
+              >
+                Gửi Kiểm duyệt
+              </button>
+            </div>
           )}
         </RequirePermission>
 
-        {/* ==========================================
-            QUYỀN EDITOR (APPROVE_PAGE) 
-            - Chỉ hiện nút thao tác khi bài đang ở trạng thái Ready For Review
-        ========================================== */}
         <RequirePermission required="CAN_APPROVE_PAGE">
           {page.status === "Ready For Review" ? (
             <div className="editor-actions">
@@ -113,21 +92,20 @@ export default function PageItemCard({
                 className="btn-action btn-approve"
                 onClick={() => onChangeStatus(page._id, "Approved")}
               >
-                Duyệt đạt
+                Duyệt
               </button>
               <button
                 className="btn-action btn-reject"
-                onClick={() => onChangeStatus(page._id, "In Progress")} // Đẩy về cho Mangaka sửa
+                onClick={() => onChangeStatus(page._id, "In Progress")}
               >
                 Yêu cầu sửa
               </button>
             </div>
           ) : (
-            // Chỉ hiển thị text thông báo nếu không ở trạng thái cần duyệt
             <div className="action-note">
               {page.status === "Approved"
-                ? "Trang này đã hoàn tất."
-                : "Chưa sẵn sàng để duyệt."}
+                ? "Trang này đã duyệt"
+                : "Chưa thể duyệt."}
             </div>
           )}
         </RequirePermission>
