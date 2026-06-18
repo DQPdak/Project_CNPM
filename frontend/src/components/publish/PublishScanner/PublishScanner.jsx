@@ -1,6 +1,5 @@
 import React from "react";
 import "./PublishScanner.css";
-import Loding from "../../../common/Loading/Loading";
 
 export default function PublishScanner({
   steps,
@@ -8,7 +7,6 @@ export default function PublishScanner({
   scanStatus,
   errorMessage,
 }) {
-  // Tính phần trăm thanh tiến độ
   const progressPercentage =
     scanStatus === "idle"
       ? 0
@@ -18,9 +16,8 @@ export default function PublishScanner({
 
   return (
     <div className="scanner-card">
-      <h3 className="scanner-title">🔍 Hệ thống Quét Điều kiện Xuất bản</h3>
+      <h3 className="scanner-title">TIẾN ĐỘ QUÉT ĐIỀU KIỆN XUẤT BẢN</h3>
 
-      {/* Thanh tiến độ tổng */}
       <div className="progress-bar-container">
         <div
           className={`progress-bar-fill ${scanStatus}`}
@@ -28,11 +25,9 @@ export default function PublishScanner({
         ></div>
       </div>
 
-      {/* Danh sách các chốt chặn */}
       <div className="scanner-steps">
         {steps.map((step, index) => {
-          let stepState = "pending"; // Mặc định là chờ quét
-
+          let stepState = "pending";
           if (scanStatus === "scanning") {
             if (index < currentStep) stepState = "passed";
             if (index === currentStep) stepState = "scanning";
@@ -42,12 +37,14 @@ export default function PublishScanner({
           } else if (scanStatus === "success") {
             stepState = "passed";
           }
-
           return (
             <div key={index} className={`step-item state-${stepState}`}>
               <div className="step-icon">
                 {stepState === "pending" && "⏳"}
-                {stepState === "scanning" && <Loding text={``} />}
+                {/* Đã thay Loading bằng div custom */}
+                {stepState === "scanning" && (
+                  <div className="inline-spinner"></div>
+                )}
                 {stepState === "passed" && "✅"}
                 {stepState === "failed" && "❌"}
               </div>

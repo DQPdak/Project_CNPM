@@ -24,9 +24,7 @@ export default function PublishApprovalPage() {
     setScanStatus("scanning");
     setCurrentStep(0);
     setErrorMessage("");
-
     const result = await publishChapter(chapterId);
-
     let failAtStep = -1;
     if (result.success === false) {
       const msg = (result.message || "").toLowerCase();
@@ -36,11 +34,9 @@ export default function PublishApprovalPage() {
       else if (msg.includes("annotation")) failAtStep = 3;
       else failAtStep = 0;
     }
-
     for (let i = 0; i < SCAN_STEPS.length; i += 1) {
       setCurrentStep(i);
       await new Promise((resolve) => setTimeout(resolve, 500));
-
       if (i === failAtStep) {
         setScanStatus("failed");
         setErrorMessage(result.message);
@@ -48,14 +44,12 @@ export default function PublishApprovalPage() {
         return;
       }
     }
-
     if (result.success === false) {
       setScanStatus("failed");
       setErrorMessage(result.message);
       toast.error("Xuat ban that bai.");
       return;
     }
-
     setScanStatus("success");
     toast.success("Chapter da duoc xuat ban.");
   };
@@ -64,10 +58,12 @@ export default function PublishApprovalPage() {
     <div className="publish-page-container">
       <header className="publish-page-header">
         <Link to="/chapter-list" className="publish-back-link">
-          Quay lai danh sach chapter
+          ← Quay lai
         </Link>
         <h1 className="publish-title">Tram xuat ban chapter</h1>
-        <p className="publish-subtitle">Chapter ID: {chapterId}</p>
+        <p className="publish-subtitle">
+          Chapter ID: <span className="publish-badge">{chapterId}</span>
+        </p>
       </header>
 
       <PublishScanner
@@ -85,17 +81,19 @@ export default function PublishApprovalPage() {
             className={`btn-massive-publish state-${scanStatus}`}
           >
             {scanStatus === "scanning"
-              ? "DANG XU LY HE THONG..."
+              ? "DANG XU LY..."
               : scanStatus === "success"
-                ? "DA XUAT BAN"
+                ? "DA XUAT BAN!"
                 : scanStatus === "failed"
                   ? "QUET LAI HE THONG"
-                  : "KHOI DONG KIEM TRA VA XUAT BAN"}
+                  : "KHOI DONG KIEM TRA"}
           </button>
         </RequirePermission>
-        <p className="publish-warning-note">
-          Hanh dong nay se cong khai chapter den toan bo doc gia.
-        </p>
+        <div className="publish-warning-box">
+          <p className="publish-warning-note">
+            Hanh dong nay se cong khai chapter den toan bo doc gia!
+          </p>
+        </div>
       </div>
     </div>
   );

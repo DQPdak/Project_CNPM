@@ -1,33 +1,18 @@
+@reference "../../../index.css";
+
 .page-gallery-grid {
-  display: grid;
-  /* Tự động tính toán số cột, mỗi cột tối thiểu 220px, tối đa là 1 phần đều nhau */
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 20px;
-  margin-top: 24px;
+  @apply grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-6 mt-6;
 }
 
 .gallery-empty {
-  text-align: center;
-  padding: 80px 20px;
-  background: white;
-  border: 1px dashed #cbd5e1;
-  border-radius: 12px;
-  color: #64748b;
-  margin-top: 24px;
+  @apply text-center p-12 bg-[#FFD000] border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] text-black mt-6;
 }
-
 .gallery-empty .empty-icon {
-  font-size: 48px;
-  opacity: 0.5;
-  margin-bottom: 16px;
-  display: block;
+  @apply text-5xl mb-4 block;
 }
 .gallery-empty h3 {
-  color: #334155;
-  margin: 0 0 8px 0;
-  font-size: 18px;
+  @apply m-0 mb-3 text-2xl font-black uppercase tracking-widest;
 }
 .gallery-empty p {
-  margin: 0;
-  font-size: 14px;
+  @apply m-0 text-sm font-bold tracking-wider bg-white inline-block px-4 py-2 border-2 border-black;
 }

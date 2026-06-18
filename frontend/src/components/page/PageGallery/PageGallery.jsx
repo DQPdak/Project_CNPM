@@ -10,13 +10,12 @@ export default function PageGallery({
   if (!pages || pages.length === 0) {
     return (
       <div className="gallery-empty">
-        <span className="empty-icon">No pages</span>
-        <h3>Chua co ban thao nao</h3>
-        <p>Tai len trang truyện de bat dau quy trinh duyet.</p>
+        <span className="empty-icon">🖼️</span>
+        <h3>Chưa có bản thảo nào</h3>
+        <p>Tải lên trang truyện để bắt đầu quy trình duyệt.</p>
       </div>
     );
   }
-
   return (
     <div className="page-gallery-grid">
       {pages.map((page) => (
