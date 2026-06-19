@@ -1,6 +1,8 @@
 const Chapter = require("../../models/ChapterModel");
 const Series = require("../../models/SeriesModel");
-const { canAccessSeries } = require("../../modules/authorization/middlewares/scope");
+const {
+  canAccessSeries,
+} = require("../../modules/authorization/middlewares/scope");
 
 exports.Chapter = async (req, res) => {
   try {
@@ -32,6 +34,7 @@ exports.Chapter = async (req, res) => {
     return res.status(201).json({
       message: "Tạo chapter thành công",
       chapter: newChapter,
+      success: true,
     });
   } catch (err) {
     return res.status(500).json({ error: "Lỗi server", details: err.message });

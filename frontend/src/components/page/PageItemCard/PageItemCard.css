@@ -11,7 +11,7 @@
   @apply w-full aspect-[2/3] bg-gray-200 overflow-hidden flex items-center justify-center;
 }
 .page-image-container img {
-  @apply w-full h-full object-cover grayscale-[20%] hover:grayscale-0 transition-all duration-300;
+  @apply w-full h-full object-contain grayscale-[20%] hover:grayscale-0 transition-all duration-300;
 }
 
 .page-number-badge {

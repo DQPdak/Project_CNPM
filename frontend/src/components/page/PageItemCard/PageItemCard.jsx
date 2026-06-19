@@ -50,7 +50,7 @@ export default function PageItemCard({
       <div className="page-image-container">
         <img
           src={
-            page.image_url ||
+            page.file_url ||
             `https://placehold.co/400x600/e2e8f0/64748b?text=Page+${page.page_number}`
           }
           alt="Page"

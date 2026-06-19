@@ -65,24 +65,30 @@ export default function PageManagementPage() {
 
   const fetchPagesAndChapterInfo = useCallback(async () => {
     setIsLoading(true);
-    const [chapterResult, pagesResult] = await Promise.all([
-      getChapterById(chapterId),
-      getPagesByChapter(chapterId),
-    ]);
-    if (chapterResult.success === false) {
-      toast.error("Khong the tai chapter: " + chapterResult.message);
-    } else {
-      const chapter = chapterResult.chapter;
-      setChapterInfo(chapter);
-      setSelectedChapterStatus(chapter?.status || "");
-    }
-    if (pagesResult.success === false) {
-      toast.error("Khong the tai danh sach trang: " + pagesResult.message);
+    try {
+      const [chapterResult, pagesResult] = await Promise.all([
+        getChapterById(chapterId),
+        getPagesByChapter(chapterId),
+      ]);
+      if (chapterResult.success === false) {
+        toast.error("Khong the tai chapter: " + chapterResult.message);
+      } else {
+        const chapter = chapterResult.chapter;
+        setChapterInfo(chapter);
+        setSelectedChapterStatus(chapter?.status || "");
+      }
+      if (pagesResult.success === false) {
+        toast.error("Khong the tai danh sach trang: " + pagesResult.message);
+        setPages([]);
+      } else {
+        setPages(pagesResult.pages || []);
+      }
+    } catch (error) {
+      toast.error("Da xay ra loi khi tai du lieu: " + error.message);
       setPages([]);
-    } else {
-      setPages(pagesResult.pages || []);
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   }, [chapterId, toast]);
 
   useEffect(() => {
@@ -94,47 +100,63 @@ export default function PageManagementPage() {
       return;
     }
     setIsUpdatingChapter(true);
-    const result = await updateChapterStatus(chapterId, selectedChapterStatus);
-    if (result.success === false) {
-      toast.error("Khong the cap nhat chapter: " + result.message);
-    } else {
-      setChapterInfo((prev) => ({
-        ...prev,
-        status: result.chapter?.status || selectedChapterStatus,
-      }));
-      toast.success(
-        `Da cap nhat chapter thanh ${translateStatus(selectedChapterStatus)}.`,
+    try {
+      const result = await updateChapterStatus(
+        chapterId,
+        selectedChapterStatus,
       );
+      if (result.success === false) {
+        toast.error("Khong the cap nhat chapter: " + result.message);
+      } else {
+        setChapterInfo((prev) => ({
+          ...prev,
+          status: result.chapter?.status || selectedChapterStatus,
+        }));
+        toast.success(
+          `Da cap nhat chapter thanh ${translateStatus(selectedChapterStatus)}.`,
+        );
+      }
+    } catch (error) {
+      toast.error("Da xay ra loi khi cap nhat chapter: " + error.message);
+    } finally {
+      setIsUpdatingChapter(false);
     }
-    setIsUpdatingChapter(false);
   };
 
   const handleUploadSuccess = () => fetchPagesAndChapterInfo();
 
   const handleStatusChange = async (pageId, newStatus) => {
     setIsLoading(true);
-    const result = await approvePage(pageId, newStatus);
-    if (result.success === false) {
-      toast.error("Khong the cap nhat trang: " + result.message);
-    } else {
+    try {
+      const result = await approvePage(pageId, newStatus);
+      if (result.success === false)
+        throw new Error(result.message || "Không thể cập nhật trang");
+
       toast.success(
-        `Da cap nhat trang thai trang thanh ${translateStatus(newStatus)}.`,
+        `Đã cập nhật trạng thái trang thành ${translateStatus(newStatus)}.`,
       );
       await fetchPagesAndChapterInfo();
+    } catch (error) {
+      toast.error("Không thể cập nhật trang: " + error.message);
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   const handleUpdateVersion = async (pageId, file) => {
     setIsLoading(true);
-    const result = await updatePageVersion(pageId, file);
-    if (result.success === false) {
-      toast.error("Khong the tai len phien ban moi: " + result.message);
-    } else {
-      toast.success("Da tai len phien ban moi.");
+    try {
+      const result = await updatePageVersion(pageId, file);
+      if (result.success === false)
+        throw new Error(result.message || "Không thể tải lên phiên bản mới");
+
+      toast.success("Đã tải lên phiên bản mới.");
       await fetchPagesAndChapterInfo();
+    } catch (error) {
+      toast.error("Không thể tải lên phiên bản mới: " + error.message);
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   const backSeriesId = chapterInfo.series_id || "";

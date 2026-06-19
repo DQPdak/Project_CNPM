@@ -23,12 +23,13 @@ exports.uploadPages = async (req, res) => {
         file_url: req.files[i].path, // lưu lại đường dẫn từ Cloudinary trả về
         version: 1,
       });
-
       await newPage.save();
       page.push(newPage);
     }
     await Chapter.findByIdAndUpdate(chapter_id, { status: "In Production" }); // cập nhật trạng thái chapter
-    res.status(200).json({ message: "Upload pages thành công", pages: page });
+    res
+      .status(200)
+      .json({ message: "Upload pages thành công", pages: page, success: true });
   } catch (err) {
     console.error(err);
     res.status(500).json({ err: "Lỗi server", detail: err.message });
