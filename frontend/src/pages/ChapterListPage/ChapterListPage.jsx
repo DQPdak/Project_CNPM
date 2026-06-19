@@ -38,7 +38,7 @@ export default function ChapterListPage() {
     setResolvedSeriesId(firstSeries._id);
     navigate(`/chapter-list/${firstSeries._id}`, { replace: true });
     return firstSeries._id;
-  }, [navigate, seriesId, toast, user?.id]);
+  }, [navigate, seriesId, user?.id]);
 
   const fetchChaptersList = useCallback(async () => {
     setIsLoading(true);
@@ -56,7 +56,7 @@ export default function ChapterListPage() {
       setChapters(result.chapters || []);
     }
     setIsLoading(false);
-  }, [resolveSeriesId, toast]);
+  }, [resolveSeriesId]);
 
   useEffect(() => {
     fetchChaptersList();

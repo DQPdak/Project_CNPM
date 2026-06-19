@@ -48,7 +48,6 @@ export default function CreateChapterAction({
     } else {
       toast.error("Lỗi tạo Chapter: " + result.message);
     }
-    console.log("result", result);
   };
   return (
     <>
