@@ -72,15 +72,20 @@ export const useAuthStore = create((set, get) => ({
   },
   login: async ({ email, password }) => {
     set({ sessionStatus: "authenticating" });
-    const result = await loginRequest({ email, password });
-    set({
-      accessToken: result.accessToken,
-      user: result.user,
-      isAuthenticated: true,
-      initialized: true,
-      sessionStatus: "authenticated",
-    });
-    return result;
+    try {
+      const result = await loginRequest({ email, password });
+      set({
+        accessToken: result.accessToken,
+        user: result.user,
+        isAuthenticated: true,
+        initialized: true,
+        sessionStatus: "authenticated",
+      });
+      return result;
+    } catch (error) {
+      set({ sessionStatus: "unauthenticated" });
+      throw error;
+    }
   },
   refreshSession: async () => {
     if (refreshPromise) {
