@@ -89,7 +89,7 @@ export default function PageManagementPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [chapterId, toast]);
+  }, [chapterId]);
 
   useEffect(() => {
     fetchPagesAndChapterInfo();
