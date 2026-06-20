@@ -13,9 +13,9 @@ const BoardDashboard = () => {
             <p className="card-desc">
               Danh sách tác phẩm chờ bỏ phiếu Approve/Reject.
             </p>
-            <div className="placeholder-box">
-              [Danh sách Series xét duyệt & Lịch phát hành]
-            </div>
+            <Link to="/board/reviews" className="btn-amber">
+              Xem hồ sơ chờ duyệt
+            </Link>
           </div>
         </div>
         <div>
