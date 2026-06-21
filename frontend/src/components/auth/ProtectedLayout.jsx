@@ -27,6 +27,7 @@ const ROLE_MENUS = {
   ],
   Admin: [
     { name: "Quản lý User", path: "/admin/users" },
+    { name: "Quản lý Phát hành", path: "/admin/releases" },
     { name: "Ranking & Vote", path: "/admin/ranking" },
     { name: "Hệ thống Series", path: "/admin/series" },
     { name: "Cấu hình Hệ thống", path: "/admin/settings" },

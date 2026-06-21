@@ -37,6 +37,7 @@ export default function AppRoutes() {
           <Route path="/board/ranking" element={<RankingDashboardPage />} />
           <Route path="/mangaka/ranking" element={<RankingDashboardPage />} />
           <Route path="/editor/ranking" element={<RankingDashboardPage />} />
+          <Route path="/admin/releases" element={<RankingDashboardPage />} />
           <Route path="/admin/ranking" element={<RankingDashboardPage />} />
           <Route path="/admin/users" element={<AdminUsersPage />} />
         </Route>
