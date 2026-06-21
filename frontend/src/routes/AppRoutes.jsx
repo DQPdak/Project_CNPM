@@ -10,6 +10,12 @@ import PageManagementPage from "../pages/PageManagementPage/PageManagementPage";
 import PublishApprovalPage from "../pages/PublishApprovalPage/PublishApprovalPage";
 import RankingDashboardPage from "../pages/RankingDashboardPage/RankingDashboardPage";
 import DashboardIndex from "../pages/Dashboard/DashboardIndex";
+import MangakaSeriesListPage from "../pages/mangaka/MangakaSeriesListPage";
+import MangakaSeriesFormPage from "../pages/mangaka/MangakaSeriesFormPage";
+import BoardPendingSeriesPage from "../pages/board/BoardPendingSeriesPage";
+import BoardSeriesReviewPage from "../pages/board/BoardSeriesReviewPage";
+import RequireRole from "../components/security/RequireRole";
+
 export default function AppRoutes() {
   return (
     <ToastProvider>
@@ -40,6 +46,46 @@ export default function AppRoutes() {
           <Route path="/admin/releases" element={<RankingDashboardPage />} />
           <Route path="/admin/ranking" element={<RankingDashboardPage />} />
           <Route path="/admin/users" element={<AdminUsersPage />} />
+          <Route
+            path="/mangaka/series"
+            element={
+              <RequireRole allowedRoles={["Mangaka", "Admin"]}>
+                <MangakaSeriesListPage />
+              </RequireRole>
+            }
+          />
+          <Route
+            path="/mangaka/series/new"
+            element={
+              <RequireRole allowedRoles={["Mangaka", "Admin"]}>
+                <MangakaSeriesFormPage />
+              </RequireRole>
+            }
+          />
+          <Route
+            path="/mangaka/series/:seriesId"
+            element={
+              <RequireRole allowedRoles={["Mangaka", "Admin"]}>
+                <MangakaSeriesFormPage />
+              </RequireRole>
+            }
+          />
+          <Route
+            path="/board/reviews"
+            element={
+              <RequireRole allowedRoles={["Editorial Board", "Admin"]}>
+                <BoardPendingSeriesPage />
+              </RequireRole>
+            }
+          />
+          <Route
+            path="/board/series/:seriesId"
+            element={
+              <RequireRole allowedRoles={["Editorial Board", "Admin"]}>
+                <BoardSeriesReviewPage />
+              </RequireRole>
+            }
+          />
         </Route>
       </Routes>
     </ToastProvider>
