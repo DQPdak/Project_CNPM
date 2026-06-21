@@ -184,3 +184,106 @@ describe("Series API Phase 3 - Upload cover", () => {
     expect(response.status).toBe(400);
   });
 });
+
+describe("Series API Phase 5 - Module 13 lifecycle", () => {
+  let boardToken;
+  let mangakaToken;
+  let author;
+
+  beforeEach(async () => {
+    ({ accessToken: mangakaToken, user: author } =
+      await createAuthenticatedUser({ role: "Mangaka" }));
+    ({ accessToken: boardToken } = await createAuthenticatedUser({
+      role: "Editorial Board",
+      email: `board-${Date.now()}@example.com`,
+    }));
+  });
+
+  it("lists at-risk series for editorial board", async () => {
+    await Series.create({
+      title: "At Risk Series",
+      author_id: author._id,
+      status: "At Risk",
+      risk_status: "Warning",
+    });
+    await Series.create({
+      title: "Safe Series",
+      author_id: author._id,
+      status: "Active",
+      risk_status: "Safe",
+    });
+
+    const response = await withAuth(
+      request(app).get("/api/series/at-risk"),
+      boardToken,
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.body.count).toBe(1);
+    expect(response.body.series[0].title).toBe("At Risk Series");
+  });
+
+  it("includes series with critical risk status", async () => {
+    await Series.create({
+      title: "Critical Series",
+      author_id: author._id,
+      status: "Active",
+      risk_status: "Critical",
+    });
+
+    const response = await withAuth(
+      request(app).get("/api/series/at-risk"),
+      boardToken,
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.body.count).toBe(1);
+    expect(response.body.series[0].risk_status).toBe("Critical");
+  });
+
+  it("updates series lifecycle status", async () => {
+    const series = await Series.create({
+      title: "Lifecycle Series",
+      author_id: author._id,
+      status: "Active",
+    });
+
+    const response = await withAuth(
+      request(app).patch(`/api/series/${series._id}/status`),
+      boardToken,
+    ).send({
+      status: "Hiatus",
+      risk_status: "Critical",
+      approved_schedule: "monthly",
+    });
+
+    expect(response.status).toBe(200);
+    expect(response.body.series.status).toBe("Hiatus");
+    expect(response.body.series.risk_status).toBe("Critical");
+    expect(response.body.series.approved_schedule).toBe("monthly");
+  });
+
+  it("rejects invalid lifecycle status", async () => {
+    const series = await Series.create({
+      title: "Invalid Status Series",
+      author_id: author._id,
+      status: "Active",
+    });
+
+    const response = await withAuth(
+      request(app).patch(`/api/series/${series._id}/status`),
+      boardToken,
+    ).send({ status: "Draft" });
+
+    expect(response.status).toBe(400);
+  });
+
+  it("denies mangaka access to at-risk list", async () => {
+    const response = await withAuth(
+      request(app).get("/api/series/at-risk"),
+      mangakaToken,
+    );
+
+    expect(response.status).toBe(403);
+  });
+});

@@ -9,6 +9,8 @@ const getSeriesById = require("../controllers/series/getSeriesById");
 const upsertProposal = require("../controllers/series/upsertProposal");
 const submitProposal = require("../controllers/series/submitProposal");
 const uploadCover = require("../controllers/series/uploadCover");
+const getAtRiskSeries = require("../controllers/series/getAtRiskSeries");
+const updateSeriesStatus = require("../controllers/series/updateSeriesStatus");
 const upload = require("../middlewares/upload.middleware");
 
 const router = express.Router();
@@ -18,6 +20,16 @@ router.use(requireAuth);
 router.post("/", requireRole(ROLES.MANGAKA), createSeries.createSeries);
 router.get("/mine", requireRole(ROLES.MANGAKA), getMySeries.getMySeries);
 router.get("/mine/:author_id", requireRole(ROLES.MANGAKA), getMySeries.getMySeries);
+router.get(
+  "/at-risk",
+  requireRole(ROLES.EDITORIAL_BOARD, ROLES.ADMIN),
+  getAtRiskSeries.getAtRiskSeries,
+);
+router.patch(
+  "/:id/status",
+  requireRole(ROLES.EDITORIAL_BOARD, ROLES.ADMIN),
+  updateSeriesStatus.updateSeriesStatus,
+);
 router.get(
   "/:id",
   requireRole(ROLES.MANGAKA, ROLES.TANTOU_EDITOR, ROLES.EDITORIAL_BOARD),
