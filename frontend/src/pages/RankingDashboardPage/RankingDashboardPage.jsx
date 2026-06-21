@@ -7,6 +7,7 @@ import {
   CalendarPlus,
   FileSpreadsheet,
   Filter,
+  HelpCircle,
   LineChart,
   RefreshCcw,
   Trophy,
@@ -302,7 +303,10 @@ export default function RankingDashboardPage() {
                       required
                     />
                   </Field>
-                  <Field label="Tập tin Excel/CSV">
+                  <Field 
+                    label="Tập tin Excel/CSV" 
+                    tooltip="Cấu trúc file mẫu cần có các cột: seriesId, votes, avgScore, comments, views"
+                  >
                     <input
                       type="file"
                       accept=".csv,.xlsx,.xls"
@@ -315,10 +319,6 @@ export default function RankingDashboardPage() {
                       required
                     />
                   </Field>
-                  <div className="ranking-sample">
-                    <span>Cấu trúc CSV mẫu:</span>
-                    <code>seriesId,votes,avgScore,comments,views</code>
-                  </div>
                   <button type="submit" disabled={isImporting}>
                     <Upload size={18} />
                     {isImporting ? "Đang xử lý..." : "Tải lên & Xử lý xếp hạng"}
@@ -431,10 +431,17 @@ function MetricCard({ icon, label, value, detail, tone = "normal" }) {
   );
 }
 
-function Field({ label, children }) {
+function Field({ label, children, tooltip }) {
   return (
     <label className="ranking-field">
-      <span>{label}</span>
+      <span className="ranking-field__label-wrap">
+        <span>{label}</span>
+        {tooltip && (
+          <span className="ranking-tooltip-trigger" data-tooltip={tooltip}>
+            <HelpCircle size={14} />
+          </span>
+        )}
+      </span>
       {children}
     </label>
   );
