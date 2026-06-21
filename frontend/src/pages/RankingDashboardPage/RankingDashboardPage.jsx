@@ -87,6 +87,18 @@ export default function RankingDashboardPage() {
     return match?.name || chartSeriesId;
   }, [chartSeriesId]);
 
+  const visibleSeries = useMemo(() => {
+    if (canManage) return SERIES_OPTIONS;
+    const uniqueIds = Array.from(new Set(leaderboard.map((item) => item.seriesId)));
+    return SERIES_OPTIONS.filter((series) => uniqueIds.includes(series.id));
+  }, [leaderboard, canManage]);
+
+  useEffect(() => {
+    if (visibleSeries.length > 0 && !visibleSeries.some((s) => s.id === chartSeriesId)) {
+      setChartSeriesId(visibleSeries[0].id);
+    }
+  }, [visibleSeries, chartSeriesId]);
+
   const fetchLeaderboard = useCallback(async () => {
     setIsLoading(true);
     const result = await getLeaderboard(filters);
@@ -402,7 +414,7 @@ export default function RankingDashboardPage() {
                   value={chartSeriesId}
                   onChange={(event) => setChartSeriesId(event.target.value)}
                 >
-                  {SERIES_OPTIONS.map((series) => (
+                  {visibleSeries.map((series) => (
                     <option key={series.id} value={series.id}>
                       {series.name}
                     </option>
