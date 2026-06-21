@@ -108,6 +108,45 @@ describe("Board review flow Phase 2", () => {
     expect(series.approved_schedule).toBe("weekly");
   });
 
+  it("finalizes by majority vote across board members", async () => {
+    const seriesId = await createSubmittedSeries();
+
+    const { accessToken: board2 } = await createAuthenticatedUser({
+      role: "Editorial Board",
+      email: `board2-${Date.now()}@example.com`,
+    });
+    const { accessToken: board3 } = await createAuthenticatedUser({
+      role: "Editorial Board",
+      email: `board3-${Date.now()}@example.com`,
+    });
+
+    await withAuth(
+      request(app).post(`/api/board/series/${seriesId}/vote`),
+      boardToken,
+    ).send({ vote: "Approve" });
+    await withAuth(
+      request(app).post(`/api/board/series/${seriesId}/vote`),
+      board2,
+    ).send({ vote: "Approve" });
+    await withAuth(
+      request(app).post(`/api/board/series/${seriesId}/vote`),
+      board3,
+    ).send({ vote: "Reject" });
+
+    const finalizeRes = await withAuth(
+      request(app).post(`/api/board/series/${seriesId}/finalize`),
+      boardToken,
+    ).send({ approved_schedule: "weekly" });
+
+    expect(finalizeRes.status).toBe(200);
+    expect(finalizeRes.body.decision).toBe("Approve");
+    expect(finalizeRes.body.tally).toEqual({
+      Approve: 2,
+      Reject: 1,
+      "Need Revision": 0,
+    });
+  });
+
   it("rejects a series on finalize", async () => {
     const seriesId = await createSubmittedSeries();
 

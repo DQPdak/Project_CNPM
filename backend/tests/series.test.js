@@ -286,4 +286,75 @@ describe("Series API Phase 5 - Module 13 lifecycle", () => {
 
     expect(response.status).toBe(403);
   });
+
+  it("casts a lifecycle decision vote", async () => {
+    const series = await Series.create({
+      title: "Lifecycle Vote Series",
+      author_id: author._id,
+      status: "At Risk",
+      risk_status: "Critical",
+    });
+
+    const response = await withAuth(
+      request(app).post(`/api/series/${series._id}/lifecycle-vote`),
+      boardToken,
+    ).send({ vote: "Hiatus", comment: "Tam dung de cai thien" });
+
+    expect(response.status).toBe(201);
+    expect(response.body.vote.vote).toBe("Hiatus");
+    expect(response.body.vote.vote_context).toBe("lifecycle");
+  });
+
+  it("accepts new Module 13 vote options", async () => {
+    const series = await Series.create({
+      title: "Online Only Series",
+      author_id: author._id,
+      status: "At Risk",
+    });
+
+    const response = await withAuth(
+      request(app).post(`/api/series/${series._id}/lifecycle-vote`),
+      boardToken,
+    ).send({ vote: "Need Improvement Plan" });
+
+    expect(response.status).toBe(201);
+    expect(response.body.vote.vote).toBe("Need Improvement Plan");
+  });
+
+  it("rejects invalid lifecycle vote value", async () => {
+    const series = await Series.create({
+      title: "Bad Vote Series",
+      author_id: author._id,
+      status: "At Risk",
+    });
+
+    const response = await withAuth(
+      request(app).post(`/api/series/${series._id}/lifecycle-vote`),
+      boardToken,
+    ).send({ vote: "Approve" });
+
+    expect(response.status).toBe(400);
+  });
+
+  it("lists lifecycle votes with tally", async () => {
+    const series = await Series.create({
+      title: "Dossier Series",
+      author_id: author._id,
+      status: "At Risk",
+    });
+
+    await withAuth(
+      request(app).post(`/api/series/${series._id}/lifecycle-vote`),
+      boardToken,
+    ).send({ vote: "Continue", comment: "Van con tiem nang" });
+
+    const response = await withAuth(
+      request(app).get(`/api/series/${series._id}/lifecycle-votes`),
+      boardToken,
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.body.count).toBe(1);
+    expect(response.body.tally.Continue).toBe(1);
+  });
 });

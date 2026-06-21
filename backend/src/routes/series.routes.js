@@ -11,6 +11,7 @@ const submitProposal = require("../controllers/series/submitProposal");
 const uploadCover = require("../controllers/series/uploadCover");
 const getAtRiskSeries = require("../controllers/series/getAtRiskSeries");
 const updateSeriesStatus = require("../controllers/series/updateSeriesStatus");
+const lifecycleVote = require("../controllers/series/lifecycleVote");
 const upload = require("../middlewares/upload.middleware");
 
 const router = express.Router();
@@ -29,6 +30,16 @@ router.patch(
   "/:id/status",
   requireRole(ROLES.EDITORIAL_BOARD, ROLES.ADMIN),
   updateSeriesStatus.updateSeriesStatus,
+);
+router.get(
+  "/:id/lifecycle-votes",
+  requireRole(ROLES.EDITORIAL_BOARD, ROLES.ADMIN),
+  lifecycleVote.getLifecycleVotes,
+);
+router.post(
+  "/:id/lifecycle-vote",
+  requireRole(ROLES.EDITORIAL_BOARD, ROLES.ADMIN),
+  lifecycleVote.castLifecycleVote,
 );
 router.get(
   "/:id",

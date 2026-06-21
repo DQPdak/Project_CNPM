@@ -21,7 +21,9 @@ const boardVoteSchema = new mongoose.Schema(
         "Continue",
         "Cancel",
         "Hiatus",
-        "Change Schedule", // Dùng cho lúc đánh giá định kỳ
+        "Change Schedule",
+        "Online Only",
+        "Need Improvement Plan", // Dùng cho lúc đánh giá vòng đời (Module 13)
       ],
       required: true,
     },
