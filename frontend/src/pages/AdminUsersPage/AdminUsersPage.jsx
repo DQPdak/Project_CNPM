@@ -9,6 +9,7 @@ import {
 import { useToast } from "../../contexts/ToastContext";
 import Loading from "../../common/Loading/Loading";
 import { useAuthStore } from "../../stores/authStore";
+import "./AdminUsersPage.css";
 
 const ROLE_OPTIONS = [
   "Mangaka",
@@ -37,6 +38,9 @@ export default function AdminUsersPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [resetTarget, setResetTarget] = useState(null);
   const [newPassword, setNewPassword] = useState("");
+
+  // Thêm duy nhất 1 UI state để xử lý Tabs
+  const [activeTab, setActiveTab] = useState("list"); // 'list' hoặc 'create'
 
   const sortedUsers = useMemo(
     () => [...users].sort((a, b) => a.email.localeCompare(b.email)),
@@ -80,6 +84,8 @@ export default function AdminUsersPage() {
       toast.success("Da tao tai khoan nhan vien.");
       setForm(initialForm);
       await fetchUsers();
+      // Chuyển về tab list sau khi tạo thành công (Tuỳ chọn thêm để tăng UX)
+      setActiveTab("list");
     }
 
     setIsSubmitting(false);
@@ -103,217 +109,186 @@ export default function AdminUsersPage() {
 
   return (
     <RequirePermission required="CAN_MANAGE_USERS">
-      <div style={{ maxWidth: "1180px", margin: "0 auto" }}>
-        {isLoading && <Loading text="Dang tai danh sach tai khoan..." />}
+      <div className="admin-users-page">
+        <div className="page-container">
+          {isLoading && <Loading text="Dang tai danh sach tai khoan..." />}
 
-        <header
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "flex-start",
-            gap: "16px",
-            marginBottom: "24px",
-          }}
-        >
-          <div>
-            <h1 style={{ margin: 0, fontSize: "26px", color: "#0f172a" }}>
-              Quan ly tai khoan
-            </h1>
-            <p style={{ margin: "6px 0 0", color: "#64748b" }}>
+          <header className="page-header">
+            <h1 className="page-title">Quan ly tai khoan</h1>
+            <p className="page-subtitle">
               Tao tai khoan noi bo va reset mat khau cho nhan vien.
             </p>
-          </div>
-        </header>
+          </header>
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "minmax(280px, 360px) minmax(0, 1fr)",
-            gap: "20px",
-            alignItems: "start",
-          }}
-        >
-          <form
-            onSubmit={handleCreateUser}
-            style={{
-              background: "#ffffff",
-              border: "1px solid #e2e8f0",
-              borderRadius: "8px",
-              padding: "18px",
-            }}
-          >
-            <h2 style={{ margin: "0 0 16px", fontSize: "18px" }}>
-              Tao tai khoan
-            </h2>
-
-            <Field label="Ho ten">
-              <input
-                value={form.name}
-                onChange={(event) => updateForm("name", event.target.value)}
-                required
-                style={inputStyle}
-              />
-            </Field>
-
-            <Field label="Email">
-              <input
-                type="email"
-                value={form.email}
-                onChange={(event) => updateForm("email", event.target.value)}
-                required
-                style={inputStyle}
-              />
-            </Field>
-
-            <Field label="Mat khau khoi tao">
-              <input
-                type="password"
-                value={form.password}
-                onChange={(event) => updateForm("password", event.target.value)}
-                required
-                minLength={8}
-                style={inputStyle}
-              />
-            </Field>
-
-            <Field label="Role">
-              <select
-                value={form.role}
-                onChange={(event) => updateForm("role", event.target.value)}
-                style={inputStyle}
-              >
-                {ROLE_OPTIONS.map((role) => (
-                  <option key={role} value={role}>
-                    {role}
-                  </option>
-                ))}
-              </select>
-            </Field>
-
-            <Field label="Status">
-              <select
-                value={form.status}
-                onChange={(event) => updateForm("status", event.target.value)}
-                style={inputStyle}
-              >
-                {STATUS_OPTIONS.map((status) => (
-                  <option key={status} value={status}>
-                    {status}
-                  </option>
-                ))}
-              </select>
-            </Field>
-
+          {/* Tab Navigation */}
+          <div className="tab-navigation">
             <button
-              type="submit"
-              disabled={isSubmitting}
-              style={primaryButtonStyle}
+              type="button"
+              onClick={() => setActiveTab("list")}
+              className={`tab-btn ${activeTab === "list" ? "tab-active" : "tab-inactive"}`}
             >
-              {isSubmitting ? "Dang tao..." : "Tao tai khoan"}
+              Danh sách tài khoản
             </button>
-          </form>
-
-          <section
-            style={{
-              background: "#ffffff",
-              border: "1px solid #e2e8f0",
-              borderRadius: "8px",
-              overflow: "hidden",
-            }}
-          >
-            <div
-              style={{
-                padding: "16px 18px",
-                borderBottom: "1px solid #e2e8f0",
-                fontWeight: 700,
-              }}
+            <button
+              type="button"
+              onClick={() => setActiveTab("create")}
+              className={`tab-btn ${activeTab === "create" ? "tab-active" : "tab-inactive"}`}
             >
-              Danh sach tai khoan
-            </div>
-            <div style={{ overflowX: "auto" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                <thead>
-                  <tr style={{ background: "#f8fafc", textAlign: "left" }}>
-                    <Th>Name</Th>
-                    <Th>Email</Th>
-                    <Th>Role</Th>
-                    <Th>Status</Th>
-                    <Th>Action</Th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sortedUsers.map((user) => (
-                    <tr key={user.id} style={{ borderTop: "1px solid #e2e8f0" }}>
-                      <Td>{user.name}</Td>
-                      <Td>{user.email}</Td>
-                      <Td>{user.role}</Td>
-                      <Td>
-                        <span
-                          style={{
-                            display: "inline-block",
-                            padding: "4px 8px",
-                            borderRadius: "999px",
-                            background:
-                              user.status === "Active" ? "#dcfce7" : "#fee2e2",
-                            color:
-                              user.status === "Active" ? "#166534" : "#991b1b",
-                            fontSize: "12px",
-                            fontWeight: 700,
-                          }}
-                        >
-                          {user.status}
-                        </span>
-                      </Td>
-                      <Td>
-                        <button
-                          type="button"
-                          onClick={() => setResetTarget(user)}
-                          style={secondaryButtonStyle}
-                        >
-                          Reset password
-                        </button>
-                      </Td>
-                    </tr>
-                  ))}
-                  {!isLoading && sortedUsers.length === 0 ? (
-                    <tr>
-                      <Td colSpan={5}>Chua co tai khoan nao.</Td>
-                    </tr>
-                  ) : null}
-                </tbody>
-              </table>
-            </div>
-          </section>
+              Tạo tài khoản mới
+            </button>
+          </div>
+
+          <div className="tab-content-area">
+            {/* Tab 1: Danh sách tài khoản */}
+            {activeTab === "list" && (
+              <section className="table-card">
+                <div className="table-wrapper">
+                  <table className="neo-table">
+                    <thead>
+                      <tr className="tr-head">
+                        <Th>Name</Th>
+                        <Th>Email</Th>
+                        <Th>Role</Th>
+                        <Th>Status</Th>
+                        <Th>Action</Th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {sortedUsers.map((user) => (
+                        <tr key={user.id} className="tr-body">
+                          <Td>{user.name}</Td>
+                          <Td>{user.email}</Td>
+                          <Td>{user.role}</Td>
+                          <Td>
+                            <span
+                              className={`status-badge ${
+                                user.status === "Active"
+                                  ? "status-active"
+                                  : "status-inactive"
+                              }`}
+                            >
+                              {user.status}
+                            </span>
+                          </Td>
+                          <Td>
+                            <button
+                              type="button"
+                              onClick={() => setResetTarget(user)}
+                              className="btn-secondary"
+                            >
+                              Reset password
+                            </button>
+                          </Td>
+                        </tr>
+                      ))}
+                      {!isLoading && sortedUsers.length === 0 ? (
+                        <tr>
+                          <Td colSpan={5}>Chua co tai khoan nao.</Td>
+                        </tr>
+                      ) : null}
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            )}
+
+            {/* Tab 2: Form Tạo tài khoản */}
+            {activeTab === "create" && (
+              <form onSubmit={handleCreateUser} className="form-card">
+                <h2 className="card-title">Nhập thông tin nhân viên</h2>
+
+                <div className="form-grid">
+                  <Field label="Ho ten">
+                    <input
+                      value={form.name}
+                      onChange={(event) =>
+                        updateForm("name", event.target.value)
+                      }
+                      required
+                      className="input-field"
+                    />
+                  </Field>
+
+                  <Field label="Email">
+                    <input
+                      type="email"
+                      value={form.email}
+                      onChange={(event) =>
+                        updateForm("email", event.target.value)
+                      }
+                      required
+                      className="input-field"
+                    />
+                  </Field>
+
+                  <Field label="Mat khau khoi tao">
+                    <input
+                      type="password"
+                      value={form.password}
+                      onChange={(event) =>
+                        updateForm("password", event.target.value)
+                      }
+                      required
+                      minLength={8}
+                      className="input-field"
+                    />
+                  </Field>
+
+                  <Field label="Role">
+                    <select
+                      value={form.role}
+                      onChange={(event) =>
+                        updateForm("role", event.target.value)
+                      }
+                      className="select-field"
+                    >
+                      {ROLE_OPTIONS.map((role) => (
+                        <option key={role} value={role}>
+                          {role}
+                        </option>
+                      ))}
+                    </select>
+                  </Field>
+
+                  <Field label="Status">
+                    <select
+                      value={form.status}
+                      onChange={(event) =>
+                        updateForm("status", event.target.value)
+                      }
+                      className="select-field"
+                    >
+                      {STATUS_OPTIONS.map((status) => (
+                        <option key={status} value={status}>
+                          {status}
+                        </option>
+                      ))}
+                    </select>
+                  </Field>
+                </div>
+
+                <div className="form-actions">
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="btn-primary"
+                  >
+                    {isSubmitting ? "Dang tao..." : "Tạo tài khoản"}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
         </div>
 
+        {/* Modal Reset Password */}
         {resetTarget ? (
-          <div
-            style={{
-              position: "fixed",
-              inset: 0,
-              background: "rgba(15, 23, 42, 0.36)",
-              display: "grid",
-              placeItems: "center",
-              padding: "20px",
-            }}
-          >
-            <form
-              onSubmit={handleResetPassword}
-              style={{
-                width: "100%",
-                maxWidth: "420px",
-                background: "#ffffff",
-                borderRadius: "8px",
-                padding: "20px",
-                boxShadow: "0 24px 60px rgba(15, 23, 42, 0.18)",
-              }}
-            >
-              <h2 style={{ margin: "0 0 8px", fontSize: "20px" }}>
-                Reset password
-              </h2>
-              <p style={{ margin: "0 0 16px", color: "#64748b" }}>
-                {resetTarget.email}
-              </p>
+          <div className="modal-overlay">
+            <form onSubmit={handleResetPassword} className="modal-card">
+              <div className="tape-deco"></div>
+              <h2 className="modal-title">Reset password</h2>
+              <p className="modal-subtitle">Target: {resetTarget.email}</p>
+
               <Field label="Mat khau moi">
                 <input
                   type="password"
@@ -321,24 +296,25 @@ export default function AdminUsersPage() {
                   onChange={(event) => setNewPassword(event.target.value)}
                   minLength={8}
                   required
-                  style={inputStyle}
+                  className="input-field"
                 />
               </Field>
-              <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
+
+              <div className="modal-actions">
                 <button
                   type="button"
                   onClick={() => {
                     setResetTarget(null);
                     setNewPassword("");
                   }}
-                  style={secondaryButtonStyle}
+                  className="btn-cancel"
                 >
                   Huy
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  style={primaryButtonStyle}
+                  className="btn-confirm"
                 >
                   {isSubmitting ? "Dang reset..." : "Reset"}
                 </button>
@@ -353,60 +329,21 @@ export default function AdminUsersPage() {
 
 function Field({ label, children }) {
   return (
-    <label style={{ display: "block", marginBottom: "14px" }}>
-      <span
-        style={{
-          display: "block",
-          marginBottom: "6px",
-          color: "#334155",
-          fontSize: "13px",
-          fontWeight: 700,
-        }}
-      >
-        {label}
-      </span>
+    <label className="input-group">
+      <span className="input-label">{label}</span>
       {children}
     </label>
   );
 }
 
 function Th({ children }) {
-  return <th style={{ padding: "12px 14px", fontSize: "13px" }}>{children}</th>;
+  return <th className="th-neo">{children}</th>;
 }
 
 function Td({ children, colSpan }) {
   return (
-    <td colSpan={colSpan} style={{ padding: "12px 14px", color: "#334155" }}>
+    <td colSpan={colSpan} className="td-neo">
       {children}
     </td>
   );
 }
-
-const inputStyle = {
-  width: "100%",
-  padding: "10px 12px",
-  borderRadius: "6px",
-  border: "1px solid #cbd5e1",
-  outline: "none",
-  fontSize: "14px",
-};
-
-const primaryButtonStyle = {
-  border: "none",
-  borderRadius: "6px",
-  background: "#0f172a",
-  color: "#ffffff",
-  padding: "10px 14px",
-  fontWeight: 700,
-  cursor: "pointer",
-};
-
-const secondaryButtonStyle = {
-  border: "1px solid #cbd5e1",
-  borderRadius: "6px",
-  background: "#ffffff",
-  color: "#334155",
-  padding: "9px 12px",
-  fontWeight: 700,
-  cursor: "pointer",
-};
