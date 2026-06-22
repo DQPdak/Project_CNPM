@@ -148,4 +148,48 @@ describe("Module 11 & 12 (Nhiệm vụ 8): Kỳ phát hành, Nhập Vote & Xếp
     expect(opRanking.trend).toBe("DOWN"); // Từ hạng 1 xuống hạng 2
     expect(opRanking.cancellationWarning).toBe(true); // Xu hướng DOWN kích hoạt cancellationWarning
   });
+
+  it("cập nhật trạng thái Series thành Critical/Warning khi điểm trung bình dưới 4 hoặc bằng 6", async () => {
+    const issue1 = await ReleaseIssue.create({
+      custom_id: "ISSUE-TEST-AVG-01",
+      title: "Kỳ phát hành Test điểm TB",
+      release_date: new Date(),
+      type: "Weekly",
+    });
+
+    const seriesCritical = await Series.create({
+      title: "Bleach",
+      author_id: new mongoose.Types.ObjectId(),
+      status: "Active",
+      risk_status: "Safe"
+    });
+
+    const seriesWarning = await Series.create({
+      title: "Conan",
+      author_id: new mongoose.Types.ObjectId(),
+      status: "Active",
+      risk_status: "Safe"
+    });
+
+    // Giả lập votes
+    // S3 (Bleach) có điểm trung bình 3.5 (dưới 4)
+    // S4 (Conan) có điểm trung bình 6.0 (bằng 6)
+    const rawVotes = [
+      { seriesId: "S3", votes: 100, avgScore: 3.5 },
+      { seriesId: "S4", votes: 200, avgScore: 6.0 },
+    ];
+
+    const RankingService = require("../src/services/RankingService");
+    await RankingService.calculateRankingAndTrends("ISSUE-TEST-AVG-01", rawVotes);
+
+    // Kiểm tra Series Critical
+    const updatedCritical = await Series.findById(seriesCritical._id);
+    expect(updatedCritical.risk_status).toBe("Critical");
+    expect(updatedCritical.status).toBe("At Risk");
+
+    // Kiểm tra Series Warning
+    const updatedWarning = await Series.findById(seriesWarning._id);
+    expect(updatedWarning.risk_status).toBe("Warning");
+    expect(updatedWarning.status).toBe("At Risk");
+  });
 });

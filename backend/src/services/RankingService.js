@@ -10,7 +10,9 @@ const SHORT_ID_MAP = {
   "S1": "One Piece",
   "S2": "Naruto",
   "S3": "Bleach",
-  "S4": "Conan"
+  "S4": "Conan",
+  "S5": "Dragon Ball",
+  "S6": "Death Note"
 };
 
 class RankingService {
@@ -152,16 +154,38 @@ class RankingService {
           } else {
             current.trend = "STABLE";
           }
-
-          if (current.currentRank >= 4 || current.trend === "DOWN") {
-            current.cancellationWarning = true;
-          }
         } else {
           current.trend = "STABLE";
         }
       } else {
         current.trend = "STABLE";
       }
+
+      // Xác định trạng thái cảnh báo dựa trên điểm trung bình (average_score) và thứ hạng/xu hướng
+      let updatedRiskStatus = "Safe";
+      let updatedStatus = "Active";
+
+      if (current.average_score < 4) {
+        current.cancellationWarning = true;
+        updatedRiskStatus = "Critical";
+        updatedStatus = "At Risk";
+      } else if (current.average_score <= 6) {
+        current.cancellationWarning = true;
+        updatedRiskStatus = "Warning";
+        updatedStatus = "At Risk";
+      } else if (current.currentRank >= 4 || current.trend === "DOWN") {
+        current.cancellationWarning = true;
+        updatedRiskStatus = "Warning";
+        updatedStatus = "At Risk";
+      } else {
+        current.cancellationWarning = false;
+      }
+
+      // Cập nhật trạng thái Series tương ứng trong database
+      await Series.findByIdAndUpdate(current.series_id, {
+        risk_status: updatedRiskStatus,
+        status: updatedStatus
+      });
 
       // Lưu/Cập nhật dữ liệu bình chọn (ReaderVote)
       await ReaderVote.findOneAndUpdate(

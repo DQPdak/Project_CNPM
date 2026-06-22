@@ -9,7 +9,9 @@ const SHORT_ID_MAP = {
   "S1": "One Piece",
   "S2": "Naruto",
   "S3": "Bleach",
-  "S4": "Conan"
+  "S4": "Conan",
+  "S5": "Dragon Ball",
+  "S6": "Death Note"
 };
 
 async function seedSeries() {
@@ -38,7 +40,7 @@ async function seedSeries() {
         await Series.create({
           title,
           description: `Truyện được tạo tự động cho hệ thống xếp hạng: ${title}`,
-          genre: shortId === "S1" || shortId === "S2" ? "Shonen" : (shortId === "S3" ? "Action" : "Mystery"),
+          genre: shortId === "S1" || shortId === "S2" || shortId === "S5" ? "Shonen" : (shortId === "S3" ? "Action" : (shortId === "S6" ? "Thriller" : "Mystery")),
           target_audience: "Teen",
           author_id: author._id,
           status: "Active"

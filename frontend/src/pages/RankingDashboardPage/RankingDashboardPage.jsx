@@ -28,6 +28,8 @@ const SERIES_OPTIONS = [
   { id: "S2", name: "Naruto", genre: "Shonen", authorId: "A2" },
   { id: "S3", name: "Bleach", genre: "Action", authorId: "A3" },
   { id: "S4", name: "Conan", genre: "Mystery", authorId: "A4" },
+  { id: "S5", name: "Dragon Ball", genre: "Shonen", authorId: "A5" },
+  { id: "S6", name: "Death Note", genre: "Thriller", authorId: "A6" },
 ];
 
 const ISSUE_TYPES = ["Weekly", "Monthly", "One-shot", "Online only"];
