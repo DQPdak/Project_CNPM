@@ -22,6 +22,7 @@ const ROLE_MENUS = {
   ],
   "Editorial Board": [
     { name: "Duyệt Series Mới", path: "/board/reviews" },
+    { name: "Series có nguy cơ", path: "/board/at-risk" },
     { name: "Quản lý Phát hành", path: "/board/releases" },
     { name: "Bảng xếp hạng (Ranking)", path: "/board/ranking" },
   ],

@@ -14,6 +14,7 @@ import MangakaSeriesListPage from "../pages/mangaka/MangakaSeriesListPage";
 import MangakaSeriesFormPage from "../pages/mangaka/MangakaSeriesFormPage";
 import BoardPendingSeriesPage from "../pages/board/BoardPendingSeriesPage";
 import BoardSeriesReviewPage from "../pages/board/BoardSeriesReviewPage";
+import BoardAtRiskSeriesPage from "../pages/board/BoardAtRiskSeriesPage";
 import RequireRole from "../components/security/RequireRole";
 
 export default function AppRoutes() {
@@ -83,6 +84,22 @@ export default function AppRoutes() {
             element={
               <RequireRole allowedRoles={["Editorial Board", "Admin"]}>
                 <BoardSeriesReviewPage />
+              </RequireRole>
+            }
+          />
+          <Route
+            path="/board/at-risk"
+            element={
+              <RequireRole allowedRoles={["Editorial Board", "Admin"]}>
+                <BoardAtRiskSeriesPage />
+              </RequireRole>
+            }
+          />
+          <Route
+            path="/admin/series"
+            element={
+              <RequireRole allowedRoles={["Admin"]}>
+                <BoardAtRiskSeriesPage />
               </RequireRole>
             }
           />

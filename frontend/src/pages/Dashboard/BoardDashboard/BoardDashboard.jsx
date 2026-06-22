@@ -16,6 +16,9 @@ const BoardDashboard = () => {
             <Link to="/board/reviews" className="btn-amber">
               Xem hồ sơ chờ duyệt
             </Link>
+            <Link to="/board/at-risk" className="btn-amber" style={{ marginTop: "12px" }}>
+              Series có nguy cơ
+            </Link>
           </div>
         </div>
         <div>
