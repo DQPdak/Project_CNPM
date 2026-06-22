@@ -218,9 +218,6 @@ export default function BoardAtRiskSeriesPage() {
     <div>
       <header style={{ marginBottom: "24px" }}>
         <h1 style={{ margin: 0, fontSize: "1.75rem" }}>Danh sách series có nguy cơ</h1>
-        <p style={{ margin: "8px 0 0", color: "#64748b" }}>
-          Module 13 — Quyết định tiếp tục, hủy hoặc đổi lịch xuất bản truyện.
-        </p>
       </header>
 
       {isLoading && <Loading text="Đang tải danh sách series có nguy cơ..." />}
