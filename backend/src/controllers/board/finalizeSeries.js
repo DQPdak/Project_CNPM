@@ -31,8 +31,21 @@ exports.finalizeSeries = async (req, res) => {
       return res.status(400).json({ message: "Chưa có phiếu bầu nào" });
     }
 
-    const latestVote = votes[votes.length - 1];
-    const decision = latestVote.vote;
+    const tally = { Approve: 0, Reject: 0, "Need Revision": 0 };
+    votes.forEach((v) => {
+      if (tally[v.vote] !== undefined) {
+        tally[v.vote] += 1;
+      }
+    });
+
+    let decision;
+    if (tally.Approve > tally.Reject && tally.Approve > tally["Need Revision"]) {
+      decision = "Approve";
+    } else if (tally.Reject >= tally.Approve && tally.Reject >= tally["Need Revision"]) {
+      decision = "Reject";
+    } else {
+      decision = "Need Revision";
+    }
 
     if (decision === "Approve") {
       if (!approved_schedule || !SCHEDULE_VALUES.includes(approved_schedule)) {
@@ -58,6 +71,7 @@ exports.finalizeSeries = async (req, res) => {
     return res.status(200).json({
       message: "Tổng hợp kết quả duyệt thành công",
       decision,
+      tally,
       series,
       proposal,
       votes,

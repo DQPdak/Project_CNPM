@@ -13,8 +13,13 @@ const MangakaDashboard = () => {
             <p className="card-desc">
               Danh sách các tác phẩm bạn đang sáng tác.
             </p>
-            <div className="placeholder-box">
-              [Danh sách Series / Nút tạo Chapter mới]
+            <div className="flex flex-col gap-3">
+              <Link to="/mangaka/series" className="btn-indigo">
+                Xem series của tôi
+              </Link>
+              <Link to="/mangaka/series/new" className="btn-indigo">
+                + Tạo series mới
+              </Link>
             </div>
           </div>
         </div>

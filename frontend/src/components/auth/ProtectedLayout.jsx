@@ -22,11 +22,13 @@ const ROLE_MENUS = {
   ],
   "Editorial Board": [
     { name: "Duyệt Series Mới", path: "/board/reviews" },
+    { name: "Series có nguy cơ", path: "/board/at-risk" },
     { name: "Quản lý Phát hành", path: "/board/releases" },
     { name: "Bảng xếp hạng (Ranking)", path: "/board/ranking" },
   ],
   Admin: [
     { name: "Quản lý User", path: "/admin/users" },
+    { name: "Quản lý Phát hành", path: "/admin/releases" },
     { name: "Ranking & Vote", path: "/admin/ranking" },
     { name: "Hệ thống Series", path: "/admin/series" },
     { name: "Cấu hình Hệ thống", path: "/admin/settings" },
