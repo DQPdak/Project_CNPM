@@ -1,7 +1,9 @@
 const express = require("express");
 const { ROLES } = require("../constants/roles");
 const { requireAuth } = require("../modules/auth/middlewares/requireAuth");
-const { requireRole } = require("../modules/authorization/middlewares/requireRole");
+const {
+  requireRole,
+} = require("../modules/authorization/middlewares/requireRole");
 const {
   requireChapterScope,
   requirePageScope,
@@ -11,6 +13,7 @@ const updatePageVersion = require("../controllers/page/updatePageVersion");
 const approvePage = require("../controllers/page/approvedPage");
 const getPagesByChapter = require("../controllers/page/getPagesByChapter");
 const upload = require("../middlewares/upload.middleware");
+const getPageVersions = require("../controllers/page/getPageVersions");
 
 const router = express.Router();
 
@@ -18,29 +21,57 @@ router.use(requireAuth);
 
 router.get(
   "/chapter/:chapter_id",
-  requireRole(ROLES.MANGAKA, ROLES.TANTOU_EDITOR, ROLES.EDITORIAL_BOARD),
+  requireRole(
+    ROLES.MANGAKA,
+    ROLES.ASSISTANT,
+    ROLES.TANTOU_EDITOR,
+    ROLES.EDITORIAL_BOARD,
+    ROLES.ADMIN,
+  ),
   requireChapterScope("chapter_id", "read"),
   getPagesByChapter.getPagesByChapter,
 );
+
 router.post(
   "/upload/:chapter_id/upload",
-  requireRole(ROLES.MANGAKA, ROLES.TANTOU_EDITOR),
+  requireRole(ROLES.MANGAKA, ROLES.ADMIN),
   requireChapterScope("chapter_id", "write"),
-  upload.array("pages", 50),
+  upload.fields([
+    { name: "source_file", maxCount: 1 }, // Bắt buộc: File PSD/CLIP
+    { name: "attached_resource", maxCount: 1 }, // Tùy chọn: File ZIP
+  ]),
   uploadPages.uploadPages,
 );
+
 router.put(
   "/update/:page_id",
-  requireRole(ROLES.MANGAKA, ROLES.TANTOU_EDITOR),
+  requireRole(ROLES.MANGAKA, ROLES.ASSISTANT, ROLES.ADMIN),
   requirePageScope("page_id", "write"),
-  upload.single("page"),
+  upload.fields([
+    { name: "source_file", maxCount: 1 }, // Bản thảo mới (bắt buộc)
+    { name: "attached_resource", maxCount: 1 }, // Tài nguyên mới (tùy chọn)
+  ]),
   updatePageVersion.updatePageVersion,
 );
+
 router.put(
   "/approve/:page_id",
-  requireRole(ROLES.MANGAKA, ROLES.TANTOU_EDITOR),
+  requireRole(ROLES.MANGAKA, ROLES.ADMIN, ROLES.TANTOU_EDITOR),
   requirePageScope("page_id", "write"),
   approvePage.approvePage,
+);
+
+router.get(
+  "/:page_id/versions",
+  requireRole(
+    ROLES.MANGAKA,
+    ROLES.ASSISTANT,
+    ROLES.ADMIN,
+    ROLES.EDITORIAL_BOARD,
+    ROLES.TANTOU_EDITOR,
+  ),
+  requirePageScope("page_id", "read"),
+  getPageVersions.getPageVersions,
 );
 
 module.exports = router;

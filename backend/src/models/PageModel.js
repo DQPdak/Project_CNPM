@@ -11,11 +11,22 @@ const pageSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
-    file_url: {
+    // URL ảnh phẳng (PNG/JPG) được sinh ra từ file PSD để hiển thị trên web
+    current_preview_url: {
       type: String,
       required: true,
-    }, // Đường dẫn tới file ảnh của trang truyện
-    version: {
+    },
+    // NÚT TẢI 1: Đường link tải file bản thảo gốc .psd (Bắt buộc)
+    current_source_file_url: {
+      type: String,
+      required: true,
+    },
+    // NÚT TẢI 2: Đường link tải file tài nguyên đính kèm .zip (Được phép null)
+    attached_resource_url: {
+      type: String,
+      default: null,
+    },
+    current_version: {
       type: Number,
       default: 1,
     },
