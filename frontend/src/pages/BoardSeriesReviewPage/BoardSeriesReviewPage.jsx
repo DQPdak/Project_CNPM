@@ -5,12 +5,13 @@ import castVote from "../../services/board/castVoteService";
 import finalizeSeries from "../../services/board/finalizeSeriesService";
 import Loading from "../../common/Loading/Loading";
 import { useToast } from "../../contexts/ToastContext";
+import "./BoardSeriesReviewPage.css"; // Import file CSS mới
 
 const SCHEDULE_OPTIONS = [
-  { value: "weekly", label: "Weekly" },
-  { value: "monthly", label: "Monthly" },
-  { value: "one-shot", label: "One-shot" },
-  { value: "online only", label: "Online only" },
+  { value: "weekly", label: "Hàng tuần" },
+  { value: "monthly", label: "Hàng tháng" },
+  { value: "one-shot", label: "Một tập (One-shot)" },
+  { value: "online only", label: "Chỉ phát hành online" },
 ];
 
 export default function BoardSeriesReviewPage() {
@@ -70,105 +71,86 @@ export default function BoardSeriesReviewPage() {
   }
 
   if (!data?.series) {
-    return <p>Không tìm thấy hồ sơ series.</p>;
+    return <div className="empty-state">Không tìm thấy hồ sơ series.</div>;
   }
 
   const { series, proposal, votes } = data;
   const canVote = ["Submitted", "Under Review"].includes(proposal?.status);
 
   return (
-    <div style={{ maxWidth: "800px" }}>
-      <Link
-        to="/board/reviews"
-        style={{ color: "#0ea5e9", textDecoration: "none", fontSize: "0.9rem" }}
-      >
+    <div className="board-review-wrapper">
+      <Link to="/board/reviews" className="back-link">
         ← Quay lại danh sách chờ duyệt
       </Link>
 
-      <h1 style={{ margin: "16px 0 8px" }}>{series.title}</h1>
-      <p style={{ color: "#64748b" }}>
-        Tác giả: {series.author_id?.name || "—"} · Proposal:{" "}
-        <strong>{proposal?.status}</strong>
-      </p>
+      <header className="page-header">
+        <h1 className="page-title">{series.title}</h1>
+        <div className="header-meta">
+          <span className="meta-author">
+            Tác giả: {series.author_id?.name || "—"}
+          </span>
+          <span className="meta-status">
+            Proposal: <strong>{proposal?.status}</strong>
+          </span>
+        </div>
+      </header>
 
-      <section
-        style={{
-          background: "#fff",
-          padding: "20px",
-          borderRadius: "12px",
-          border: "1px solid #e2e8f0",
-          marginBottom: "20px",
-        }}
-      >
-        <h2 style={{ marginTop: 0, fontSize: "1.1rem" }}>Hồ sơ đề xuất</h2>
-        <p>
-          <strong>Tóm tắt:</strong> {proposal?.summary || "—"}
-        </p>
-        <p>
-          <strong>Nhân vật:</strong> {proposal?.characters || "—"}
-        </p>
-        <p>
-          <strong>Phong cách:</strong> {proposal?.art_style || "—"}
-        </p>
+      <section className="neo-section">
+        <h2 className="section-title">Hồ sơ đề xuất</h2>
+        <div className="proposal-info">
+          <p>
+            <span className="info-label">Tóm tắt:</span>{" "}
+            {proposal?.summary || "—"}
+          </p>
+          <p>
+            <span className="info-label">Nhân vật:</span>{" "}
+            {proposal?.characters || "—"}
+          </p>
+          <p>
+            <span className="info-label">Phong cách:</span>{" "}
+            {proposal?.art_style || "—"}
+          </p>
+        </div>
         {proposal?.cover_image && (
-          <img
-            src={proposal.cover_image}
-            alt="Cover"
-            style={{ maxWidth: "240px", borderRadius: "8px", marginTop: "8px" }}
-          />
+          <img src={proposal.cover_image} alt="Cover" className="cover-image" />
         )}
       </section>
 
       {votes?.length > 0 && (
-        <section
-          style={{
-            background: "#f8fafc",
-            padding: "16px",
-            borderRadius: "12px",
-            marginBottom: "20px",
-          }}
-        >
-          <h3 style={{ marginTop: 0 }}>Phiếu bầu hiện có ({votes.length})</h3>
-          {votes.map((v) => (
-            <div key={v._id} style={{ marginBottom: "8px", fontSize: "0.9rem" }}>
-              <strong>{v.vote}</strong> — {v.board_member_id?.name || "Board member"}
-              {v.comment && `: ${v.comment}`}
-            </div>
-          ))}
+        <section className="votes-section">
+          <h3 className="section-title">Phiếu bầu hiện có ({votes.length})</h3>
+          <div className="votes-list">
+            {votes.map((v) => (
+              <div key={v._id} className="vote-item">
+                <span className="vote-badge">{v.vote}</span>
+                <span className="vote-member">
+                  — {v.board_member_id?.name || "Board member"}
+                </span>
+                {v.comment && (
+                  <span className="vote-comment">: {v.comment}</span>
+                )}
+              </div>
+            ))}
+          </div>
         </section>
       )}
 
       {canVote && (
-        <section
-          style={{
-            background: "#fff",
-            padding: "20px",
-            borderRadius: "12px",
-            border: "1px solid #e2e8f0",
-          }}
-        >
-          <h2 style={{ marginTop: 0, fontSize: "1.1rem" }}>Bỏ phiếu</h2>
+        <section className="neo-section">
+          <h2 className="section-title">Bỏ phiếu</h2>
           <textarea
+            className="neo-textarea"
             value={comment}
             onChange={(e) => setComment(e.target.value)}
             placeholder="Góp ý (tuỳ chọn)"
-            style={{
-              width: "100%",
-              minHeight: "80px",
-              padding: "10px",
-              borderRadius: "8px",
-              border: "1px solid #cbd5e1",
-              marginBottom: "12px",
-              boxSizing: "border-box",
-            }}
           />
 
-          <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", marginBottom: "16px" }}>
+          <div className="vote-actions">
             <button
               type="button"
               disabled={isVoting}
               onClick={() => handleVote("Approve")}
-              style={voteBtnStyle("#16a34a")}
+              className="btn-approve"
             >
               Approve
             </button>
@@ -176,7 +158,7 @@ export default function BoardSeriesReviewPage() {
               type="button"
               disabled={isVoting}
               onClick={() => handleVote("Reject")}
-              style={voteBtnStyle("#dc2626")}
+              className="btn-reject"
             >
               Reject
             </button>
@@ -184,25 +166,20 @@ export default function BoardSeriesReviewPage() {
               type="button"
               disabled={isVoting}
               onClick={() => handleVote("Need Revision")}
-              style={voteBtnStyle("#9333ea")}
+              className="btn-revise"
             >
               Need Revision
             </button>
           </div>
 
-          <div style={{ borderTop: "1px solid #e2e8f0", paddingTop: "16px" }}>
-            <label style={{ fontWeight: 600, display: "block", marginBottom: "8px" }}>
+          <div className="finalize-section">
+            <label className="finalize-label">
               Lịch xuất bản (khi Approve)
             </label>
             <select
+              className="neo-select"
               value={approvedSchedule}
               onChange={(e) => setApprovedSchedule(e.target.value)}
-              style={{
-                padding: "8px 12px",
-                borderRadius: "8px",
-                border: "1px solid #cbd5e1",
-                marginBottom: "12px",
-              }}
             >
               {SCHEDULE_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
@@ -210,35 +187,22 @@ export default function BoardSeriesReviewPage() {
                 </option>
               ))}
             </select>
-            <br />
+
             <button
               type="button"
               disabled={isVoting || votes.length === 0}
               onClick={handleFinalize}
-              style={voteBtnStyle("#0ea5e9")}
+              className="btn-finalize"
             >
               Tổng hợp kết quả (Finalize)
             </button>
+
             {votes.length === 0 && (
-              <p style={{ fontSize: "0.85rem", color: "#64748b", marginTop: "8px" }}>
-                Cần bỏ phiếu trước khi finalize.
-              </p>
+              <p className="warning-text">Cần bỏ phiếu trước khi finalize.</p>
             )}
           </div>
         </section>
       )}
     </div>
   );
-}
-
-function voteBtnStyle(bg) {
-  return {
-    padding: "10px 18px",
-    background: bg,
-    color: "#fff",
-    border: "none",
-    borderRadius: "8px",
-    fontWeight: 600,
-    cursor: "pointer",
-  };
 }

@@ -7,7 +7,6 @@ import {
   CalendarPlus,
   FileSpreadsheet,
   Filter,
-  HelpCircle,
   LineChart,
   RefreshCcw,
   Trophy,
@@ -74,7 +73,9 @@ export default function RankingDashboardPage() {
   const canManage = MANAGE_ROLES.includes(user?.role);
 
   const topSeries = leaderboard[0];
-  const riskCount = leaderboard.filter((item) => item.cancellationWarning).length;
+  const riskCount = leaderboard.filter(
+    (item) => item.cancellationWarning,
+  ).length;
   const totalVotes = leaderboard.reduce(
     (sum, item) => sum + Number(item.votes || 0),
     0,
@@ -91,12 +92,17 @@ export default function RankingDashboardPage() {
 
   const visibleSeries = useMemo(() => {
     if (canManage) return SERIES_OPTIONS;
-    const uniqueIds = Array.from(new Set(leaderboard.map((item) => item.seriesId)));
+    const uniqueIds = Array.from(
+      new Set(leaderboard.map((item) => item.seriesId)),
+    );
     return SERIES_OPTIONS.filter((series) => uniqueIds.includes(series.id));
   }, [leaderboard, canManage]);
 
   useEffect(() => {
-    if (visibleSeries.length > 0 && !visibleSeries.some((s) => s.id === chartSeriesId)) {
+    if (
+      visibleSeries.length > 0 &&
+      !visibleSeries.some((s) => s.id === chartSeriesId)
+    ) {
       setChartSeriesId(visibleSeries[0].id);
     }
   }, [visibleSeries, chartSeriesId]);
@@ -105,7 +111,7 @@ export default function RankingDashboardPage() {
     setIsLoading(true);
     const result = await getLeaderboard(filters);
     if (result.success === false) {
-      toast.error("Khong the tai bang xep hang: " + result.message);
+      toast.error("Không thể tải bảng xếp hạng: " + result.message);
       setLeaderboard([]);
     } else {
       setLeaderboard(Array.isArray(result) ? result : []);
@@ -121,7 +127,7 @@ export default function RankingDashboardPage() {
 
     const result = await getPerformanceChartData(chartSeriesId);
     if (result.success === false) {
-      toast.error("Khong the tai bieu do: " + result.message);
+      toast.error("Không thể tải biểu đồ: " + result.message);
       setChartData([]);
     } else {
       setChartData(Array.isArray(result) ? result : []);
@@ -158,16 +164,16 @@ export default function RankingDashboardPage() {
   const handleCreateIssue = async (event) => {
     event.preventDefault();
     if (!issueForm.seriesList.length) {
-      toast.error("Can chon it nhat mot series cho ky phat hanh.");
+      toast.error("Cần chọn ít nhất một series cho kỳ phát hành.");
       return;
     }
 
     setIsCreating(true);
     const result = await createReleaseIssue(issueForm);
     if (result.success === false) {
-      toast.error("Khong the tao ky phat hanh: " + result.message);
+      toast.error("Không thể tạo kỳ phát hành: " + result.message);
     } else {
-      toast.success("Da tao ky phat hanh moi.");
+      toast.success("Đã tạo kỳ phát hành mới.");
       setImportForm((current) => ({ ...current, issueId: issueForm.id }));
       setFilters((current) => ({ ...current, issueId: issueForm.id }));
       setIssueForm(initialIssueForm);
@@ -178,16 +184,16 @@ export default function RankingDashboardPage() {
   const handleImportVotes = async (event) => {
     event.preventDefault();
     if (!importForm.issueId || !importForm.file) {
-      toast.error("Can nhap ma ky phat hanh va chon file vote.");
+      toast.error("Cần nhập mã kỳ phát hành và chọn file vote.");
       return;
     }
 
     setIsImporting(true);
     const result = await importVoteData(importForm);
     if (result.success === false) {
-      toast.error("Khong the import vote: " + result.message);
+      toast.error("Không thể import vote: " + result.message);
     } else {
-      toast.success("Da import vote va cap nhat bang xep hang.");
+      toast.success("Đã import vote và cập nhật bảng xếp hạng.");
       setLeaderboard(result.data || []);
       setFilters((current) => ({ ...current, issueId: importForm.issueId }));
       await fetchChartData();
@@ -197,21 +203,25 @@ export default function RankingDashboardPage() {
 
   return (
     <RequirePermission required="CAN_VIEW_RANKING">
-      <div className="ranking-page">
+      <div className="ranking-wrapper">
         {isLoading && <Loading text="Đang tải dữ liệu..." />}
 
-        <header className="ranking-page__header">
-          <div>
-            <h1>{isReleasesView ? "Quản lý Phát hành & Bình chọn" : "Bảng xếp hạng Series"}</h1>
-            <p>
+        <header className="page-header">
+          <div className="header-info">
+            <h1 className="page-title">
               {isReleasesView
-                ? "Tạo các kỳ phát hành mới và nhập (import) dữ liệu bình chọn của độc giả từ file Excel/CSV."
-                : "Theo dõi xếp hạng, điểm số, xu hướng và hiệu suất của các series manga qua các kỳ phát hành."}
+                ? "Phát hành & Bình chọn"
+                : "Bảng xếp hạng Series"}
+            </h1>
+            <p className="page-desc">
+              {isReleasesView
+                ? "Tạo kỳ phát hành & nhập (import) vote độc giả"
+                : "Theo dõi xếp hạng, điểm số & hiệu suất manga"}
             </p>
           </div>
           {!isReleasesView && (
             <button
-              className="ranking-page__refresh"
+              className="btn-secondary"
               type="button"
               onClick={fetchLeaderboard}
             >
@@ -224,33 +234,38 @@ export default function RankingDashboardPage() {
         {isReleasesView ? (
           <div className="ranking-grid">
             {canManage ? (
-              <section className="ranking-panel">
-                <div className="ranking-panel__title">
-                  <CalendarPlus size={20} />
+              <section className="neo-panel">
+                <div className="panel-title">
+                  <CalendarPlus size={24} />
                   <h2>Tạo kỳ phát hành mới</h2>
                 </div>
-                <form className="ranking-form" onSubmit={handleCreateIssue}>
+                <form className="neo-form" onSubmit={handleCreateIssue}>
                   <Field label="Mã kỳ phát hành">
                     <input
+                      className="neo-input"
                       value={issueForm.id}
-                      onChange={(event) => updateIssueForm("id", event.target.value)}
-                      placeholder="ISSUE-2026-01"
+                      onChange={(event) =>
+                        updateIssueForm("id", event.target.value)
+                      }
+                      placeholder="VD: ISSUE-2026-01"
                       required
                     />
                   </Field>
                   <Field label="Tên kỳ phát hành">
                     <input
+                      className="neo-input"
                       value={issueForm.name}
                       onChange={(event) =>
                         updateIssueForm("name", event.target.value)
                       }
-                      placeholder="Weekly Jump 01"
+                      placeholder="VD: Weekly Jump 01"
                       required
                     />
                   </Field>
-                  <div className="ranking-form__row">
+                  <div className="grid-2-cols">
                     <Field label="Ngày phát hành">
                       <input
+                        className="neo-input"
                         type="date"
                         value={issueForm.releaseDate}
                         onChange={(event) =>
@@ -261,6 +276,7 @@ export default function RankingDashboardPage() {
                     </Field>
                     <Field label="Loại kỳ phát hành">
                       <select
+                        className="neo-select"
                         value={issueForm.type}
                         onChange={(event) =>
                           updateIssueForm("type", event.target.value)
@@ -274,11 +290,16 @@ export default function RankingDashboardPage() {
                       </select>
                     </Field>
                   </div>
-                  <div className="ranking-form__series">
-                    <span>Manga trong kỳ phát hành</span>
-                    <div>
+                  <div>
+                    <span className="series-list-wrap">
+                      Manga trong kỳ phát hành:
+                    </span>
+                    <div className="series-checkbox-grid">
                       {SERIES_OPTIONS.map((series) => (
-                        <label key={series.id}>
+                        <label
+                          key={series.id}
+                          className="series-checkbox-label"
+                        >
                           <input
                             type="checkbox"
                             checked={issueForm.seriesList.includes(series.id)}
@@ -289,7 +310,11 @@ export default function RankingDashboardPage() {
                       ))}
                     </div>
                   </div>
-                  <button type="submit" disabled={isCreating}>
+                  <button
+                    className="btn-primary"
+                    type="submit"
+                    disabled={isCreating}
+                  >
                     <CalendarPlus size={18} />
                     {isCreating ? "Đang xử lý..." : "Tạo kỳ phát hành"}
                   </button>
@@ -298,14 +323,15 @@ export default function RankingDashboardPage() {
             ) : null}
 
             {canManage ? (
-              <section className="ranking-panel">
-                <div className="ranking-panel__title">
-                  <FileSpreadsheet size={20} />
-                  <h2>Nhập dữ liệu bình chọn độc giả</h2>
+              <section className="neo-panel">
+                <div className="panel-title">
+                  <FileSpreadsheet size={24} />
+                  <h2>Nhập bình chọn độc giả</h2>
                 </div>
-                <form className="ranking-form" onSubmit={handleImportVotes}>
+                <form className="neo-form" onSubmit={handleImportVotes}>
                   <Field label="Mã kỳ phát hành cần nhập">
                     <input
+                      className="neo-input"
                       value={importForm.issueId}
                       onChange={(event) =>
                         setImportForm((current) => ({
@@ -313,15 +339,16 @@ export default function RankingDashboardPage() {
                           issueId: event.target.value,
                         }))
                       }
-                      placeholder="ISSUE-2026-01"
+                      placeholder="VD: ISSUE-2026-01"
                       required
                     />
                   </Field>
-                  <Field 
-                    label="Tập tin Excel/CSV" 
+                  <Field
+                    label="Tập tin Excel/CSV"
                     tooltip="Cấu trúc file mẫu cần có các cột: seriesId, votes, avgScore, comments, views"
                   >
                     <input
+                      className="neo-input !p-2 !bg-[#F4F4F0] cursor-pointer"
                       type="file"
                       accept=".csv,.xlsx,.xls"
                       onChange={(event) =>
@@ -333,9 +360,13 @@ export default function RankingDashboardPage() {
                       required
                     />
                   </Field>
-                  <button type="submit" disabled={isImporting}>
+                  <button
+                    className="btn-primary mt-4"
+                    type="submit"
+                    disabled={isImporting}
+                  >
                     <Upload size={18} />
-                    {isImporting ? "Đang xử lý..." : "Tải lên & Xử lý xếp hạng"}
+                    {isImporting ? "Đang xử lý..." : "Tải lên & Xử lý"}
                   </button>
                 </form>
               </section>
@@ -343,49 +374,59 @@ export default function RankingDashboardPage() {
           </div>
         ) : (
           <>
-            <section className="ranking-metrics" aria-label="Thống kê xếp hạng">
+            <section className="metrics-grid" aria-label="Thống kê xếp hạng">
               <MetricCard
-                icon={<Trophy size={22} />}
+                icon={<Trophy size={28} />}
                 label="Manga dẫn đầu"
                 value={topSeries?.seriesName || "Chưa có dữ liệu"}
-                detail={topSeries ? `Thứ hạng #${topSeries.currentRank}` : "Nhập vote để bắt đầu"}
+                detail={
+                  topSeries
+                    ? `Thứ hạng #${topSeries.currentRank}`
+                    : "Cần nhập vote"
+                }
               />
               <MetricCard
-                icon={<BarChart3 size={22} />}
+                icon={<BarChart3 size={28} />}
                 label="Tổng số phiếu"
                 value={numberFormatter.format(totalVotes)}
                 detail={`${leaderboard.length} series trong bảng`}
               />
               <MetricCard
-                icon={<LineChart size={22} />}
+                icon={<LineChart size={28} />}
                 label="Điểm trung bình"
                 value={averageScore ? averageScore.toFixed(2) : "0"}
                 detail="Tính theo điểm tổng hợp"
               />
               <MetricCard
-                icon={<AlertTriangle size={22} />}
+                icon={<AlertTriangle size={28} />}
                 label="Nhóm cảnh báo"
                 value={riskCount}
-                detail="Series có nguy cơ hủy/giảm hạng"
-                tone={riskCount ? "danger" : "normal"}
+                detail="Series nguy cơ hủy/giảm hạng"
+                isDanger={riskCount > 0}
               />
             </section>
 
-            <section className="ranking-panel ranking-panel--wide">
+            <section className="neo-panel">
               <div className="ranking-toolbar">
-                <div className="ranking-panel__title">
-                  <Filter size={20} />
+                <div className="panel-title border-b-0 mb-0">
+                  <Filter size={24} />
                   <h2>Bảng xếp hạng Manga</h2>
                 </div>
                 <div className="ranking-filters">
                   <input
+                    className="neo-input !py-2 !w-auto"
                     value={filters.issueId}
-                    onChange={(event) => updateFilters("issueId", event.target.value)}
-                    placeholder="Lọc theo mã kỳ"
+                    onChange={(event) =>
+                      updateFilters("issueId", event.target.value)
+                    }
+                    placeholder="Mã kỳ..."
                   />
                   <select
+                    className="neo-select !py-2 !w-auto"
                     value={filters.genre}
-                    onChange={(event) => updateFilters("genre", event.target.value)}
+                    onChange={(event) =>
+                      updateFilters("genre", event.target.value)
+                    }
                   >
                     <option value="">Tất cả thể loại</option>
                     <option value="Shonen">Shonen</option>
@@ -393,12 +434,19 @@ export default function RankingDashboardPage() {
                     <option value="Mystery">Mystery</option>
                   </select>
                   <input
+                    className="neo-input !py-2 !w-auto"
                     value={filters.authorId}
-                    onChange={(event) => updateFilters("authorId", event.target.value)}
-                    placeholder="Author ID"
+                    onChange={(event) =>
+                      updateFilters("authorId", event.target.value)
+                    }
+                    placeholder="Author ID..."
                   />
-                  <button type="button" onClick={fetchLeaderboard}>
-                    Áp dụng lọc
+                  <button
+                    className="btn-primary !py-2 !px-4"
+                    type="button"
+                    onClick={fetchLeaderboard}
+                  >
+                    Lọc
                   </button>
                 </div>
               </div>
@@ -406,13 +454,14 @@ export default function RankingDashboardPage() {
               <LeaderboardTable rows={leaderboard} />
             </section>
 
-            <section className="ranking-panel ranking-panel--wide">
+            <section className="neo-panel mt-8">
               <div className="ranking-toolbar">
-                <div className="ranking-panel__title">
-                  <LineChart size={20} />
+                <div className="panel-title border-b-0 mb-0">
+                  <LineChart size={24} />
                   <h2>Biểu đồ hiệu suất</h2>
                 </div>
                 <select
+                  className="neo-select !w-auto max-w-xs"
                   value={chartSeriesId}
                   onChange={(event) => setChartSeriesId(event.target.value)}
                 >
@@ -423,7 +472,10 @@ export default function RankingDashboardPage() {
                   ))}
                 </select>
               </div>
-              <PerformanceChart data={chartData} seriesName={selectedSeriesName} />
+              <PerformanceChart
+                data={chartData}
+                seriesName={selectedSeriesName}
+              />
             </section>
           </>
         )}
@@ -432,14 +484,14 @@ export default function RankingDashboardPage() {
   );
 }
 
-function MetricCard({ icon, label, value, detail, tone = "normal" }) {
+function MetricCard({ icon, label, value, detail, isDanger }) {
   return (
-    <article className={`ranking-metric ranking-metric--${tone}`}>
-      <div className="ranking-metric__icon">{icon}</div>
-      <div>
-        <span>{label}</span>
-        <strong>{value}</strong>
-        <p>{detail}</p>
+    <article className={`metric-card ${isDanger ? "metric-card--danger" : ""}`}>
+      <div className="metric-icon">{icon}</div>
+      <div className="metric-content">
+        <span className="metric-label">{label}</span>
+        <strong className="metric-value">{value}</strong>
+        <p className="metric-detail">{detail}</p>
       </div>
     </article>
   );
@@ -447,17 +499,13 @@ function MetricCard({ icon, label, value, detail, tone = "normal" }) {
 
 function Field({ label, children, tooltip }) {
   return (
-    <label className="ranking-field">
-      <span className="ranking-field__label-wrap">
-        <span>{label}</span>
-        {tooltip && (
-          <span className="ranking-tooltip-trigger" data-tooltip={tooltip}>
-            <HelpCircle size={14} />
-          </span>
-        )}
-      </span>
+    <div className="form-group">
+      <div className="neo-label-wrap">
+        <label className="neo-label">{label}</label>
+      </div>
       {children}
-    </label>
+      {tooltip && <p className="field-tooltip">💡 {tooltip}</p>}
+    </div>
   );
 }
 
@@ -465,22 +513,23 @@ function LeaderboardTable({ rows }) {
   if (!rows.length) {
     return (
       <div className="ranking-empty">
-        Chưa có dữ liệu xếp hạng. Vui lòng tạo kỳ phát hành và tải file bình chọn lên.
+        Chưa có dữ liệu xếp hạng. Vui lòng tạo kỳ phát hành và tải file bình
+        chọn lên.
       </div>
     );
   }
 
   return (
-    <div className="ranking-table-wrap">
-      <table className="ranking-table">
+    <div className="table-responsive">
+      <table className="neo-table">
         <thead>
           <tr>
-            <th>Thứ hạng</th>
+            <th>Hạng</th>
             <th>Manga</th>
             <th>Kỳ phát hành</th>
             <th>Số phiếu</th>
             <th>Điểm TB</th>
-            <th>Điểm tổng hợp</th>
+            <th>Tổng điểm</th>
             <th>Xu hướng</th>
             <th>Trạng thái</th>
           </tr>
@@ -489,11 +538,11 @@ function LeaderboardTable({ rows }) {
           {rows.map((row) => (
             <tr key={`${row.issueId}-${row.seriesId}`}>
               <td>
-                <span className="ranking-rank">#{row.currentRank}</span>
+                <span className="rank-number">#{row.currentRank}</span>
               </td>
               <td>
-                <strong>{row.seriesName}</strong>
-                <small>{row.seriesId}</small>
+                <strong className="series-name">{row.seriesName}</strong>
+                <span className="series-id">{row.seriesId}</span>
               </td>
               <td>{row.issueId}</td>
               <td>{numberFormatter.format(Number(row.votes || 0))}</td>
@@ -504,9 +553,9 @@ function LeaderboardTable({ rows }) {
               </td>
               <td>
                 {row.cancellationWarning ? (
-                  <span className="ranking-warning">Có nguy cơ</span>
+                  <span className="status-warning">Nguy cơ cao</span>
                 ) : (
-                  <span className="ranking-safe">Ổn định</span>
+                  <span className="status-safe">An toàn</span>
                 )}
               </td>
             </tr>
@@ -518,19 +567,19 @@ function LeaderboardTable({ rows }) {
 }
 
 function TrendBadge({ trend }) {
-  const normalizedTrend = trend || "STABLE";
-  return (
-    <span className={`ranking-trend ranking-trend--${normalizedTrend.toLowerCase()}`}>
-      {normalizedTrend}
-    </span>
-  );
+  const normalizedTrend = (trend || "STABLE").toUpperCase();
+  let colorClass = "trend-stable";
+  if (normalizedTrend === "UP") colorClass = "trend-up";
+  if (normalizedTrend === "DOWN") colorClass = "trend-down";
+
+  return <span className={`trend-badge ${colorClass}`}>{normalizedTrend}</span>;
 }
 
 function PerformanceChart({ data, seriesName }) {
   if (!data.length) {
     return (
       <div className="ranking-empty">
-        Chưa có lịch sử hiệu suất cho {seriesName}. Nhập ít nhất một kỳ để xem biểu đồ.
+        Chưa có lịch sử hiệu suất cho {seriesName}.
       </div>
     );
   }
@@ -538,13 +587,18 @@ function PerformanceChart({ data, seriesName }) {
   const width = 720;
   const height = 260;
   const padding = 34;
-  const maxScore = Math.max(...data.map((item) => Number(item.totalScore || 0)), 1);
+  const maxScore = Math.max(
+    ...data.map((item) => Number(item.totalScore || 0)),
+    1,
+  );
   const xStep =
     data.length > 1 ? (width - padding * 2) / (data.length - 1) : width / 2;
   const points = data.map((item, index) => {
     const x = data.length > 1 ? padding + index * xStep : width / 2;
     const y =
-      height - padding - (Number(item.totalScore || 0) / maxScore) * (height - padding * 2);
+      height -
+      padding -
+      (Number(item.totalScore || 0) / maxScore) * (height - padding * 2);
     return { ...item, x, y };
   });
   const path = points
@@ -552,26 +606,35 @@ function PerformanceChart({ data, seriesName }) {
     .join(" ");
 
   return (
-    <div className="ranking-chart">
-      <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`Bieu do ${seriesName}`}>
-        <line x1={padding} y1={height - padding} x2={width - padding} y2={height - padding} />
+    <div className="neo-chart-container">
+      <svg
+        viewBox={`0 0 ${width} ${height}`}
+        role="img"
+        aria-label={`Bieu do ${seriesName}`}
+      >
+        <line
+          x1={padding}
+          y1={height - padding}
+          x2={width - padding}
+          y2={height - padding}
+        />
         <line x1={padding} y1={padding} x2={padding} y2={height - padding} />
         <path d={path} />
         {points.map((point) => (
           <g key={point.issueId}>
-            <circle cx={point.x} cy={point.y} r="5" />
-            <text x={point.x} y={point.y - 12}>
+            <circle cx={point.x} cy={point.y} r="6" />
+            <text x={point.x} y={point.y - 14}>
               {point.totalScore}
             </text>
-            <text x={point.x} y={height - 10} className="ranking-chart__label">
+            <text x={point.x} y={height - 10} className="neo-chart-label">
               {point.issueId}
             </text>
           </g>
         ))}
       </svg>
-      <div className="ranking-chart__legend">
-        <span>{seriesName}</span>
-        <span>Đường biểu diễn điểm tổng hợp qua các kỳ</span>
+      <div className="chart-legend">
+        <span className="chart-legend-title">{seriesName}</span>
+        <span>Biểu đồ điểm tổng hợp qua các kỳ</span>
       </div>
     </div>
   );
