@@ -1,27 +1,11 @@
-import React, { useRef } from "react";
+import React from "react";
+import { useNavigate } from "react-router-dom";
 import RequirePermission from "../../security/RequirePermission";
 import "./PageItemCard.css";
 
-export default function PageItemCard({
-  page,
-  onChangeStatus,
-  onUpdateVersion,
-}) {
-  const fileInputRef = useRef(null);
+export default function PageItemCard({ page, onChangeStatus }) {
+  const navigate = useNavigate();
 
-  const handleUpdateClick = () => {
-    fileInputRef.current.click();
-  };
-
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      onUpdateVersion(page._id, file);
-    }
-    e.target.value = null;
-  };
-
-  // Đồng bộ Tiếng Việt hoàn toàn
   const renderStatusBadge = (status) => {
     switch (status) {
       case "Draft":
@@ -50,31 +34,23 @@ export default function PageItemCard({
       <div className="page-image-container">
         <img
           src={
-            page.file_url ||
-            `https://placehold.co/400x600/e2e8f0/64748b?text=Page+${page.page_number}`
+            page.current_preview_url ||
+            `https://placehold.co/400x600/F4F4F0/000000?text=Page+${page.page_number}`
           }
-          alt="Page"
+          alt={`Trang ${page.page_number}`}
           loading="lazy"
         />
+        {page.current_version && (
+          <div className="page-version-badge">V{page.current_version}</div>
+        )}
       </div>
 
       <div className="page-actions">
-        <RequirePermission required="CAN_UPDATE_VERSION">
+        {/* LOGIC 1: DÀNH CHO MANGAKA (Khi trang đang vẽ) */}
+        {/* Chỉ hiển thị nút "Gửi Kiểm duyệt" nếu có quyền CAN_UPDATE_PAGE_STATUS và trang chưa gửi đi */}
+        <RequirePermission required="CAN_UPDATE_PAGE_STATUS">
           {(page.status === "Draft" || page.status === "In Progress") && (
             <div className="actions-wrapper">
-              <button
-                className="btn-action btn-reupload"
-                onClick={handleUpdateClick}
-              >
-                Tải bản mới
-              </button>
-              <input
-                type="file"
-                hidden
-                ref={fileInputRef}
-                accept="image/*"
-                onChange={handleFileChange}
-              />
               <button
                 className="btn-action btn-submit-review"
                 onClick={() => onChangeStatus(page._id, "Ready For Review")}
@@ -85,8 +61,11 @@ export default function PageItemCard({
           )}
         </RequirePermission>
 
+        {/* LOGIC 2: DÀNH CHO EDITOR (Khi Mangaka đã gửi lên) */}
+        {/* Chỉ hiển thị cặp nút "Duyệt / Yêu cầu sửa" nếu có quyền CAN_APPROVE_PAGE và trang đang chờ duyệt */}
+        {/* Đã TIÊU DIỆT hoàn toàn khối else chứa nút "Chưa thể duyệt" vô dụng */}
         <RequirePermission required="CAN_APPROVE_PAGE">
-          {page.status === "Ready For Review" ? (
+          {page.status === "Ready For Review" && (
             <div className="editor-actions">
               <button
                 className="btn-action btn-approve"
@@ -101,14 +80,27 @@ export default function PageItemCard({
                 Yêu cầu sửa
               </button>
             </div>
-          ) : (
-            <div className="action-note">
-              {page.status === "Approved"
-                ? "Trang này đã duyệt"
-                : "Chưa thể duyệt."}
-            </div>
           )}
         </RequirePermission>
+
+        {/* CỤM NÚT ĐIỀU HƯỚNG CỐ ĐỊNH CHO TẤT CẢ MỌI NGƯỜI */}
+        {/* Ai cũng có quyền vào Workspace (Mangaka để giao task, Assistant để nộp bài, Editor để soi) */}
+        {/* Ai cũng có quyền xem lịch sử (Để tra cứu xem ai phá game) */}
+        <div className="card-nav-actions">
+          <button
+            className="btn-nav-workspace"
+            onClick={() => navigate(`/workspace/${page._id}`)}
+          >
+            Workspace
+          </button>
+
+          <button
+            className="btn-nav-history"
+            onClick={() => navigate(`/page-history/${page._id}`)}
+          >
+            Version History
+          </button>
+        </div>
       </div>
     </div>
   );

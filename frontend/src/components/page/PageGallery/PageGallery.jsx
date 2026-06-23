@@ -16,6 +16,7 @@ export default function PageGallery({
       </div>
     );
   }
+
   return (
     <div className="page-gallery-grid">
       {pages.map((page) => (

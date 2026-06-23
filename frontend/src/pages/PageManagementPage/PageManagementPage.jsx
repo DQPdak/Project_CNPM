@@ -159,6 +159,9 @@ export default function PageManagementPage() {
     }
   };
 
+  const lastPageNumber =
+    pages.length > 0 ? Math.max(...pages.map((p) => p.page_number || 0)) : 0;
+
   const backSeriesId = chapterInfo.series_id || "";
 
   return (
@@ -223,6 +226,7 @@ export default function PageManagementPage() {
       <RequirePermission required="CAN_UPLOAD_PAGE">
         <UploadPagesDropzone
           chapterId={chapterId}
+          lastPageNumber={lastPageNumber}
           onUploadSuccess={handleUploadSuccess}
         />
       </RequirePermission>

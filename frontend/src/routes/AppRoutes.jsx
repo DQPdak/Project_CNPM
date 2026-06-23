@@ -15,6 +15,7 @@ import MangakaSeriesFormPage from "../pages/mangaka/MangakaSeriesFormPage";
 import BoardPendingSeriesPage from "../pages/board/BoardPendingSeriesPage";
 import BoardSeriesReviewPage from "../pages/board/BoardSeriesReviewPage";
 import BoardAtRiskSeriesPage from "../pages/board/BoardAtRiskSeriesPage";
+import PageVersionHistory from "../pages/PageVersionHistory/PageVersionHistory";
 import RequireRole from "../components/security/RequireRole";
 
 export default function AppRoutes() {
@@ -94,6 +95,10 @@ export default function AppRoutes() {
                 <BoardAtRiskSeriesPage />
               </RequireRole>
             }
+          />
+          <Route
+            path="/page-history/:pageId"
+            element={<PageVersionHistory />}
           />
           <Route
             path="/admin/series"
