@@ -10,11 +10,12 @@ import PageManagementPage from "../pages/PageManagementPage/PageManagementPage";
 import PublishApprovalPage from "../pages/PublishApprovalPage/PublishApprovalPage";
 import RankingDashboardPage from "../pages/RankingDashboardPage/RankingDashboardPage";
 import DashboardIndex from "../pages/Dashboard/DashboardIndex";
-import MangakaSeriesListPage from "../pages/mangaka/MangakaSeriesListPage";
-import MangakaSeriesFormPage from "../pages/mangaka/MangakaSeriesFormPage";
-import BoardPendingSeriesPage from "../pages/board/BoardPendingSeriesPage";
-import BoardSeriesReviewPage from "../pages/board/BoardSeriesReviewPage";
-import BoardAtRiskSeriesPage from "../pages/board/BoardAtRiskSeriesPage";
+import MangakaSeriesListPage from "../pages/MangakaSeriesListPage/MangakaSeriesListPage";
+import MangakaSeriesFormPage from "../pages/MangakaSeriesFormPage/MangakaSeriesFormPage";
+import BoardPendingSeriesPage from "../pages/BoardPendingSeriesPage/BoardPendingSeriesPage";
+import BoardSeriesReviewPage from "../pages/BoardSeriesReviewPage/BoardSeriesReviewPage";
+import BoardAtRiskSeriesPage from "../pages/BoardAtRiskSeriesPage/BoardAtRiskSeriesPage";
+import PageVersionHistory from "../pages/PageVersionHistory/PageVersionHistory";
 import RequireRole from "../components/security/RequireRole";
 
 export default function AppRoutes() {
@@ -94,6 +95,10 @@ export default function AppRoutes() {
                 <BoardAtRiskSeriesPage />
               </RequireRole>
             }
+          />
+          <Route
+            path="/page-history/:pageId"
+            element={<PageVersionHistory />}
           />
           <Route
             path="/admin/series"

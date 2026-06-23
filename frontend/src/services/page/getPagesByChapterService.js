@@ -2,7 +2,9 @@ import { apiFetch } from "../apiClient";
 
 const getPagesByChapter = async (chapterId) => {
   try {
-    return await apiFetch(`/pages/chapter/${chapterId}`);
+    return await apiFetch(`/pages/chapter/${chapterId}`, {
+      method: "GET",
+    });
   } catch (error) {
     return {
       success: false,

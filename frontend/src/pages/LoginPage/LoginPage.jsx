@@ -18,7 +18,7 @@ export default function LoginPage() {
   // Thêm state để quản lý trạng thái ẩn/hiện mật khẩu
   const [showPassword, setShowPassword] = useState(false);
 
-  const redirectTarget = location.state?.from?.pathname || "/";
+  const redirectTarget = "/";
 
   if (isAuthenticated) {
     return <Navigate to={redirectTarget} replace />;

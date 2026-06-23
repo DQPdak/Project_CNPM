@@ -1,10 +1,19 @@
 import { apiFetch } from "../apiClient";
 
-const uploadPages = async (chapterId, files) => {
+const uploadPages = async (
+  chapterId,
+  pageNumber,
+  sourceFile,
+  attachedResource,
+) => {
   try {
     const formData = new FormData();
-    for (let i = 0; i < files.length; i += 1) {
-      formData.append("pages", files[i]);
+
+    formData.append("page_number", pageNumber);
+    formData.append("source_file", sourceFile);
+
+    if (attachedResource) {
+      formData.append("attached_resource", attachedResource);
     }
 
     return await apiFetch(`/pages/upload/${chapterId}/upload`, {
@@ -15,7 +24,7 @@ const uploadPages = async (chapterId, files) => {
     return {
       success: false,
       status: error.status,
-      message: error.message || "Tai len ban thao that bai.",
+      message: error.message || "Tải lên bản thảo thất bại.",
     };
   }
 };
