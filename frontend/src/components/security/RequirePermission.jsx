@@ -2,14 +2,15 @@ import React from "react";
 import { useAuthStore } from "../../stores/authStore";
 
 const PERMISSION_ROLE_MAP = {
-  CAN_CREATE_CHAPTER: ["Mangaka", "Tantou Editor", "Admin"],
-  CAN_UPLOAD_PAGE: ["Mangaka", "Tantou Editor", "Admin"],
-  CAN_UPDATE_VERSION: ["Mangaka", "Tantou Editor", "Admin"],
+  CAN_CREATE_CHAPTER: ["Mangaka", "Admin"],
+  CAN_UPLOAD_PAGE: ["Mangaka", "Admin"],
+  CAN_UPDATE_VERSION: ["Mangaka", "Admin", "Assistant"],
   CAN_APPROVE_PAGE: ["Mangaka", "Tantou Editor", "Admin"],
   CAN_PUBLISH_CHAPTER: ["Editorial Board", "Tantou Editor", "Admin"],
   CAN_MANAGE_USERS: ["Admin"],
   CAN_MANAGE_RANKING: ["Editorial Board", "Admin"],
   CAN_VIEW_RANKING: ["Editorial Board", "Mangaka", "Tantou Editor", "Admin"],
+  CAN_UPDATE_PAGE_STATUS: ["Mangaka", "Tantou Editor", "Admin"],
 };
 
 export default function RequirePermission({ required, children }) {

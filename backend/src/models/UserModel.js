@@ -30,6 +30,11 @@ const userSchema = new mongoose.Schema(
       enum: ["Active", "Inactive", "Suspended"],
       default: "Active",
     },
+
+    is_locked: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true },
 );
