@@ -5,6 +5,7 @@ const { requireRole } = require("../modules/authorization/middlewares/requireRol
 const { requireSeriesScope } = require("../modules/authorization/middlewares/scope");
 const createSeries = require("../controllers/series/createSeries");
 const getMySeries = require("../controllers/series/getMySeries");
+const getSeriesByRole = require("../controllers/series/getSeriesByRole");
 const getSeriesById = require("../controllers/series/getSeriesById");
 const upsertProposal = require("../controllers/series/upsertProposal");
 const submitProposal = require("../controllers/series/submitProposal");
@@ -20,7 +21,26 @@ router.use(requireAuth);
 
 router.post("/", requireRole(ROLES.MANGAKA), createSeries.createSeries);
 router.get("/mine", requireRole(ROLES.MANGAKA), getMySeries.getMySeries);
-router.get("/mine/:author_id", requireRole(ROLES.MANGAKA), getMySeries.getMySeries);
+router.get(
+  "/mine/:author_id",
+  requireRole(ROLES.ADMIN),
+  getMySeries.getSeriesByAuthor,
+);
+router.get(
+  "/editor",
+  requireRole(ROLES.TANTOU_EDITOR),
+  getSeriesByRole.getEditorSeries,
+);
+router.get(
+  "/all",
+  requireRole(ROLES.EDITORIAL_BOARD),
+  getSeriesByRole.getAllSeries,
+);
+router.get(
+  "/assistant",
+  requireRole(ROLES.ASSISTANT),
+  getSeriesByRole.getAssistantSeries,
+);
 router.get(
   "/at-risk",
   requireRole(ROLES.EDITORIAL_BOARD, ROLES.ADMIN),
