@@ -7,22 +7,7 @@ import submitProposal from "../../services/series/submitProposalService";
 import uploadCover from "../../services/series/uploadCoverService";
 import Loading from "../../common/Loading/Loading";
 import { useToast } from "../../contexts/ToastContext";
-
-const inputStyle = {
-  width: "100%",
-  padding: "10px 12px",
-  borderRadius: "8px",
-  border: "1px solid #cbd5e1",
-  fontSize: "0.95rem",
-  boxSizing: "border-box",
-};
-
-const labelStyle = {
-  display: "block",
-  marginBottom: "6px",
-  fontWeight: 600,
-  fontSize: "0.9rem",
-};
+import "./MangakaSeriesFormPage.css"; // Đã import file CSS mới
 
 const editableStatuses = ["Draft", "Need Revision"];
 
@@ -56,7 +41,6 @@ export default function MangakaSeriesFormPage() {
       setIsLoading(false);
       return;
     }
-
     const { series, proposal } = result;
     setForm({
       title: series.title || "",
@@ -88,9 +72,7 @@ export default function MangakaSeriesFormPage() {
       toast.error("Không thể sửa khi proposal đang chờ duyệt.");
       return;
     }
-
     setIsSaving(true);
-
     if (!isEdit) {
       const result = await createSeries(form);
       if (result.success === false) {
@@ -103,19 +85,16 @@ export default function MangakaSeriesFormPage() {
       setIsSaving(false);
       return;
     }
-
     const proposalResult = await upsertProposal(seriesId, {
       summary: form.summary,
       characters: form.characters,
       art_style: form.art_style,
     });
-
     if (proposalResult.success === false) {
       toast.error(proposalResult.message);
       setIsSaving(false);
       return;
     }
-
     toast.success("Lưu proposal thành công!");
     setProposalStatus(proposalResult.proposal?.status || proposalStatus);
     setIsSaving(false);
@@ -124,13 +103,11 @@ export default function MangakaSeriesFormPage() {
   const handleUploadCover = async (event) => {
     const file = event.target.files?.[0];
     if (!file || !seriesId) return;
-
     const result = await uploadCover(seriesId, file);
     if (result.success === false) {
       toast.error(result.message);
       return;
     }
-
     setCoverImage(result.cover_image || result.proposal?.cover_image || "");
     toast.success("Upload ảnh bìa thành công!");
   };
@@ -143,47 +120,35 @@ export default function MangakaSeriesFormPage() {
       return;
     }
     setProposalStatus(result.proposal?.status || "Submitted");
-    toast.success("Đã nộp hồ sơ lên hội đồng!");
+    toast.success("Đã nộp thành công!");
   };
 
   if (isLoading) {
-    return <Loading text="Đang tải hồ sơ series..." />;
+    return <Loading text="Đang tải dữ liệu series..." />;
   }
 
   return (
-    <div style={{ maxWidth: "720px" }}>
-      <Link
-        to="/mangaka/series"
-        style={{ color: "#0ea5e9", textDecoration: "none", fontSize: "0.9rem" }}
-      >
-        ← Quay lại danh sách
+    <div className="mangaka-form-wrapper">
+      <Link to="/mangaka/series" className="back-link">
+        Quay lại danh sách
       </Link>
 
-      <h1 style={{ margin: "16px 0 8px", fontSize: "1.75rem" }}>
+      <h1 className="page-title">
         {isEdit ? "Chi tiết series" : "Tạo series mới"}
       </h1>
 
       {isEdit && (
-        <p style={{ color: "#64748b", marginBottom: "20px" }}>
-          Trạng thái proposal: <strong>{proposalStatus}</strong>
+        <p className="status-text">
+          Trạng thái proposal:{" "}
+          <span className="status-badge">{proposalStatus}</span>
         </p>
       )}
 
-      <form
-        onSubmit={handleSave}
-        style={{
-          background: "#fff",
-          padding: "24px",
-          borderRadius: "12px",
-          border: "1px solid #e2e8f0",
-          display: "grid",
-          gap: "16px",
-        }}
-      >
-        <div>
-          <label style={labelStyle}>Tên series *</label>
+      <form onSubmit={handleSave} className="neo-form">
+        <div className="form-group">
+          <label className="neo-label">Tên series *</label>
           <input
-            style={inputStyle}
+            className="neo-input"
             value={form.title}
             onChange={handleChange("title")}
             required
@@ -191,30 +156,30 @@ export default function MangakaSeriesFormPage() {
           />
         </div>
 
-        <div>
-          <label style={labelStyle}>Mô tả</label>
+        <div className="form-group">
+          <label className="neo-label">Mô tả ngắn</label>
           <textarea
-            style={{ ...inputStyle, minHeight: "80px" }}
+            className="neo-input textarea-short"
             value={form.description}
             onChange={handleChange("description")}
             disabled={isEdit}
           />
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-          <div>
-            <label style={labelStyle}>Thể loại</label>
+        <div className="grid-2-cols">
+          <div className="form-group">
+            <label className="neo-label">Thể loại</label>
             <input
-              style={inputStyle}
+              className="neo-input"
               value={form.genre}
               onChange={handleChange("genre")}
               disabled={isEdit}
             />
           </div>
-          <div>
-            <label style={labelStyle}>Đối tượng độc giả</label>
+          <div className="form-group">
+            <label className="neo-label">Độc giả mục tiêu</label>
             <input
-              style={inputStyle}
+              className="neo-input"
               value={form.target_audience}
               onChange={handleChange("target_audience")}
               disabled={isEdit}
@@ -224,10 +189,10 @@ export default function MangakaSeriesFormPage() {
 
         {isEdit && (
           <>
-            <div>
-              <label style={labelStyle}>Tóm tắt truyện *</label>
+            <div className="form-group">
+              <label className="neo-label">Tóm tắt truyện *</label>
               <textarea
-                style={{ ...inputStyle, minHeight: "100px" }}
+                className="neo-input textarea-tall"
                 value={form.summary}
                 onChange={handleChange("summary")}
                 required
@@ -235,20 +200,20 @@ export default function MangakaSeriesFormPage() {
               />
             </div>
 
-            <div>
-              <label style={labelStyle}>Nhân vật</label>
+            <div className="form-group">
+              <label className="neo-label">Nhân vật</label>
               <textarea
-                style={{ ...inputStyle, minHeight: "80px" }}
+                className="neo-input textarea-short"
                 value={form.characters}
                 onChange={handleChange("characters")}
                 disabled={!canEdit}
               />
             </div>
 
-            <div>
-              <label style={labelStyle}>Phong cách hình ảnh</label>
+            <div className="form-group">
+              <label className="neo-label">Phong cách hình ảnh</label>
               <input
-                style={inputStyle}
+                className="neo-input"
                 value={form.art_style}
                 onChange={handleChange("art_style")}
                 disabled={!canEdit}
@@ -256,19 +221,19 @@ export default function MangakaSeriesFormPage() {
             </div>
 
             {canEdit && (
-              <div>
-                <label style={labelStyle}>Ảnh bìa / concept art</label>
-                <input type="file" accept="image/*" onChange={handleUploadCover} />
+              <div className="form-group">
+                <label className="neo-label">Ảnh bìa / Concept art</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleUploadCover}
+                  className="neo-file-input"
+                />
                 {coverImage && (
                   <img
                     src={coverImage}
                     alt="Cover"
-                    style={{
-                      marginTop: "12px",
-                      maxWidth: "200px",
-                      borderRadius: "8px",
-                      border: "1px solid #e2e8f0",
-                    }}
+                    className="cover-image-preview"
                   />
                 )}
               </div>
@@ -277,29 +242,21 @@ export default function MangakaSeriesFormPage() {
         )}
 
         {!isEdit && (
-          <div>
-            <label style={labelStyle}>Tóm tắt truyện</label>
+          <div className="form-group">
+            <label className="neo-label">Tóm tắt truyện</label>
             <textarea
-              style={{ ...inputStyle, minHeight: "100px" }}
+              className="neo-input textarea-tall"
               value={form.summary}
               onChange={handleChange("summary")}
             />
           </div>
         )}
 
-        <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+        <div className="form-actions">
           <button
             type="submit"
             disabled={isSaving || (isEdit && !canEdit)}
-            style={{
-              padding: "10px 20px",
-              background: "#0ea5e9",
-              color: "#fff",
-              border: "none",
-              borderRadius: "8px",
-              fontWeight: 600,
-              cursor: "pointer",
-            }}
+            className="btn-primary"
           >
             {isSaving ? "Đang lưu..." : isEdit ? "Lưu proposal" : "Tạo series"}
           </button>
@@ -308,17 +265,9 @@ export default function MangakaSeriesFormPage() {
             <button
               type="button"
               onClick={handleSubmit}
-              style={{
-                padding: "10px 20px",
-                background: "#16a34a",
-                color: "#fff",
-                border: "none",
-                borderRadius: "8px",
-                fontWeight: 600,
-                cursor: "pointer",
-              }}
+              className="btn-success"
             >
-              Nộp hồ sơ xét duyệt
+              Nộp xin duyệt
             </button>
           )}
         </div>

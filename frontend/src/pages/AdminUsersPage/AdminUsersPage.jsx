@@ -66,7 +66,7 @@ export default function AdminUsersPage() {
   }, [fetchUsers, user?.role]);
 
   if (user?.role !== "Admin") {
-    return <Navigate to="/chapter-list" replace />;
+    return <Navigate to="/" replace />;
   }
 
   const updateForm = (field, value) => {
