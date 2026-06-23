@@ -13,6 +13,9 @@ const { createAuthenticatedUser, withAuth } = require("./setup/authHelper");
 const seriesRoutes = require("../src/routes/series.routes");
 const Series = require("../src/models/SeriesModel");
 const SeriesProposal = require("../src/models/SeriesProposalModel");
+const Chapter = require("../src/models/ChapterModel");
+const Page = require("../src/models/PageModel");
+const Task = require("../src/models/TaskModel");
 
 const app = express();
 app.use(express.json());
@@ -356,5 +359,185 @@ describe("Series API Phase 5 - Module 13 lifecycle", () => {
     expect(response.status).toBe(200);
     expect(response.body.count).toBe(1);
     expect(response.body.tally.Continue).toBe(1);
+  });
+});
+
+describe("Series API - Lấy series theo từng role", () => {
+  it("admin lấy được series theo author_id chỉ định", async () => {
+    const { user: mangaka } = await createAuthenticatedUser({
+      role: "Mangaka",
+    });
+    const { accessToken: adminToken } = await createAuthenticatedUser({
+      role: "Admin",
+      email: `admin-${Date.now()}@example.com`,
+    });
+
+    await Series.create({
+      title: "Series cua Mangaka",
+      author_id: mangaka._id,
+      status: "Draft",
+    });
+
+    const response = await withAuth(
+      request(app).get(`/api/series/mine/${mangaka._id}`),
+      adminToken,
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.body.series).toHaveLength(1);
+    expect(response.body.series[0].series.title).toBe("Series cua Mangaka");
+  });
+
+  it("chặn mangaka truy cập route admin /mine/:author_id", async () => {
+    const { user: mangaka, accessToken: mangakaToken } =
+      await createAuthenticatedUser({ role: "Mangaka" });
+    const { user: other } = await createAuthenticatedUser({
+      role: "Mangaka",
+      email: `other-${Date.now()}@example.com`,
+    });
+
+    await Series.create({
+      title: "Series nguoi khac",
+      author_id: other._id,
+      status: "Draft",
+    });
+
+    const response = await withAuth(
+      request(app).get(`/api/series/mine/${other._id}`),
+      mangakaToken,
+    );
+
+    expect(response.status).toBe(403);
+  });
+
+  it("tantou editor lấy series theo editor_id", async () => {
+    const { user: editor, accessToken: editorToken } =
+      await createAuthenticatedUser({
+        role: "Tantou Editor",
+        email: `editor-${Date.now()}@example.com`,
+      });
+    const { user: mangaka } = await createAuthenticatedUser({
+      role: "Mangaka",
+      email: `mk-${Date.now()}@example.com`,
+    });
+
+    await Series.create({
+      title: "Series duoc phu trach",
+      author_id: mangaka._id,
+      editor_id: editor._id,
+      status: "Active",
+    });
+    await Series.create({
+      title: "Series khong phu trach",
+      author_id: mangaka._id,
+      status: "Active",
+    });
+
+    const response = await withAuth(
+      request(app).get("/api/series/editor"),
+      editorToken,
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.body.series).toHaveLength(1);
+    expect(response.body.series[0].series.title).toBe("Series duoc phu trach");
+  });
+
+  it("editorial board lấy tất cả series", async () => {
+    const { user: mangaka } = await createAuthenticatedUser({
+      role: "Mangaka",
+      email: `mk2-${Date.now()}@example.com`,
+    });
+    const { accessToken: boardToken } = await createAuthenticatedUser({
+      role: "Editorial Board",
+      email: `board-${Date.now()}@example.com`,
+    });
+
+    await Series.create({
+      title: "Series A",
+      author_id: mangaka._id,
+      status: "Active",
+    });
+    await Series.create({
+      title: "Series B",
+      author_id: mangaka._id,
+      status: "Draft",
+    });
+
+    const response = await withAuth(
+      request(app).get("/api/series/all"),
+      boardToken,
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.body.series).toHaveLength(2);
+  });
+
+  it("assistant lấy series gián tiếp qua task được giao", async () => {
+    const { user: mangaka } = await createAuthenticatedUser({
+      role: "Mangaka",
+      email: `mk3-${Date.now()}@example.com`,
+    });
+    const { user: assistant, accessToken: assistantToken } =
+      await createAuthenticatedUser({
+        role: "Assistant",
+        email: `assistant-${Date.now()}@example.com`,
+      });
+
+    const series = await Series.create({
+      title: "Series co task",
+      author_id: mangaka._id,
+      status: "Active",
+    });
+    const chapter = await Chapter.create({
+      series_id: series._id,
+      chapter_number: 1,
+      title: "Chuong 1",
+      deadline: new Date("2026-12-31"),
+    });
+    const page = await Page.create({
+      chapter_id: chapter._id,
+      page_number: 1,
+      file_url: "https://example.com/p1.jpg",
+    });
+    await Task.create({
+      page_id: page._id,
+      region_id: new mongoose.Types.ObjectId(),
+      assigned_to: assistant._id,
+      assigned_by: mangaka._id,
+      task_type: "To bong",
+      deadline: new Date("2026-12-31"),
+    });
+
+    // Series khac khong giao task -> khong duoc lay
+    await Series.create({
+      title: "Series khong task",
+      author_id: mangaka._id,
+      status: "Active",
+    });
+
+    const response = await withAuth(
+      request(app).get("/api/series/assistant"),
+      assistantToken,
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.body.series).toHaveLength(1);
+    expect(response.body.series[0].series.title).toBe("Series co task");
+  });
+
+  it("trả về rỗng khi assistant chưa có task", async () => {
+    const { accessToken: assistantToken } = await createAuthenticatedUser({
+      role: "Assistant",
+      email: `assistant2-${Date.now()}@example.com`,
+    });
+
+    const response = await withAuth(
+      request(app).get("/api/series/assistant"),
+      assistantToken,
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.body.series).toHaveLength(0);
   });
 });

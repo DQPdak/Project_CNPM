@@ -24,7 +24,7 @@ export default function ChapterListPage() {
       return seriesId;
     }
 
-    const result = await getMySeries(user?.id);
+    const result = await getMySeries();
     if (result.success === false) {
       toast.error("Khong the tai danh sach series: " + result.message);
       setResolvedSeriesId(null);
