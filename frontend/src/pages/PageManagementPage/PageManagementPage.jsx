@@ -10,6 +10,7 @@ import UploadPagesDropzone from "../../components/page/UploadPagesDropzone/Uploa
 import PageGallery from "../../components/page/PageGallery/PageGallery";
 import { useToast } from "../../contexts/ToastContext";
 import Loading from "../../common/Loading/Loading";
+import "./PageManagementPage.css";
 
 const CHAPTER_STATUS_OPTIONS = [
   "Draft",
@@ -17,6 +18,36 @@ const CHAPTER_STATUS_OPTIONS = [
   "Waiting Review",
   "Approved",
 ];
+
+// Hàm phiên dịch trạng thái sang Tiếng Việt (Chỉ dùng để hiển thị giao diện)
+const translateStatus = (status) => {
+  const s = (status || "").toLowerCase().trim();
+  if (s === "draft") return "Bản nháp";
+  if (s === "in production" || s === "in progress") return "Đang xử lý";
+  if (s === "waiting review" || s === "ready for review") return "Chờ duyệt";
+  if (s === "approved") return "Đã duyệt";
+  if (s === "published") return "Đã xuất bản";
+  return status;
+};
+
+// Hàm lấy class màu dựa trên trạng thái
+const getStatusColorClass = (status) => {
+  const s = (status || "").toLowerCase().replace(/\s+/g, "-");
+  switch (s) {
+    case "draft":
+      return "status-bg-draft";
+    case "in-production":
+      return "status-bg-in-production";
+    case "waiting-review":
+      return "status-bg-waiting-review";
+    case "approved":
+      return "status-bg-approved";
+    case "published":
+      return "status-bg-published";
+    default:
+      return "status-bg-draft";
+  }
+};
 
 export default function PageManagementPage() {
   const { chapterId } = useParams();
@@ -34,29 +65,31 @@ export default function PageManagementPage() {
 
   const fetchPagesAndChapterInfo = useCallback(async () => {
     setIsLoading(true);
-
-    const [chapterResult, pagesResult] = await Promise.all([
-      getChapterById(chapterId),
-      getPagesByChapter(chapterId),
-    ]);
-
-    if (chapterResult.success === false) {
-      toast.error("Khong the tai chapter: " + chapterResult.message);
-    } else {
-      const chapter = chapterResult.chapter;
-      setChapterInfo(chapter);
-      setSelectedChapterStatus(chapter?.status || "");
-    }
-
-    if (pagesResult.success === false) {
-      toast.error("Khong the tai danh sach trang: " + pagesResult.message);
+    try {
+      const [chapterResult, pagesResult] = await Promise.all([
+        getChapterById(chapterId),
+        getPagesByChapter(chapterId),
+      ]);
+      if (chapterResult.success === false) {
+        toast.error("Khong the tai chapter: " + chapterResult.message);
+      } else {
+        const chapter = chapterResult.chapter;
+        setChapterInfo(chapter);
+        setSelectedChapterStatus(chapter?.status || "");
+      }
+      if (pagesResult.success === false) {
+        toast.error("Khong the tai danh sach trang: " + pagesResult.message);
+        setPages([]);
+      } else {
+        setPages(pagesResult.pages || []);
+      }
+    } catch (error) {
+      toast.error("Da xay ra loi khi tai du lieu: " + error.message);
       setPages([]);
-    } else {
-      setPages(pagesResult.pages || []);
+    } finally {
+      setIsLoading(false);
     }
-
-    setIsLoading(false);
-  }, [chapterId, toast]);
+  }, [chapterId]);
 
   useEffect(() => {
     fetchPagesAndChapterInfo();
@@ -66,144 +99,120 @@ export default function PageManagementPage() {
     if (!selectedChapterStatus) {
       return;
     }
-
     setIsUpdatingChapter(true);
-    const result = await updateChapterStatus(chapterId, selectedChapterStatus);
-
-    if (result.success === false) {
-      toast.error("Khong the cap nhat chapter: " + result.message);
-    } else {
-      setChapterInfo((prev) => ({ ...prev, status: result.chapter?.status || selectedChapterStatus }));
-      toast.success(`Da cap nhat chapter thanh ${selectedChapterStatus}.`);
+    try {
+      const result = await updateChapterStatus(
+        chapterId,
+        selectedChapterStatus,
+      );
+      if (result.success === false) {
+        toast.error("Khong the cap nhat chapter: " + result.message);
+      } else {
+        setChapterInfo((prev) => ({
+          ...prev,
+          status: result.chapter?.status || selectedChapterStatus,
+        }));
+        toast.success(
+          `Da cap nhat chapter thanh ${translateStatus(selectedChapterStatus)}.`,
+        );
+      }
+    } catch (error) {
+      toast.error("Da xay ra loi khi cap nhat chapter: " + error.message);
+    } finally {
+      setIsUpdatingChapter(false);
     }
-
-    setIsUpdatingChapter(false);
   };
 
   const handleUploadSuccess = () => fetchPagesAndChapterInfo();
 
   const handleStatusChange = async (pageId, newStatus) => {
     setIsLoading(true);
-    const result = await approvePage(pageId, newStatus);
-    if (result.success === false) {
-      toast.error("Khong the cap nhat trang: " + result.message);
-    } else {
-      toast.success(`Da cap nhat trang thai trang thanh ${newStatus}.`);
+    try {
+      const result = await approvePage(pageId, newStatus);
+      if (result.success === false)
+        throw new Error(result.message || "Không thể cập nhật trang");
+
+      toast.success(
+        `Đã cập nhật trạng thái trang thành ${translateStatus(newStatus)}.`,
+      );
       await fetchPagesAndChapterInfo();
+    } catch (error) {
+      toast.error("Không thể cập nhật trang: " + error.message);
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   const handleUpdateVersion = async (pageId, file) => {
     setIsLoading(true);
-    const result = await updatePageVersion(pageId, file);
-    if (result.success === false) {
-      toast.error("Khong the tai len phien ban moi: " + result.message);
-    } else {
-      toast.success("Da tai len phien ban moi.");
+    try {
+      const result = await updatePageVersion(pageId, file);
+      if (result.success === false)
+        throw new Error(result.message || "Không thể tải lên phiên bản mới");
+
+      toast.success("Đã tải lên phiên bản mới.");
       await fetchPagesAndChapterInfo();
+    } catch (error) {
+      toast.error("Không thể tải lên phiên bản mới: " + error.message);
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   const backSeriesId = chapterInfo.series_id || "";
 
   return (
-    <div style={{ padding: "24px", maxWidth: "1200px", margin: "0 auto" }}>
+    <div className="pmp-wrapper">
       {isLoading && <Loading text="Dang xu ly..." />}
 
-      <header style={{ marginBottom: "30px" }}>
+      <header className="pmp-header-area">
         <Link
           to={backSeriesId ? `/chapter-list/${backSeriesId}` : "/chapter-list"}
-          style={{
-            textDecoration: "none",
-            color: "#64748b",
-            display: "inline-block",
-            marginBottom: "12px",
-          }}
+          className="pmp-back-btn"
         >
-          Quay lai danh sach chapter
+          ← Quay lai danh sach
         </Link>
 
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "flex-end",
-            borderBottom: "1px solid #e2e8f0",
-            paddingBottom: "16px",
-            gap: "16px",
-            flexWrap: "wrap",
-          }}
-        >
+        <div className="pmp-header-main">
           <div>
-            <h1 style={{ margin: 0, fontSize: "28px", color: "#0f172a" }}>
-              {chapterInfo.title}
-            </h1>
-            <p
-              style={{
-                margin: "8px 0 0 0",
-                color: "#64748b",
-                fontSize: "15px",
-              }}
-            >
-              Trang thai chapter:{" "}
-              <strong style={{ color: "#3b82f6" }}>{chapterInfo.status}</strong>
+            <h1 className="pmp-title">{chapterInfo.title}</h1>
+            <p className="pmp-subtitle">
+              Trạng thái:
+              <span
+                className={`pmp-status-badge ${getStatusColorClass(chapterInfo.status)}`}
+              >
+                {translateStatus(chapterInfo.status)}
+              </span>
             </p>
           </div>
 
           <RequirePermission required="CAN_APPROVE_PAGE">
-            <div
-              style={{
-                background: "#f8fafc",
-                padding: "12px",
-                borderRadius: "8px",
-                border: "1px dashed #cbd5e1",
-              }}
-            >
-              <span
-                style={{
-                  display: "block",
-                  fontSize: "12px",
-                  fontWeight: "bold",
-                  color: "#475569",
-                  marginBottom: "8px",
-                }}
-              >
-                DIEU CHINH CHAPTER
-              </span>
-              <div style={{ display: "flex", gap: "8px" }}>
+            <div className="pmp-control-box">
+              <span className="pmp-control-label">ĐIỀU CHỈNH CHAPTER</span>
+              <div className="flex gap-2">
                 <select
-                  style={{
-                    padding: "8px 12px",
-                    borderRadius: "6px",
-                    border: "1px solid #cbd5e1",
-                    outline: "none",
-                  }}
+                  className={`pmp-select ${getStatusColorClass(selectedChapterStatus)}`}
                   value={selectedChapterStatus}
                   onChange={(e) => setSelectedChapterStatus(e.target.value)}
-                  disabled={isUpdatingChapter || chapterInfo.status === "Published"}
+                  disabled={
+                    isUpdatingChapter || chapterInfo.status === "Published"
+                  }
                 >
                   {CHAPTER_STATUS_OPTIONS.map((status) => (
+                    /* Value tiếng Anh gửi BE, hiển thị tiếng Việt cho UI */
                     <option key={status} value={status}>
-                      {status}
+                      {translateStatus(status)}
                     </option>
                   ))}
                 </select>
                 <button
-                  style={{
-                    background: "#10b981",
-                    color: "white",
-                    border: "none",
-                    padding: "8px 16px",
-                    borderRadius: "6px",
-                    fontWeight: "bold",
-                    cursor: isUpdatingChapter ? "not-allowed" : "pointer",
-                  }}
+                  className="pmp-action-btn"
                   onClick={handleUpdateChapterStatus}
-                  disabled={isUpdatingChapter || chapterInfo.status === "Published"}
+                  disabled={
+                    isUpdatingChapter || chapterInfo.status === "Published"
+                  }
                 >
-                  {isUpdatingChapter ? "Dang luu..." : "Cap nhat"}
+                  {isUpdatingChapter ? "..." : "Cập nhật"}
                 </button>
               </div>
             </div>
@@ -218,14 +227,7 @@ export default function PageManagementPage() {
         />
       </RequirePermission>
 
-      <div
-        style={{
-          background: "white",
-          padding: "20px",
-          borderRadius: "12px",
-          border: "1px solid #e2e8f0",
-        }}
-      >
+      <div className="pmp-gallery-container">
         <PageGallery
           pages={pages}
           onChangeStatus={handleStatusChange}

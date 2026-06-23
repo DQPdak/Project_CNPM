@@ -1,49 +1,32 @@
 import React from "react";
-import { Link } from "react-router-dom";
 import "./BoardDashboard.css";
+import BoardPendingWidget from "../../../components/dashboard/Board/BoardPendingWidget/BoardPendingWidget";
+import BoardAtRiskWidget from "../../../components/dashboard/Board/BoardAtRiskWidget/BoardAtRiskWidget";
+import BoardLeaderboardWidget from "../../../components/dashboard/Board/BoardLeaderboardWidget/BoardLeaderboardWidget";
 
 const BoardDashboard = () => {
   return (
     <div className="dashboard-wrapper">
-      <h1 className="dashboard-title">Bảng làm việc Ban Biên tập</h1>
+      <h1 className="dashboard-title">Bảng Quyết Định Biên Tập</h1>
+
       <div className="dashboard-grid">
-        <div className="main-column">
-          <div className="card">
-            <h2 className="card-title">Hồ sơ Series chờ xét duyệt</h2>
-            <p className="card-desc">
-              Danh sách tác phẩm chờ bỏ phiếu Approve/Reject.
-            </p>
-            <Link to="/board/reviews" className="btn-amber">
-              Xem hồ sơ chờ duyệt
-            </Link>
-            <Link to="/board/at-risk" className="btn-amber" style={{ marginTop: "12px" }}>
-              Series có nguy cơ
-            </Link>
-          </div>
+        {/* Cột 1 & 2: Danh sách chờ duyệt (chiếm 2/3 không gian) */}
+        <div className="col-span-2">
+          <BoardPendingWidget />
         </div>
+
+        {/* Cột 3: Cảnh báo At-Risk (chiếm 1/3 không gian) */}
         <div>
-          <div className="widget-board">
-            <h2 className="widget-title-amber">Toàn cảnh Bảng xếp hạng</h2>
-            <p className="widget-desc-amber">
-              Dùng để ra quyết định tiếp tục hoặc hủy series.
-            </p>
-            <div className="ranking-list">
-              <div className="ranking-item-amber">
-                <span>Top 1: Tác phẩm X</span>
-                <span className="text-score">9.87 điểm</span>
-              </div>
-              <div className="ranking-item-amber">
-                <span>Top 2: Tác phẩm Y</span>
-                <span className="text-score">9.45 điểm</span>
-              </div>
-            </div>
-            <Link to="/board/ranking" className="btn-amber">
-              Quản lý & Xem Ranking đầy đủ
-            </Link>
-          </div>
+          <BoardAtRiskWidget />
+        </div>
+
+        {/* Hàng dưới cùng: Bảng xếp hạng trải dài toàn màn hình */}
+        <div className="col-span-full">
+          <BoardLeaderboardWidget />
         </div>
       </div>
     </div>
   );
 };
+
 export default BoardDashboard;

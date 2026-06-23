@@ -15,9 +15,32 @@ const STATUS_OPTIONS = [
   "Changed Schedule",
 ];
 
+const STATUS_TRANSLATIONS = {
+  "Active": "Hoạt động",
+  "At Risk": "Có nguy cơ",
+  "Hiatus": "Tạm ngưng",
+  "Cancelled": "Bị hủy",
+  "Completed": "Đã hoàn thành",
+  "Changed Schedule": "Đổi lịch phát hành",
+};
+
 const RISK_OPTIONS = ["Safe", "Warning", "Critical"];
 
+const RISK_TRANSLATIONS = {
+  "Safe": "An toàn",
+  "Warning": "Cảnh báo",
+  "Critical": "Nguy cấp",
+};
+
 const SCHEDULE_OPTIONS = ["weekly", "monthly", "one-shot", "online only", "none"];
+
+const SCHEDULE_TRANSLATIONS = {
+  "weekly": "Hằng tuần",
+  "monthly": "Hằng tháng",
+  "one-shot": "Một tập (One-shot)",
+  "online only": "Chỉ phát hành online",
+  "none": "Chưa có",
+};
 
 const LIFECYCLE_OPTIONS = [
   "Continue",
@@ -27,6 +50,15 @@ const LIFECYCLE_OPTIONS = [
   "Online Only",
   "Need Improvement Plan",
 ];
+
+const LIFECYCLE_TRANSLATIONS = {
+  "Continue": "Tiếp tục phát hành",
+  "Cancel": "Hủy bỏ bộ truyện",
+  "Hiatus": "Tạm ngưng phát hành",
+  "Change Schedule": "Thay đổi lịch phát hành",
+  "Online Only": "Chuyển sang chỉ online",
+  "Need Improvement Plan": "Yêu cầu kế hoạch cải thiện",
+};
 
 const RISK_COLOR = {
   Safe: "#16a34a",
@@ -125,7 +157,7 @@ export default function BoardAtRiskSeriesPage() {
     if (result.success === false) {
       toast.error(result.message);
     } else {
-      toast.success("Da cap nhat trang thai series.");
+      toast.success("Đã cập nhật trạng thái series thành công.");
       await fetchList();
     }
     setSavingId(null);
@@ -176,7 +208,7 @@ export default function BoardAtRiskSeriesPage() {
     if (result.success === false) {
       toast.error(result.message);
     } else {
-      toast.success("Da bo phieu quyet dinh vong doi.");
+      toast.success("Đã bỏ phiếu quyết định vòng đời thành công.");
       await loadDossier(seriesId);
     }
     setVotingId(null);
@@ -185,13 +217,10 @@ export default function BoardAtRiskSeriesPage() {
   return (
     <div>
       <header style={{ marginBottom: "24px" }}>
-        <h1 style={{ margin: 0, fontSize: "1.75rem" }}>Series co nguy co</h1>
-        <p style={{ margin: "8px 0 0", color: "#64748b" }}>
-          Module 13 — quyet dinh tiep tuc, huy hoac doi lich xuat ban
-        </p>
+        <h1 style={{ margin: 0, fontSize: "1.75rem" }}>Danh sách series có nguy cơ</h1>
       </header>
 
-      {isLoading && <Loading text="Dang tai danh sach series co nguy co..." />}
+      {isLoading && <Loading text="Đang tải danh sách series có nguy cơ..." />}
 
       {!isLoading && items.length === 0 && (
         <div
@@ -203,7 +232,7 @@ export default function BoardAtRiskSeriesPage() {
             border: "1px dashed #cbd5e1",
           }}
         >
-          Khong co series nao dang co nguy co.
+          Không có series nào đang có nguy cơ.
         </div>
       )}
 
@@ -226,9 +255,9 @@ export default function BoardAtRiskSeriesPage() {
                     {series.title}
                   </h2>
                   <p style={{ margin: 0, color: "#64748b", fontSize: "0.9rem" }}>
-                    Tac gia:{" "}
+                    Tác giả:{" "}
                     {series.author_id?.name || series.author_id?.email || "—"} ·
-                    Genre: {series.genre || "—"}
+                    Thể loại: {series.genre || "—"}
                   </p>
                 </div>
                 <span
@@ -242,7 +271,7 @@ export default function BoardAtRiskSeriesPage() {
                     whiteSpace: "nowrap",
                   }}
                 >
-                  Risk: {series.risk_status || "—"}
+                  Mức độ nguy cơ: {RISK_TRANSLATIONS[series.risk_status] || series.risk_status || "—"}
                 </span>
               </div>
 
@@ -261,7 +290,7 @@ export default function BoardAtRiskSeriesPage() {
                 >
                   {STATUS_OPTIONS.map((opt) => (
                     <option key={opt} value={opt}>
-                      {opt}
+                      Trạng thái: {STATUS_TRANSLATIONS[opt] || opt}
                     </option>
                   ))}
                 </select>
@@ -275,7 +304,7 @@ export default function BoardAtRiskSeriesPage() {
                 >
                   {RISK_OPTIONS.map((opt) => (
                     <option key={opt} value={opt}>
-                      Risk: {opt}
+                      Mức độ: {RISK_TRANSLATIONS[opt] || opt}
                     </option>
                   ))}
                 </select>
@@ -289,7 +318,7 @@ export default function BoardAtRiskSeriesPage() {
                 >
                   {SCHEDULE_OPTIONS.map((opt) => (
                     <option key={opt} value={opt}>
-                      Schedule: {opt}
+                      Lịch phát hành: {SCHEDULE_TRANSLATIONS[opt] || opt}
                     </option>
                   ))}
                 </select>
@@ -300,7 +329,7 @@ export default function BoardAtRiskSeriesPage() {
                   disabled={savingId === series._id}
                   onClick={() => handleSave(series._id)}
                 >
-                  {savingId === series._id ? "Dang luu..." : "Cap nhat trang thai"}
+                  {savingId === series._id ? "Đang lưu..." : "Cập nhật trạng thái"}
                 </button>
               </div>
 
@@ -310,7 +339,7 @@ export default function BoardAtRiskSeriesPage() {
                   style={ghostBtnStyle}
                   onClick={() => toggleDossier(series._id)}
                 >
-                  {isOpen ? "An ho so quyet dinh" : "Ho so quyet dinh & bo phieu"}
+                  {isOpen ? "Ẩn hồ sơ quyết định" : "Hồ sơ quyết định & bỏ phiếu"}
                 </button>
               </div>
 
@@ -322,12 +351,12 @@ export default function BoardAtRiskSeriesPage() {
                     paddingTop: "16px",
                   }}
                 >
-                  {dossier?.loading && <Loading text="Dang tai ho so..." />}
+                  {dossier?.loading && <Loading text="Đang tải hồ sơ..." />}
 
                   {!dossier?.loading && (
                     <>
                       <h3 style={{ margin: "0 0 8px", fontSize: "1rem" }}>
-                        Phieu quyet dinh vong doi ({dossier?.votes?.length || 0})
+                        Phiếu quyết định vòng đời ({dossier?.votes?.length || 0})
                       </h3>
 
                       {(!dossier?.votes || dossier.votes.length === 0) && (
@@ -338,7 +367,7 @@ export default function BoardAtRiskSeriesPage() {
                             margin: "0 0 12px",
                           }}
                         >
-                          Chua co phieu nao.
+                          Chưa có phiếu quyết định nào.
                         </p>
                       )}
 
@@ -353,8 +382,8 @@ export default function BoardAtRiskSeriesPage() {
                             padding: "8px 12px",
                           }}
                         >
-                          <strong>{v.vote}</strong> —{" "}
-                          {v.board_member_id?.name || "Board member"}
+                          <strong>{LIFECYCLE_TRANSLATIONS[v.vote] || v.vote}</strong> —{" "}
+                          {v.board_member_id?.name || "Thành viên ban biên tập"}
                           {v.comment && `: ${v.comment}`}
                         </div>
                       ))}
@@ -379,14 +408,14 @@ export default function BoardAtRiskSeriesPage() {
                         >
                           {LIFECYCLE_OPTIONS.map((opt) => (
                             <option key={opt} value={opt}>
-                              {opt}
+                              {LIFECYCLE_TRANSLATIONS[opt] || opt}
                             </option>
                           ))}
                         </select>
 
                         <input
                           type="text"
-                          placeholder="Nhan xet / ly do"
+                          placeholder="Nhập nhận xét / lý do..."
                           value={voteForms[series._id]?.comment || ""}
                           onChange={(e) =>
                             updateVoteForm(series._id, "comment", e.target.value)
@@ -406,7 +435,7 @@ export default function BoardAtRiskSeriesPage() {
                           disabled={votingId === series._id}
                           onClick={() => handleLifecycleVote(series._id)}
                         >
-                          {votingId === series._id ? "Dang gui..." : "Bo phieu"}
+                          {votingId === series._id ? "Đang gửi..." : "Bỏ phiếu"}
                         </button>
                       </div>
                     </>

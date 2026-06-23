@@ -7,6 +7,7 @@ import {
   CalendarPlus,
   FileSpreadsheet,
   Filter,
+  HelpCircle,
   LineChart,
   RefreshCcw,
   Trophy,
@@ -27,6 +28,8 @@ const SERIES_OPTIONS = [
   { id: "S2", name: "Naruto", genre: "Shonen", authorId: "A2" },
   { id: "S3", name: "Bleach", genre: "Action", authorId: "A3" },
   { id: "S4", name: "Conan", genre: "Mystery", authorId: "A4" },
+  { id: "S5", name: "Dragon Ball", genre: "Shonen", authorId: "A5" },
+  { id: "S6", name: "Death Note", genre: "Thriller", authorId: "A6" },
 ];
 
 const ISSUE_TYPES = ["Weekly", "Monthly", "One-shot", "Online only"];
@@ -85,6 +88,18 @@ export default function RankingDashboardPage() {
     const match = SERIES_OPTIONS.find((series) => series.id === chartSeriesId);
     return match?.name || chartSeriesId;
   }, [chartSeriesId]);
+
+  const visibleSeries = useMemo(() => {
+    if (canManage) return SERIES_OPTIONS;
+    const uniqueIds = Array.from(new Set(leaderboard.map((item) => item.seriesId)));
+    return SERIES_OPTIONS.filter((series) => uniqueIds.includes(series.id));
+  }, [leaderboard, canManage]);
+
+  useEffect(() => {
+    if (visibleSeries.length > 0 && !visibleSeries.some((s) => s.id === chartSeriesId)) {
+      setChartSeriesId(visibleSeries[0].id);
+    }
+  }, [visibleSeries, chartSeriesId]);
 
   const fetchLeaderboard = useCallback(async () => {
     setIsLoading(true);
@@ -302,7 +317,10 @@ export default function RankingDashboardPage() {
                       required
                     />
                   </Field>
-                  <Field label="Tập tin Excel/CSV">
+                  <Field 
+                    label="Tập tin Excel/CSV" 
+                    tooltip="Cấu trúc file mẫu cần có các cột: seriesId, votes, avgScore, comments, views"
+                  >
                     <input
                       type="file"
                       accept=".csv,.xlsx,.xls"
@@ -315,10 +333,6 @@ export default function RankingDashboardPage() {
                       required
                     />
                   </Field>
-                  <div className="ranking-sample">
-                    <span>Cấu trúc CSV mẫu:</span>
-                    <code>seriesId,votes,avgScore,comments,views</code>
-                  </div>
                   <button type="submit" disabled={isImporting}>
                     <Upload size={18} />
                     {isImporting ? "Đang xử lý..." : "Tải lên & Xử lý xếp hạng"}
@@ -402,7 +416,7 @@ export default function RankingDashboardPage() {
                   value={chartSeriesId}
                   onChange={(event) => setChartSeriesId(event.target.value)}
                 >
-                  {SERIES_OPTIONS.map((series) => (
+                  {visibleSeries.map((series) => (
                     <option key={series.id} value={series.id}>
                       {series.name}
                     </option>
@@ -431,10 +445,17 @@ function MetricCard({ icon, label, value, detail, tone = "normal" }) {
   );
 }
 
-function Field({ label, children }) {
+function Field({ label, children, tooltip }) {
   return (
     <label className="ranking-field">
-      <span>{label}</span>
+      <span className="ranking-field__label-wrap">
+        <span>{label}</span>
+        {tooltip && (
+          <span className="ranking-tooltip-trigger" data-tooltip={tooltip}>
+            <HelpCircle size={14} />
+          </span>
+        )}
+      </span>
       {children}
     </label>
   );

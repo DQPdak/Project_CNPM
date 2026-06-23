@@ -1,117 +1,63 @@
+@reference "../../../index.css";
+
 .scanner-card {
-  background: white;
-  border-radius: 12px;
-  border: 1px solid #e2e8f0;
-  padding: 30px;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+  @apply bg-white border-4 border-black p-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)];
 }
 .scanner-title {
-  margin: 0 0 24px 0;
-  font-size: 18px;
-  color: #0f172a;
-  text-align: center;
+  @apply m-0 mb-8 text-xl lg:text-2xl font-black text-black uppercase tracking-widest text-center border-b-4 border-black pb-4;
 }
 
-/* Thanh tiến độ */
 .progress-bar-container {
-  width: 100%;
-  height: 8px;
-  background: #e2e8f0;
-  border-radius: 10px;
-  overflow: hidden;
-  margin-bottom: 30px;
-  position: relative;
+  @apply w-full h-8 bg-[#F4F4F0] border-4 border-black overflow-hidden mb-8 relative;
 }
 .progress-bar-fill {
-  height: 100%;
-  border-radius: 10px;
-  transition: width 0.5s ease-in-out;
+  @apply h-full transition-all duration-500 ease-in-out border-r-4 border-transparent;
 }
 .progress-bar-fill.scanning {
-  background: #3b82f6;
-  box-shadow: 0 0 10px #3b82f6;
+  @apply bg-[#FFD000] border-black;
 }
 .progress-bar-fill.success {
-  background: #10b981;
-  box-shadow: 0 0 10px #10b981;
+  @apply bg-[#23A094] border-black;
 }
 .progress-bar-fill.failed {
-  background: #ef4444;
-  box-shadow: 0 0 10px #ef4444;
+  @apply bg-[#FF5C00] border-black;
 }
 
-/* Danh sách bước */
 .scanner-steps {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+  @apply flex flex-col gap-4;
 }
 .step-item {
-  display: flex;
-  gap: 16px;
-  padding: 16px;
-  border-radius: 8px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  transition: all 0.3s;
-  opacity: 0.5;
+  @apply flex gap-4 p-4 bg-white border-4 border-black transition-all opacity-70 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)];
 }
 
-/* Trạng thái các bước */
 .step-item.state-scanning {
-  opacity: 1;
-  border-color: #3b82f6;
-  background: #eff6ff;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
-  transform: scale(1.02);
+  @apply opacity-100 bg-[#FFD000] scale-[1.02] -translate-y-1 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)];
 }
 .step-item.state-passed {
-  opacity: 1;
-  border-color: #10b981;
-  background: #f0fdf4;
+  @apply opacity-100 bg-[#23A094] text-white;
 }
 .step-item.state-failed {
-  opacity: 1;
-  border-color: #ef4444;
-  background: #fef2f2;
-  animation: shake 0.5s;
+  @apply opacity-100 bg-[#FF5C00] text-white animate-[shake_0.5s_ease-in-out];
 }
 
 .step-icon {
-  font-size: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
+  @apply text-2xl flex items-center justify-center w-8;
 }
 .step-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
+  @apply flex-1 flex flex-col justify-center;
 }
 .step-content h4 {
-  margin: 0;
-  font-size: 15px;
-  color: #1e293b;
+  @apply m-0 font-black text-base uppercase tracking-wider text-inherit;
 }
 .step-error-msg {
-  margin: 6px 0 0 0;
-  font-size: 13px;
-  color: #dc2626;
-  font-weight: 600;
+  @apply m-0 mt-2 text-sm font-bold bg-white text-black px-2 py-1 border-2 border-black inline-block;
 }
 
-/* Hiệu ứng xoay tròn và rung lắc */
-.spinner {
-  display: inline-block;
-  animation: spin 1s linear infinite;
+/* Thêm class này để tạo spinner vòng tròn nhỏ gọn */
+.inline-spinner {
+  @apply w-6 h-6 border-4 border-black border-t-white rounded-full animate-spin;
 }
-@keyframes spin {
-  100% {
-    transform: rotate(360deg);
-  }
-}
+
 @keyframes shake {
   0%,
   100% {
