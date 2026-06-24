@@ -1,0 +1,41 @@
+@reference "../../../index.css";
+
+.dashboard-wrapper {
+  @apply max-w-7xl mx-auto space-y-8 font-sans;
+}
+.dashboard-title {
+  @apply text-3xl lg:text-4xl font-black text-black uppercase tracking-tight border-b-4 border-black inline-block pb-2 mb-4;
+}
+.dashboard-grid {
+  @apply grid grid-cols-1 lg:grid-cols-3 gap-8;
+}
+.main-column {
+  @apply lg:col-span-2 space-y-8;
+}
+.card {
+  @apply bg-white border-4 border-black p-6 lg:p-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)];
+}
+.card-title {
+  @apply text-2xl font-black uppercase mb-2 border-b-2 border-black inline-block pb-1 text-black;
+}
+.card-desc {
+  @apply text-gray-800 font-bold mt-2 mb-6 text-sm lg:text-base;
+}
+
+/* Admin: Tông Trắng/Đen & Vàng chanh điểm xuyết */
+.btn-gray {
+  @apply inline-block text-center py-2 px-6 text-black font-black uppercase tracking-wider border-4 border-black bg-gray-200 hover:bg-[#FFD000] shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all active:shadow-none active:translate-x-[4px] active:translate-y-[4px];
+}
+
+.widget-admin {
+  @apply bg-[#FFD000] border-4 border-black p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)];
+}
+.widget-title-emerald {
+  @apply text-xl font-black text-black uppercase mb-2;
+}
+.widget-desc-emerald {
+  @apply text-black font-bold text-sm mb-6;
+}
+.btn-emerald {
+  @apply block w-full text-center py-3 px-4 text-white font-black uppercase tracking-wider border-4 border-black bg-black hover:bg-white hover:text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.5)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.5)] transition-all active:shadow-none active:translate-x-[4px] active:translate-y-[4px];
+}
