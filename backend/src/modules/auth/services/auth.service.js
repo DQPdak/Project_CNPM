@@ -275,12 +275,63 @@ const resetPassword = async ({ userId, newPassword }) => {
   return { user: sanitizeUser(user) };
 };
 
+/**
+ * Admin cập nhật trạng thái tài khoản (Active/Inactive/Suspended)
+ * Dùng để khóa/mở khóa hoặc xóa tài khoản (soft delete)
+ */
+const updateUserStatus = async ({ userId, status }) => {
+  if (!validateStatus(status)) {
+    throw buildAuthError(400, AUTH_ERROR_CODES.INVALID_STATUS, "Status is invalid.");
+  }
+
+  const user = await User.findById(userId);
+  if (!user) {
+    throw buildAuthError(404, AUTH_ERROR_CODES.USER_NOT_FOUND, "User was not found.");
+  }
+
+  user.status = status;
+  await user.save();
+
+  // Khi khóa hoặc vô hiệu hóa → Revoke tất cả sessions
+  if (status === "Suspended" || status === "Inactive") {
+    await AuthSession.updateMany(
+      { user_id: user._id, revoked_at: null },
+      { revoked_at: new Date() },
+    );
+  }
+
+  return { user: sanitizeUser(user) };
+};
+
+/**
+ * Admin xóa tài khoản (soft delete → chuyển status thành Inactive)
+ */
+const deleteUser = async (userId) => {
+  const user = await User.findById(userId);
+  if (!user) {
+    throw buildAuthError(404, AUTH_ERROR_CODES.USER_NOT_FOUND, "User was not found.");
+  }
+
+  user.status = "Inactive";
+  await user.save();
+
+  // Revoke tất cả sessions
+  await AuthSession.updateMany(
+    { user_id: user._id, revoked_at: null },
+    { revoked_at: new Date() },
+  );
+
+  return { user: sanitizeUser(user) };
+};
+
 module.exports = {
   createUser,
+  deleteUser,
   getCurrentUserFromAccessToken,
   listUsers,
   login,
   logout,
-  refresh,
   resetPassword,
+  refresh,
+  updateUserStatus,
 };

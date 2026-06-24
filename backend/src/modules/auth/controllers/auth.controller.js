@@ -126,12 +126,66 @@ const resetPassword = async (req, res) => {
   }
 };
 
+/**
+ * PATCH /api/auth/users/:id/status
+ * Admin khóa/mở khóa tài khoản (status: Active / Suspended / Inactive)
+ */
+const updateUserStatus = async (req, res) => {
+  try {
+    const { status } = req.body;
+
+    if (!status) {
+      return res.status(400).json({
+        error: {
+          code: "AUTH_INVALID_PAYLOAD",
+          message: "status là bắt buộc.",
+        },
+      });
+    }
+
+    const result = await authService.updateUserStatus({
+      userId: req.params.id,
+      status,
+    });
+
+    let actionText = "cập nhật trạng thái";
+    if (status === "Suspended") actionText = "khóa";
+    else if (status === "Inactive") actionText = "vô hiệu hóa";
+    else if (status === "Active") actionText = "mở khóa";
+
+    return res.status(200).json({
+      message: `Đã ${actionText} tài khoản thành công.`,
+      user: result.user,
+    });
+  } catch (error) {
+    return res.status(error.status || 500).json(buildErrorResponse(error));
+  }
+};
+
+/**
+ * DELETE /api/auth/users/:id
+ * Admin xóa tài khoản (soft delete)
+ */
+const deleteUser = async (req, res) => {
+  try {
+    const result = await authService.deleteUser(req.params.id);
+    return res.status(200).json({
+      message: "Đã xóa tài khoản thành công.",
+      user: result.user,
+    });
+  } catch (error) {
+    return res.status(error.status || 500).json(buildErrorResponse(error));
+  }
+};
+
 module.exports = {
   createUser,
+  deleteUser,
   listUsers,
   login,
   logout,
   me,
-  refresh,
   resetPassword,
+  refresh,
+  updateUserStatus,
 };

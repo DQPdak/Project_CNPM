@@ -280,3 +280,188 @@ describe("Authentication API", () => {
     expect(oldRefreshResponse.status).toBe(401);
   });
 });
+
+describe("User Management - Khóa/Mở khóa/Xóa tài khoản", () => {
+  let adminToken;
+  let mangakaUser;
+
+  const createTestUser = async (overrides = {}) =>
+    User.create({
+      name: "Test User",
+      email: `test-${Date.now()}@example.com`,
+      password: await hashPassword("password123"),
+      role: "Mangaka",
+      status: "Active",
+      ...overrides,
+    });
+
+  beforeEach(async () => {
+    const admin = await User.create({
+      name: "Admin User",
+      email: "admin@example.com",
+      password: await hashPassword("password123"),
+      role: "Admin",
+      status: "Active",
+    });
+
+    const adminLogin = await request(app).post("/api/auth/login").send({
+      email: "admin@example.com",
+      password: "password123",
+    });
+    adminToken = adminLogin.body.accessToken;
+
+    mangakaUser = await createTestUser();
+  });
+
+  // ===== KHÓA TÀI KHOẢN =====
+  it("Admin khóa tài khoản (Suspend) thành công", async () => {
+    const response = await request(app)
+      .patch(`/api/auth/users/${mangakaUser._id}/status`)
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({ status: "Suspended" });
+
+    expect(response.status).toBe(200);
+    expect(response.body.user.status).toBe("Suspended");
+
+    // User bị khóa không thể login
+    const loginResponse = await request(app).post("/api/auth/login").send({
+      email: mangakaUser.email,
+      password: "password123",
+    });
+    expect(loginResponse.status).toBe(403);
+    expect(loginResponse.body.error.code).toBe("AUTH_ACCOUNT_SUSPENDED");
+  });
+
+  it("Không thể khóa tài khoản với status không hợp lệ", async () => {
+    const response = await request(app)
+      .patch(`/api/auth/users/${mangakaUser._id}/status`)
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({ status: "InvalidStatus" });
+
+    expect(response.status).toBe(400);
+  });
+
+  // ===== MỞ KHÓA TÀI KHOẢN =====
+  it("Admin mở khóa tài khoản từ Suspended → Active", async () => {
+    // Khóa trước
+    await User.findByIdAndUpdate(mangakaUser._id, { status: "Suspended" });
+
+    const response = await request(app)
+      .patch(`/api/auth/users/${mangakaUser._id}/status`)
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({ status: "Active" });
+
+    expect(response.status).toBe(200);
+    expect(response.body.user.status).toBe("Active");
+
+    // User có thể login lại
+    const loginResponse = await request(app).post("/api/auth/login").send({
+      email: mangakaUser.email,
+      password: "password123",
+    });
+    expect(loginResponse.status).toBe(200);
+  });
+
+  // ===== XÓA TÀI KHOẢN =====
+  it("Admin xóa tài khoản (soft delete) thành công", async () => {
+    const response = await request(app)
+      .delete(`/api/auth/users/${mangakaUser._id}`)
+      .set("Authorization", `Bearer ${adminToken}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body.user.status).toBe("Inactive");
+
+    // User bị xóa không thể login
+    const loginResponse = await request(app).post("/api/auth/login").send({
+      email: mangakaUser.email,
+      password: "password123",
+    });
+    expect(loginResponse.status).toBe(403);
+    expect(loginResponse.body.error.code).toBe("AUTH_ACCOUNT_INACTIVE");
+  });
+
+  it("Xóa tài khoản revoke tất cả sessions", async () => {
+    const agent = request.agent(app);
+
+    // Login trước
+    const loginResponse = await agent.post("/api/auth/login").send({
+      email: mangakaUser.email,
+      password: "password123",
+    });
+    expect(loginResponse.status).toBe(200);
+
+    // Admin xóa
+    await request(app)
+      .delete(`/api/auth/users/${mangakaUser._id}`)
+      .set("Authorization", `Bearer ${adminToken}`);
+
+    // Không thể refresh token
+    const refreshResponse = await agent.post("/api/auth/refresh").send();
+    expect(refreshResponse.status).toBe(401);
+  });
+
+  // ===== XÓA USER KHÔNG TỒN TẠI =====
+  it("Xóa user không tồn tại trả về 404", async () => {
+    const fakeId = "507f1f77bcf86cd799439011";
+    const response = await request(app)
+      .delete(`/api/auth/users/${fakeId}`)
+      .set("Authorization", `Bearer ${adminToken}`);
+
+    expect(response.status).toBe(404);
+    expect(response.body.error.code).toBe("AUTH_USER_NOT_FOUND");
+  });
+
+  // ===== KIỂM TRA REVOKE SESSION KHI KHÓA =====
+  it("Khóa tài khoản revoke tất cả sessions hiện tại", async () => {
+    const agent = request.agent(app);
+
+    // Login trước
+    const loginResponse = await agent.post("/api/auth/login").send({
+      email: mangakaUser.email,
+      password: "password123",
+    });
+    expect(loginResponse.status).toBe(200);
+
+    // Admin khóa
+    await request(app)
+      .patch(`/api/auth/users/${mangakaUser._id}/status`)
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({ status: "Suspended" });
+
+    // Không thể refresh token
+    const refreshResponse = await agent.post("/api/auth/refresh").send();
+    expect(refreshResponse.status).toBe(401);
+  });
+
+  // ===== NON-ADMIN KHÔNG ĐƯỢC PHÉP =====
+  it("Non-admin không được phép khóa/mở khóa tài khoản", async () => {
+    const mangakaLogin = await request(app).post("/api/auth/login").send({
+      email: mangakaUser.email,
+      password: "password123",
+    });
+    const mangakaToken = mangakaLogin.body.accessToken;
+
+    const targetUser = await createTestUser({ email: "target@example.com" });
+
+    const response = await request(app)
+      .patch(`/api/auth/users/${targetUser._id}/status`)
+      .set("Authorization", `Bearer ${mangakaToken}`)
+      .send({ status: "Suspended" });
+
+    expect(response.status).toBe(403);
+  });
+
+  it("Non-admin không được phép xóa tài khoản", async () => {
+    const mangakaLogin = await request(app).post("/api/auth/login").send({
+      email: mangakaUser.email,
+      password: "password123",
+    });
+    const mangakaToken = mangakaLogin.body.accessToken;
+
+    const response = await request(app)
+      .delete(`/api/auth/users/${mangakaUser._id}`)
+      .set("Authorization", `Bearer ${mangakaToken}`);
+
+    expect(response.status).toBe(403);
+  });
+});
