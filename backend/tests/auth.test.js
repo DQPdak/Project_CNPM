@@ -464,4 +464,72 @@ describe("User Management - Khóa/Mở khóa/Xóa tài khoản", () => {
 
     expect(response.status).toBe(403);
   });
+
+  // ===== PAGINATION & FILTER =====
+  it("Lấy danh sách users với pagination", async () => {
+    const response = await request(app)
+      .get("/api/auth/users?page=1&limit=2")
+      .set("Authorization", `Bearer ${adminToken}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body.users).toBeDefined();
+    expect(response.body.pagination).toBeDefined();
+    expect(response.body.pagination.page).toBe(1);
+    expect(response.body.pagination.limit).toBe(2);
+  });
+
+  it("Lọc users theo role", async () => {
+    const response = await request(app)
+      .get("/api/auth/users?role=Mangaka")
+      .set("Authorization", `Bearer ${adminToken}`);
+
+    expect(response.status).toBe(200);
+    response.body.users.forEach((user) => {
+      expect(user.role).toBe("Mangaka");
+    });
+  });
+
+  it("Tìm kiếm users theo tên hoặc email", async () => {
+    const response = await request(app)
+      .get("/api/auth/users?search=test")
+      .set("Authorization", `Bearer ${adminToken}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body.users.length).toBeGreaterThan(0);
+  });
+
+  // ===== UPDATE USER =====
+  it("Admin cập nhật thông tin user (name, email, role)", async () => {
+    const response = await request(app)
+      .put(`/api/auth/users/${mangakaUser._id}`)
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({
+        name: "Updated Name",
+        email: "updated@example.com",
+        role: "Assistant",
+      });
+
+    expect(response.status).toBe(200);
+    expect(response.body.user.name).toBe("Updated Name");
+    expect(response.body.user.email).toBe("updated@example.com");
+    expect(response.body.user.role).toBe("Assistant");
+  });
+
+  it("Không thể cập nhật email trùng với user khác", async () => {
+    const response = await request(app)
+      .put(`/api/auth/users/${mangakaUser._id}`)
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({ email: "admin@example.com" });
+
+    expect(response.status).toBe(409);
+  });
+
+  it("Không thể cập nhật role không hợp lệ", async () => {
+    const response = await request(app)
+      .put(`/api/auth/users/${mangakaUser._id}`)
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({ role: "InvalidRole" });
+
+    expect(response.status).toBe(400);
+  });
 });
