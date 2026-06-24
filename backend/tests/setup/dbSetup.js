@@ -1,7 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const mongoose = require("mongoose");
-const { MongoMemoryServer } = require("mongodb-memory-server");
+const { MongoMemoryReplSet } = require("mongodb-memory-server");
 
 let mongoServer;
 const mongoBinaryDir = path.resolve(__dirname, "../../.cache/mongodb-binaries");
@@ -14,9 +14,12 @@ const ensureMongoBinaryDir = () => {
 
 const connectDB = async () => {
   ensureMongoBinaryDir();
-  mongoServer = await MongoMemoryServer.create({
+
+  mongoServer = await MongoMemoryReplSet.create({
+    replSet: { count: 1 },
     binary: { downloadDir: mongoBinaryDir },
   });
+
   const uri = mongoServer.getUri();
   await mongoose.connect(uri);
 };

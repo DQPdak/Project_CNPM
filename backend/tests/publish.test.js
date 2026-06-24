@@ -48,13 +48,15 @@ describe("Publish API Tests", () => {
     await Page.create({
       chapter_id: chapter._id,
       page_number: 1,
-      file_url: "link1",
+      current_source_file_url: "link1.psd",
+      current_preview_url: "link1.png",
       status: "Approved",
     });
     await Page.create({
       chapter_id: chapter._id,
       page_number: 2,
-      file_url: "link2",
+      current_source_file_url: "link2.psd",
+      current_preview_url: "link2.png",
       status: "Draft",
     });
 
@@ -77,7 +79,8 @@ describe("Publish API Tests", () => {
     const page = await Page.create({
       chapter_id: chapter._id,
       page_number: 1,
-      file_url: "link",
+      current_source_file_url: "link.psd",
+      current_preview_url: "link.png",
       status: "Approved",
     });
 
@@ -109,7 +112,8 @@ describe("Publish API Tests", () => {
     const page = await Page.create({
       chapter_id: chapter._id,
       page_number: 1,
-      file_url: "link",
+      current_source_file_url: "link.psd",
+      current_preview_url: "link.png",
       status: "Approved",
     });
 
@@ -151,7 +155,8 @@ describe("Publish API Tests", () => {
     const page = await Page.create({
       chapter_id: chapter._id,
       page_number: 1,
-      file_url: "link",
+      current_source_file_url: "link.psd",
+      current_preview_url: "link.png",
       status: "Approved",
     });
 
