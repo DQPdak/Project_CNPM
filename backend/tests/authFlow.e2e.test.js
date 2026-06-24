@@ -1,4 +1,5 @@
 jest.mock("../src/middlewares/upload.middleware", () => ({
+  fields: () => (req, res, next) => next(),
   array: () => (req, res, next) => next(),
   single: () => (req, res, next) => next(),
 }));
@@ -42,17 +43,20 @@ describe("Auth flow end-to-end", () => {
       status: "In Production",
     });
 
+    // 🚨 ĐÃ SỬA Ở ĐÂY: Thay file_url
     await Page.create([
       {
         chapter_id: chapter._id,
         page_number: 1,
-        file_url: "https://example.com/page-1.jpg",
+        current_source_file_url: "https://example.com/page-1.psd",
+        current_preview_url: "https://example.com/page-1.png",
         status: "Draft",
       },
       {
         chapter_id: chapter._id,
         page_number: 2,
-        file_url: "https://example.com/page-2.jpg",
+        current_source_file_url: "https://example.com/page-2.psd",
+        current_preview_url: "https://example.com/page-2.png",
         status: "Ready For Review",
       },
     ]);
