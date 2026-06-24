@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Navigate } from "react-router-dom";
+import { Trash, Pencil, Lock, LockOpen } from "lucide-react";
 import RequirePermission from "../../components/security/RequirePermission";
 import {
   createUser,
@@ -36,7 +37,12 @@ export default function AdminUsersPage() {
   const toast = useToast();
   const user = useAuthStore((state) => state.user);
   const [users, setUsers] = useState([]);
-  const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, totalPages: 0 });
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 10,
+    total: 0,
+    totalPages: 0,
+  });
   const [filters, setFilters] = useState({ search: "", role: "", status: "" });
   const [form, setForm] = useState(initialForm);
   const [isLoading, setIsLoading] = useState(true);
@@ -135,7 +141,12 @@ export default function AdminUsersPage() {
 
   // ===== UPDATE STATUS (KHÓA/MỞ KHÓA) =====
   const handleUpdateStatus = async (target, newStatus) => {
-    const actionText = newStatus === "Suspended" ? "khoa" : newStatus === "Active" ? "mo khoa" : "vo hieu hoa";
+    const actionText =
+      newStatus === "Suspended"
+        ? "khoa"
+        : newStatus === "Active"
+          ? "mo khoa"
+          : "vo hieu hoa";
     const result = await updateUserStatus(target.id, newStatus);
     if (result.success === false) {
       toast.error("Khong the " + actionText + ": " + result.message);
@@ -214,7 +225,9 @@ export default function AdminUsersPage() {
                     type="text"
                     placeholder="Tim kiem theo ten hoac email..."
                     value={filters.search}
-                    onChange={(e) => handleFilterChange("search", e.target.value)}
+                    onChange={(e) =>
+                      handleFilterChange("search", e.target.value)
+                    }
                     className="filter-input"
                   />
                   <select
@@ -224,17 +237,23 @@ export default function AdminUsersPage() {
                   >
                     <option value="">Tat ca role</option>
                     {ROLE_OPTIONS.map((role) => (
-                      <option key={role} value={role}>{role}</option>
+                      <option key={role} value={role}>
+                        {role}
+                      </option>
                     ))}
                   </select>
                   <select
                     value={filters.status}
-                    onChange={(e) => handleFilterChange("status", e.target.value)}
+                    onChange={(e) =>
+                      handleFilterChange("status", e.target.value)
+                    }
                     className="filter-select"
                   >
                     <option value="">Tat ca trang thai</option>
                     {STATUS_OPTIONS.map((status) => (
-                      <option key={status} value={status}>{status}</option>
+                      <option key={status} value={status}>
+                        {status}
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -259,7 +278,9 @@ export default function AdminUsersPage() {
                             <Td>{u.email}</Td>
                             <Td>{u.role}</Td>
                             <Td>
-                              <span className={`status-badge status-${u.status.toLowerCase()}`}>
+                              <span
+                                className={`status-badge status-${u.status.toLowerCase()}`}
+                              >
                                 {u.status}
                               </span>
                             </Td>
@@ -269,35 +290,41 @@ export default function AdminUsersPage() {
                                   type="button"
                                   onClick={() => handleDeleteUser(u)}
                                   className="btn-icon btn-delete"
-                                  title="Xoa tai khoan"
+                                  title="Xóa tài khoản"
                                 >
-                                  🗑️
+                                  <Trash size={18} strokeWidth={2.5} />
                                 </button>
+
                                 <button
                                   type="button"
                                   onClick={() => handleOpenEdit(u)}
                                   className="btn-icon btn-edit"
-                                  title="Sua thong tin"
+                                  title="Sửa thông tin"
                                 >
-                                  ✏️
+                                  <Pencil size={18} strokeWidth={2.5} />
                                 </button>
+
                                 {u.status === "Active" ? (
                                   <button
                                     type="button"
-                                    onClick={() => handleUpdateStatus(u, "Suspended")}
+                                    onClick={() =>
+                                      handleUpdateStatus(u, "Suspended")
+                                    }
                                     className="btn-icon btn-suspend"
-                                    title="Khoa tai khoan"
+                                    title="Khóa tài khoản"
                                   >
-                                    🔒
+                                    <Lock size={18} strokeWidth={2.5} />
                                   </button>
                                 ) : (
                                   <button
                                     type="button"
-                                    onClick={() => handleUpdateStatus(u, "Active")}
+                                    onClick={() =>
+                                      handleUpdateStatus(u, "Active")
+                                    }
                                     className="btn-icon btn-activate"
-                                    title="Mo khoa tai khoan"
+                                    title="Mở khóa tài khoản"
                                   >
-                                    🔓
+                                    <LockOpen size={18} strokeWidth={2.5} />
                                   </button>
                                 )}
                               </div>
@@ -325,7 +352,8 @@ export default function AdminUsersPage() {
                         &lt;
                       </button>
                       <span className="page-info">
-                        Trang {pagination.page} / {pagination.totalPages} ({pagination.total} tai khoan)
+                        Trang {pagination.page} / {pagination.totalPages} (
+                        {pagination.total} tai khoan)
                       </span>
                       <button
                         type="button"
@@ -350,7 +378,9 @@ export default function AdminUsersPage() {
                   <Field label="Ho ten">
                     <input
                       value={form.name}
-                      onChange={(event) => updateForm("name", event.target.value)}
+                      onChange={(event) =>
+                        updateForm("name", event.target.value)
+                      }
                       required
                       className="input-field"
                     />
@@ -360,7 +390,9 @@ export default function AdminUsersPage() {
                     <input
                       type="email"
                       value={form.email}
-                      onChange={(event) => updateForm("email", event.target.value)}
+                      onChange={(event) =>
+                        updateForm("email", event.target.value)
+                      }
                       required
                       className="input-field"
                     />
@@ -370,7 +402,9 @@ export default function AdminUsersPage() {
                     <input
                       type="password"
                       value={form.password}
-                      onChange={(event) => updateForm("password", event.target.value)}
+                      onChange={(event) =>
+                        updateForm("password", event.target.value)
+                      }
                       required
                       minLength={8}
                       className="input-field"
@@ -380,7 +414,9 @@ export default function AdminUsersPage() {
                   <Field label="Role">
                     <select
                       value={form.role}
-                      onChange={(event) => updateForm("role", event.target.value)}
+                      onChange={(event) =>
+                        updateForm("role", event.target.value)
+                      }
                       className="select-field"
                     >
                       {ROLE_OPTIONS.map((role) => (
@@ -394,7 +430,9 @@ export default function AdminUsersPage() {
                   <Field label="Trang thai">
                     <select
                       value={form.status}
-                      onChange={(event) => updateForm("status", event.target.value)}
+                      onChange={(event) =>
+                        updateForm("status", event.target.value)
+                      }
                       className="select-field"
                     >
                       {STATUS_OPTIONS.map((status) => (
@@ -497,7 +535,9 @@ export default function AdminUsersPage() {
                     className="select-field"
                   >
                     {ROLE_OPTIONS.map((role) => (
-                      <option key={role} value={role}>{role}</option>
+                      <option key={role} value={role}>
+                        {role}
+                      </option>
                     ))}
                   </select>
                 </Field>

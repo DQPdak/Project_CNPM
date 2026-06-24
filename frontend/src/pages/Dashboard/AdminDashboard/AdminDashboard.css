@@ -39,3 +39,64 @@
 .btn-emerald {
   @apply block w-full text-center py-3 px-4 text-white font-black uppercase tracking-wider border-4 border-black bg-black hover:bg-white hover:text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.5)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.5)] transition-all active:shadow-none active:translate-x-[4px] active:translate-y-[4px];
 }
+
+.btn-icon {
+  width: 42px;
+  height: 42px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-width: 3px;
+  border-style: solid;
+
+  cursor: pointer;
+
+  transition: all 0.15s ease;
+
+  box-shadow: 4px 4px 0 #000;
+}
+
+.btn-icon:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 #000;
+}
+
+.btn-icon:active {
+  transform: translate(4px, 4px);
+  box-shadow: none;
+}
+
+.btn-delete {
+  background: #ffe8e8;
+  color: #ff4545;
+  padding-inline: 0.5rem;
+}
+
+.btn-delete:hover {
+  background: #ff4545;
+  color: #fff;
+}
+
+.btn-edit {
+  background: #e5f8f5;
+  color: #23a094;
+}
+
+.btn-edit:hover {
+  background: #23a094;
+  color: #fff;
+}
+
+.btn-suspend,
+.btn-activate {
+  background: #fff7d6;
+  color: #d4a700;
+}
+
+.btn-suspend:hover,
+.btn-activate:hover {
+  background: #d4a700;
+  color: #fff;
+}
