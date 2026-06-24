@@ -28,5 +28,18 @@ router.post(
   requireRole(ROLES.ADMIN),
   authController.resetPassword,
 );
+// Khóa/Mở khóa/Xóa tài khoản
+router.patch(
+  "/users/:id/status",
+  requireAuth,
+  requireRole(ROLES.ADMIN),
+  authController.updateUserStatus,
+);
+router.delete(
+  "/users/:id",
+  requireAuth,
+  requireRole(ROLES.ADMIN),
+  authController.deleteUser,
+);
 
 module.exports = router;
