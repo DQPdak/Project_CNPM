@@ -178,14 +178,52 @@ const deleteUser = async (req, res) => {
   }
 };
 
+/**
+ * GET /api/auth/users
+ * Admin lấy danh sách users với filter/search/pagination
+ */
+const listUsersWithFilter = async (req, res) => {
+  try {
+    const { page, limit, search, role, status } = req.query;
+    const result = await authService.listUsersWithFilter({
+      page: parseInt(page) || 1,
+      limit: parseInt(limit) || 10,
+      search: search || "",
+      role: role || "",
+      status: status || "",
+    });
+    return res.status(200).json(result);
+  } catch (error) {
+    return res.status(error.status || 500).json(buildErrorResponse(error));
+  }
+};
+
+/**
+ * PUT /api/auth/users/:id
+ * Admin cập nhật thông tin user
+ */
+const updateUser = async (req, res) => {
+  try {
+    const result = await authService.updateUser({ userId: req.params.id, updates: req.body });
+    return res.status(200).json({
+      message: "Cập nhật thông tin user thành công.",
+      user: result.user,
+    });
+  } catch (error) {
+    return res.status(error.status || 500).json(buildErrorResponse(error));
+  }
+};
+
 module.exports = {
   createUser,
   deleteUser,
   listUsers,
+  listUsersWithFilter,
   login,
   logout,
   me,
   resetPassword,
   refresh,
+  updateUser,
   updateUserStatus,
 };

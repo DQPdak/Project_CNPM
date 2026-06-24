@@ -324,14 +324,96 @@ const deleteUser = async (userId) => {
   return { user: sanitizeUser(user) };
 };
 
+/**
+ * Lấy danh sách users với filter, search, pagination
+ */
+const listUsersWithFilter = async ({ page = 1, limit = 10, search = "", role = "", status = "" }) => {
+  const query = {};
+
+  if (role) {
+    query.role = role;
+  }
+
+  if (status) {
+    query.status = status;
+  }
+
+  if (search) {
+    const searchRegex = new RegExp(search.trim(), "i");
+    query.$or = [
+      { name: searchRegex },
+      { email: searchRegex },
+    ];
+  }
+
+  const skip = (page - 1) * limit;
+
+  const [users, total] = await Promise.all([
+    User.find(query)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit),
+    User.countDocuments(query),
+  ]);
+
+  return {
+    users: users.map(sanitizeUser),
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+    },
+  };
+};
+
+/**
+ * Admin cập nhật thông tin user (name, email, role)
+ */
+const updateUser = async ({ userId, updates }) => {
+  const allowedFields = ["name", "email", "role"];
+  const filteredUpdates = {};
+
+  for (const key of allowedFields) {
+    if (updates[key] !== undefined) {
+      filteredUpdates[key] = updates[key];
+    }
+  }
+
+  if (filteredUpdates.role && !validateRole(filteredUpdates.role)) {
+    throw buildAuthError(400, "AUTH_INVALID_ROLE", "Role is invalid.");
+  }
+
+  if (filteredUpdates.email) {
+    const normalizedEmail = filteredUpdates.email.trim().toLowerCase();
+    const existingUser = await User.findOne({
+      email: normalizedEmail,
+      _id: { $ne: userId },
+    });
+    if (existingUser) {
+      throw buildAuthError(409, AUTH_ERROR_CODES.EMAIL_ALREADY_EXISTS, "Email already exists.");
+    }
+    filteredUpdates.email = normalizedEmail;
+  }
+
+  const user = await User.findByIdAndUpdate(userId, filteredUpdates, { new: true });
+  if (!user) {
+    throw buildAuthError(404, AUTH_ERROR_CODES.USER_NOT_FOUND, "User was not found.");
+  }
+
+  return { user: sanitizeUser(user) };
+};
+
 module.exports = {
   createUser,
   deleteUser,
   getCurrentUserFromAccessToken,
   listUsers,
+  listUsersWithFilter,
   login,
   logout,
   resetPassword,
   refresh,
+  updateUser,
   updateUserStatus,
 };
