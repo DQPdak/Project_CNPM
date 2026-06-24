@@ -5,6 +5,7 @@ import getLifecycleVotes from "../../services/series/getLifecycleVotesService";
 import castLifecycleVote from "../../services/series/castLifecycleVoteService";
 import Loading from "../../common/Loading/Loading";
 import { useToast } from "../../contexts/ToastContext";
+import "./BoardAtRiskSeriesPage.css"; // Đã import file CSS mới
 
 const STATUS_OPTIONS = [
   "Active",
@@ -16,30 +17,36 @@ const STATUS_OPTIONS = [
 ];
 
 const STATUS_TRANSLATIONS = {
-  "Active": "Hoạt động",
+  Active: "Hoạt động",
   "At Risk": "Có nguy cơ",
-  "Hiatus": "Tạm ngưng",
-  "Cancelled": "Bị hủy",
-  "Completed": "Đã hoàn thành",
+  Hiatus: "Tạm ngưng",
+  Cancelled: "Hủy bỏ",
+  Completed: "Hoàn thành",
   "Changed Schedule": "Đổi lịch phát hành",
 };
 
 const RISK_OPTIONS = ["Safe", "Warning", "Critical"];
 
 const RISK_TRANSLATIONS = {
-  "Safe": "An toàn",
-  "Warning": "Cảnh báo",
-  "Critical": "Nguy cấp",
+  Safe: "An toàn",
+  Warning: "Cảnh báo",
+  Critical: "Nguy cấp",
 };
 
-const SCHEDULE_OPTIONS = ["weekly", "monthly", "one-shot", "online only", "none"];
+const SCHEDULE_OPTIONS = [
+  "weekly",
+  "monthly",
+  "one-shot",
+  "online only",
+  "none",
+];
 
 const SCHEDULE_TRANSLATIONS = {
-  "weekly": "Hằng tuần",
-  "monthly": "Hằng tháng",
+  weekly: "Hàng tuần",
+  monthly: "Hàng tháng",
   "one-shot": "Một tập (One-shot)",
   "online only": "Chỉ phát hành online",
-  "none": "Chưa có",
+  none: "Chưa có",
 };
 
 const LIFECYCLE_OPTIONS = [
@@ -52,55 +59,12 @@ const LIFECYCLE_OPTIONS = [
 ];
 
 const LIFECYCLE_TRANSLATIONS = {
-  "Continue": "Tiếp tục phát hành",
-  "Cancel": "Hủy bỏ bộ truyện",
-  "Hiatus": "Tạm ngưng phát hành",
+  Continue: "Tiếp tục phát hành",
+  Cancel: "Hủy truyện",
+  Hiatus: "Tạm ngưng phát hành",
   "Change Schedule": "Thay đổi lịch phát hành",
-  "Online Only": "Chuyển sang chỉ online",
+  "Online Only": "Chuyển sang chỉ đăng online",
   "Need Improvement Plan": "Yêu cầu kế hoạch cải thiện",
-};
-
-const RISK_COLOR = {
-  Safe: "#16a34a",
-  Warning: "#d97706",
-  Critical: "#dc2626",
-};
-
-const cardStyle = {
-  background: "#fff",
-  border: "1px solid #e2e8f0",
-  borderRadius: "12px",
-  padding: "20px",
-  marginBottom: "16px",
-};
-
-const selectStyle = {
-  padding: "8px 10px",
-  borderRadius: "8px",
-  border: "1px solid #cbd5e1",
-  marginRight: "8px",
-  marginBottom: "8px",
-};
-
-const btnStyle = {
-  padding: "8px 16px",
-  background: "#0ea5e9",
-  color: "#fff",
-  border: "none",
-  borderRadius: "8px",
-  fontWeight: 600,
-  cursor: "pointer",
-};
-
-const ghostBtnStyle = {
-  padding: "8px 16px",
-  background: "#fff",
-  color: "#0ea5e9",
-  border: "1px solid #0ea5e9",
-  borderRadius: "8px",
-  fontWeight: 600,
-  cursor: "pointer",
-  marginBottom: "8px",
 };
 
 export default function BoardAtRiskSeriesPage() {
@@ -157,7 +121,7 @@ export default function BoardAtRiskSeriesPage() {
     if (result.success === false) {
       toast.error(result.message);
     } else {
-      toast.success("Đã cập nhật trạng thái series thành công.");
+      toast.success("Cập nhật trạng thái series thành công.");
       await fetchList();
     }
     setSavingId(null);
@@ -214,79 +178,57 @@ export default function BoardAtRiskSeriesPage() {
     setVotingId(null);
   };
 
+  // Helper cho CSS Class
+  const getRiskBadgeClass = (risk) => {
+    const r = (risk || "Warning").toLowerCase();
+    return `risk-badge risk-${r}`;
+  };
+
   return (
-    <div>
-      <header style={{ marginBottom: "24px" }}>
-        <h1 style={{ margin: 0, fontSize: "1.75rem" }}>Danh sách series có nguy cơ</h1>
+    <div className="board-at-risk-wrapper">
+      <header className="page-header">
+        <h1 className="page-title">Danh sách series có nguy cơ</h1>
       </header>
 
       {isLoading && <Loading text="Đang tải danh sách series có nguy cơ..." />}
 
       {!isLoading && items.length === 0 && (
-        <div
-          style={{
-            padding: "40px",
-            textAlign: "center",
-            background: "#fff",
-            borderRadius: "12px",
-            border: "1px dashed #cbd5e1",
-          }}
-        >
-          Không có series nào đang có nguy cơ.
-        </div>
+        <div className="empty-box">Không có series nào đang có nguy cơ</div>
       )}
 
       {!isLoading &&
         items.map((series) => {
           const dossier = dossiers[series._id];
           const isOpen = expandedId === series._id;
+
           return (
-            <div key={series._id} style={cardStyle}>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "flex-start",
-                  gap: "12px",
-                }}
-              >
-                <div>
-                  <h2 style={{ margin: "0 0 8px", fontSize: "1.2rem" }}>
-                    {series.title}
-                  </h2>
-                  <p style={{ margin: 0, color: "#64748b", fontSize: "0.9rem" }}>
+            <div key={series._id} className="neo-card">
+              <div className="card-header">
+                <div className="card-info">
+                  <h2 className="card-title">{series.title}</h2>
+                  <p className="card-meta">
                     Tác giả:{" "}
-                    {series.author_id?.name || series.author_id?.email || "—"} ·
-                    Thể loại: {series.genre || "—"}
+                    {series.author_id?.name ||
+                      series.author_id?.email ||
+                      "Chưa rõ"}{" "}
+                    · Thể loại: {series.genre || "N/A"}
                   </p>
                 </div>
-                <span
-                  style={{
-                    padding: "4px 10px",
-                    borderRadius: "999px",
-                    fontSize: "0.8rem",
-                    fontWeight: 700,
-                    color: "#fff",
-                    background: RISK_COLOR[series.risk_status] || "#64748b",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  Mức độ nguy cơ: {RISK_TRANSLATIONS[series.risk_status] || series.risk_status || "—"}
+                <span className={getRiskBadgeClass(series.risk_status)}>
+                  Mức nguy cơ:{" "}
+                  {RISK_TRANSLATIONS[series.risk_status] ||
+                    series.risk_status ||
+                    "N/A"}
                 </span>
               </div>
 
-              <div
-                style={{
-                  display: "flex",
-                  flexWrap: "wrap",
-                  alignItems: "center",
-                  marginTop: "12px",
-                }}
-              >
+              <div className="card-actions">
                 <select
-                  style={selectStyle}
+                  className="neo-select"
                   value={forms[series._id]?.status || "At Risk"}
-                  onChange={(e) => updateForm(series._id, "status", e.target.value)}
+                  onChange={(e) =>
+                    updateForm(series._id, "status", e.target.value)
+                  }
                 >
                   {STATUS_OPTIONS.map((opt) => (
                     <option key={opt} value={opt}>
@@ -294,9 +236,8 @@ export default function BoardAtRiskSeriesPage() {
                     </option>
                   ))}
                 </select>
-
                 <select
-                  style={selectStyle}
+                  className="neo-select"
                   value={forms[series._id]?.risk_status || "Warning"}
                   onChange={(e) =>
                     updateForm(series._id, "risk_status", e.target.value)
@@ -308,9 +249,8 @@ export default function BoardAtRiskSeriesPage() {
                     </option>
                   ))}
                 </select>
-
                 <select
-                  style={selectStyle}
+                  className="neo-select"
                   value={forms[series._id]?.approved_schedule || "none"}
                   onChange={(e) =>
                     updateForm(series._id, "approved_schedule", e.target.value)
@@ -322,83 +262,62 @@ export default function BoardAtRiskSeriesPage() {
                     </option>
                   ))}
                 </select>
-
                 <button
                   type="button"
-                  style={btnStyle}
+                  className="btn-primary"
                   disabled={savingId === series._id}
                   onClick={() => handleSave(series._id)}
                 >
-                  {savingId === series._id ? "Đang lưu..." : "Cập nhật trạng thái"}
+                  {savingId === series._id
+                    ? "Đang lưu..."
+                    : "Cập nhật trạng thái"}
                 </button>
               </div>
 
-              <div style={{ marginTop: "12px" }}>
+              <div className="dossier-toggle">
                 <button
                   type="button"
-                  style={ghostBtnStyle}
+                  className="btn-secondary"
                   onClick={() => toggleDossier(series._id)}
                 >
-                  {isOpen ? "Ẩn hồ sơ quyết định" : "Hồ sơ quyết định & bỏ phiếu"}
+                  {isOpen
+                    ? "Đóng hồ sơ quyết định"
+                    : "Hồ sơ quyết định & Bỏ phiếu"}
                 </button>
               </div>
 
               {isOpen && (
-                <div
-                  style={{
-                    borderTop: "1px solid #e2e8f0",
-                    marginTop: "8px",
-                    paddingTop: "16px",
-                  }}
-                >
-                  {dossier?.loading && <Loading text="Đang tải hồ sơ..." />}
-
+                <div className="dossier-content">
+                  {dossier?.loading && <Loading text="Đang tải..." />}
                   {!dossier?.loading && (
                     <>
-                      <h3 style={{ margin: "0 0 8px", fontSize: "1rem" }}>
-                        Phiếu quyết định vòng đời ({dossier?.votes?.length || 0})
+                      <h3 className="dossier-title">
+                        Phiếu quyết định vòng đời ({dossier?.votes?.length || 0}
+                        )
                       </h3>
-
                       {(!dossier?.votes || dossier.votes.length === 0) && (
-                        <p
-                          style={{
-                            color: "#64748b",
-                            fontSize: "0.9rem",
-                            margin: "0 0 12px",
-                          }}
-                        >
-                          Chưa có phiếu quyết định nào.
+                        <p className="dossier-empty">
+                          Chưa có thành viên nào bỏ phiếu quyết định.
                         </p>
                       )}
 
-                      {dossier?.votes?.map((v) => (
-                        <div
-                          key={v._id}
-                          style={{
-                            marginBottom: "8px",
-                            fontSize: "0.9rem",
-                            background: "#f8fafc",
-                            borderRadius: "8px",
-                            padding: "8px 12px",
-                          }}
-                        >
-                          <strong>{LIFECYCLE_TRANSLATIONS[v.vote] || v.vote}</strong> —{" "}
-                          {v.board_member_id?.name || "Thành viên ban biên tập"}
-                          {v.comment && `: ${v.comment}`}
-                        </div>
-                      ))}
+                      <div className="vote-list">
+                        {dossier?.votes?.map((v) => (
+                          <div key={v._id} className="vote-item">
+                            <span className="vote-highlight">
+                              {LIFECYCLE_TRANSLATIONS[v.vote] || v.vote}
+                            </span>{" "}
+                            -{" "}
+                            {v.board_member_id?.name ||
+                              "Thành viên ban biên tập"}
+                            {v.comment && `: ${v.comment}`}
+                          </div>
+                        ))}
+                      </div>
 
-                      <div
-                        style={{
-                          display: "flex",
-                          flexWrap: "wrap",
-                          gap: "8px",
-                          alignItems: "center",
-                          marginTop: "12px",
-                        }}
-                      >
+                      <div className="vote-form">
                         <select
-                          style={selectStyle}
+                          className="neo-select"
                           value={
                             voteForms[series._id]?.vote || LIFECYCLE_OPTIONS[0]
                           }
@@ -412,26 +331,22 @@ export default function BoardAtRiskSeriesPage() {
                             </option>
                           ))}
                         </select>
-
                         <input
                           type="text"
+                          className="neo-input"
                           placeholder="Nhập nhận xét / lý do..."
                           value={voteForms[series._id]?.comment || ""}
                           onChange={(e) =>
-                            updateVoteForm(series._id, "comment", e.target.value)
+                            updateVoteForm(
+                              series._id,
+                              "comment",
+                              e.target.value,
+                            )
                           }
-                          style={{
-                            flex: "1 1 240px",
-                            padding: "8px 10px",
-                            borderRadius: "8px",
-                            border: "1px solid #cbd5e1",
-                            marginBottom: "8px",
-                          }}
                         />
-
                         <button
                           type="button"
-                          style={btnStyle}
+                          className="btn-action"
                           disabled={votingId === series._id}
                           onClick={() => handleLifecycleVote(series._id)}
                         >

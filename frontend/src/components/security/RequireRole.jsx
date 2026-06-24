@@ -7,7 +7,7 @@ export default function RequireRole({ allowedRoles, children }) {
   const role = user?.role;
 
   if (!role || !allowedRoles.includes(role)) {
-    return <Navigate to="/chapter-list" replace />;
+    return <Navigate to="/" replace />;
   }
 
   return <>{children}</>;
