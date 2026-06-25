@@ -66,10 +66,10 @@ class RankingService {
     if (!mongoose.Types.ObjectId.isValid(seriesObjectId)) {
       return seriesObjectId.toString();
     }
-    
+
     const series = await Series.findById(seriesObjectId);
     if (!series) return seriesObjectId.toString();
-    
+
     for (const [shortId, title] of Object.entries(SHORT_ID_MAP)) {
       if (series.title && series.title.toLowerCase() === title.toLowerCase()) {
         return shortId;
@@ -161,7 +161,7 @@ class RankingService {
         current.trend = "STABLE";
       }
 
-      // Xác định trạng thái cảnh báo dựa trên điểm trung bình (average_score) và thứ hạng/xu hướng
+      // Xác định trạng thái cảnh báo dựa trên điểm trung bình (average_score), tổng điểm (totalScore) và xu hướng
       let updatedRiskStatus = "Safe";
       let updatedStatus = "Active";
 
@@ -173,7 +173,7 @@ class RankingService {
         current.cancellationWarning = true;
         updatedRiskStatus = "Warning";
         updatedStatus = "At Risk";
-      } else if (current.currentRank >= 4 || current.trend === "DOWN") {
+      } else if (current.totalScore < 500 || current.trend === "DOWN") {
         current.cancellationWarning = true;
         updatedRiskStatus = "Warning";
         updatedStatus = "At Risk";
@@ -226,7 +226,7 @@ class RankingService {
   static async getVoteHistory() {
     const rankings = await Ranking.find().populate("release_issue_id").populate("series_id");
     const result = [];
-    
+
     for (const r of rankings) {
       if (!r.release_issue_id || !r.series_id) continue;
 
@@ -258,7 +258,7 @@ class RankingService {
   static async getSeriesStore() {
     const seriesList = await Series.find().populate("author_id").populate("editor_id");
     const result = [];
-    
+
     for (const s of seriesList) {
       const shortId = await this.getShortId(s._id);
       result.push({
