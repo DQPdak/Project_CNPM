@@ -19,7 +19,7 @@ exports.getEditorSeries = async (req, res) => {
   }
 };
 
-// Editorial Board: lấy toàn bộ series trong hệ thống
+// Editorial Board / Admin: lấy toàn bộ series trong hệ thống
 exports.getAllSeries = async (req, res) => {
   try {
     const seriesList = await Series.find()
