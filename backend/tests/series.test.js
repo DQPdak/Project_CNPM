@@ -89,5 +89,72 @@ describe("Series API - Lấy series theo từng role", () => {
     expect(response.body.series[0].series.title).toBe("Series co task");
   });
 
-  // ... (giữ nguyên phần còn lại)
+  it("editorial board lấy tất cả series", async () => {
+    const { user: mangaka } = await createAuthenticatedUser({
+      role: "Mangaka",
+      email: `mk-all-${Date.now()}@example.com`,
+    });
+    const { accessToken: boardToken } = await createAuthenticatedUser({
+      role: "Editorial Board",
+      email: `board-all-${Date.now()}@example.com`,
+    });
+
+    await Series.create({
+      title: "Series A",
+      author_id: mangaka._id,
+      status: "Active",
+    });
+    await Series.create({
+      title: "Series B",
+      author_id: mangaka._id,
+      status: "Draft",
+    });
+
+    const response = await withAuth(
+      request(app).get("/api/series/all"),
+      boardToken,
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.body.series).toHaveLength(2);
+  });
+
+  it("admin cũng lấy được tất cả series", async () => {
+    const { user: mangaka } = await createAuthenticatedUser({
+      role: "Mangaka",
+      email: `mk-admin-${Date.now()}@example.com`,
+    });
+    const { accessToken: adminToken } = await createAuthenticatedUser({
+      role: "Admin",
+      email: `admin-all-${Date.now()}@example.com`,
+    });
+
+    await Series.create({
+      title: "Series cho admin",
+      author_id: mangaka._id,
+      status: "Active",
+    });
+
+    const response = await withAuth(
+      request(app).get("/api/series/all"),
+      adminToken,
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.body.series).toHaveLength(1);
+  });
+
+  it("chặn mangaka lấy tất cả series", async () => {
+    const { accessToken: mangakaToken } = await createAuthenticatedUser({
+      role: "Mangaka",
+      email: `mk-deny-${Date.now()}@example.com`,
+    });
+
+    const response = await withAuth(
+      request(app).get("/api/series/all"),
+      mangakaToken,
+    );
+
+    expect(response.status).toBe(403);
+  });
 });

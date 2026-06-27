@@ -33,7 +33,7 @@ router.get(
 );
 router.get(
   "/all",
-  requireRole(ROLES.EDITORIAL_BOARD),
+  requireRole(ROLES.EDITORIAL_BOARD, ROLES.ADMIN),
   getSeriesByRole.getAllSeries,
 );
 router.get(
