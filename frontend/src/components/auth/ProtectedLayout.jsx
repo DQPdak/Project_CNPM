@@ -6,7 +6,7 @@ import { useAuthStore } from "../../stores/authStore";
 const ROLE_MENUS = {
   Mangaka: [
     { name: "Series của tôi", path: "/mangaka/series" },
-    { name: "Tạo Chapter mới", path: "/mangaka/chapter/create" },
+    { name: "Tạo Chapter mới", path: "/chapter-list" },
     { name: "Quản lý Task Trợ lý", path: "/mangaka/tasks" },
     { name: "Ranking Series", path: "/mangaka/ranking" },
   ],
