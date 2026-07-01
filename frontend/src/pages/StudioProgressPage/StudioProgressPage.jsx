@@ -11,9 +11,9 @@ import { Calendar, DollarSign, User, AlertTriangle, RefreshCw, Layers, CheckCirc
 import "./StudioProgressPage.css";
 
 const THREE_COLUMNS = [
-  { id: "todo", title: "Viá»‡c cáº§n lÃ m", color: "border-t-[#FFD000]" },
-  { id: "inprogress", title: "Äang thá»±c hiá»‡n", color: "border-t-[#23A094]" },
-  { id: "done", title: "HoÃ n thÃ nh", color: "border-t-[#28a745]" }
+  { id: "todo", title: "Việc cần làm", color: "border-t-[#FFD000]" },
+  { id: "inprogress", title: "Đang thực hiện", color: "border-t-[#23A094]" },
+  { id: "done", title: "Hoàn thành", color: "border-t-[#28a745]" }
 ];
 
 export default function StudioProgressPage() {
@@ -56,7 +56,7 @@ export default function StudioProgressPage() {
         res = await getAssistantSeries();
       }
 
-      if (res.success) {
+      if (res.success !== false) {
         const items = res.series || [];
         const formatted = items.map(item => item.series ? item.series : item);
         setSeriesList(formatted);
@@ -64,10 +64,10 @@ export default function StudioProgressPage() {
           setSelectedSeriesId(formatted[0]._id);
         }
       } else {
-        toast.error("KhÃ´ng thá»ƒ táº£i danh sÃ¡ch series: " + res.message);
+        toast.error("Không thể tải danh sách series: " + res.message);
       }
     } catch (error) {
-      toast.error("Lá»—i khi táº£i series: " + error.message);
+      toast.error("Lỗi khi tải series: " + error.message);
     } finally {
       setIsLoading(false);
     }
@@ -87,7 +87,7 @@ export default function StudioProgressPage() {
 
     const fetchChapters = async () => {
       const res = await getChaptersBySeries(selectedSeriesId);
-      if (res.success) {
+      if (res.success !== false) {
         setChapters(res.chapters || []);
         if (res.chapters && res.chapters.length > 0) {
           setSelectedChapterId(res.chapters[0]._id);
@@ -95,7 +95,7 @@ export default function StudioProgressPage() {
           setSelectedChapterId("");
         }
       } else {
-        toast.error("KhÃ´ng thá»ƒ táº£i chÆ°Æ¡ng: " + res.message);
+        toast.error("Không thể tải chương: " + res.message);
         setChapters([]);
         setSelectedChapterId("");
       }
@@ -178,7 +178,7 @@ export default function StudioProgressPage() {
 
     // Check permissions
     if (!isAllowedToEdit) {
-      toast.error("Báº¡n khÃ´ng cÃ³ quyá»n cáº­p nháº­t tráº¡ng thÃ¡i tiáº¿n Ä‘á»™!");
+      toast.error("Bạn không có quyền cập nhật trạng thái tiến độ!");
       return;
     }
 
@@ -198,11 +198,11 @@ export default function StudioProgressPage() {
     try {
       const res = await updateTaskStatusApi(taskId, newStatus);
       if (res.success) {
-        toast.success(`ÄÃ£ chuyá»ƒn cÃ´ng viá»‡c sang cá»™t: ${columnId === "todo" ? "Viá»‡c cáº§n lÃ m" : columnId === "inprogress" ? "Äang thá»±c hiá»‡n" : "HoÃ n thÃ nh"}`);
+        toast.success(`Đã chuyển công việc sang cột: ${columnId === "todo" ? "Việc cần làm" : columnId === "inprogress" ? "Đang thực hiện" : "Hoàn thành"}`);
         // Refresh local list
         setAllTasks(allTasks.map(t => t._id === taskId ? { ...t, status: newStatus } : t));
       } else {
-        toast.error("Lá»—i cáº­p nháº­t tráº¡ng thÃ¡i: " + res.message);
+        toast.error("Lỗi cập nhật trạng thái: " + res.message);
       }
     } catch (err) {
       toast.error(err.message);
@@ -247,36 +247,36 @@ export default function StudioProgressPage() {
 
   const translateTaskStatus = (status) => {
     const s = (status || "").toLowerCase().trim();
-    if (s === "assigned") return "Má»›i giao";
-    if (s === "in progress") return "Äang váº½";
-    if (s === "submitted") return "Chá» duyá»‡t";
-    if (s === "approved") return "ÄÃ£ duyá»‡t";
-    if (s === "revision requested") return "Cáº§n sá»­a";
-    if (s === "rejected") return "Bá»‹ tá»« chá»‘i";
-    if (s === "paid") return "ÄÃ£ tráº£ lÆ°Æ¡ng";
+    if (s === "assigned") return "Mới giao";
+    if (s === "in progress") return "Đang vẽ";
+    if (s === "submitted") return "Chờ duyệt";
+    if (s === "approved") return "Đã duyệt";
+    if (s === "revision requested") return "Cần sửa";
+    if (s === "rejected") return "Bị từ chối";
+    if (s === "paid") return "Đã trả lương";
     return status;
   };
 
   return (
     <div className="kp-container">
-      {isActionLoading && <Loading text="Äang xá»­ lÃ½ kÃ©o tháº£..." />}
+      {isActionLoading && <Loading text="Đang xử lý kéo thả..." />}
 
       {/* WORKSPACE HEADER */}
       <header className="kp-header shadow-brutal">
         <div>
-          <h1 className="kp-title">Báº¢NG TIáº¾N Äá»˜ & DASHBOARD GIÃM SÃT</h1>
-          <p className="kp-subtitle">GiÃ¡m sÃ¡t tá»•ng quan Annotation biÃªn táº­p, quáº£n lÃ½ luá»“ng váº½ Kanban vÃ  rÃ  soÃ¡t deadline</p>
+          <h1 className="kp-title">Bảng tiến độ & Dashboard giám sát</h1>
+          <p className="kp-subtitle">Giám sát tổng quan annotation biên tập, quản lý luồng vẽ Kanban và rà soát deadline.</p>
         </div>
         
         <button onClick={fetchTasksAndProgress} className="kp-refresh-btn font-bold">
-          <RefreshCw size={16} /> Táº£i láº¡i dá»¯ liá»‡u
+          <RefreshCw size={16} /> Tải lại dữ liệu
         </button>
       </header>
 
       {/* SELECTION CONTROL PANEL */}
       <section className="kp-filter-panel shadow-brutal bg-white border-4 border-black p-4 flex flex-wrap gap-6 items-center">
         <div className="kp-filter-group">
-          <label htmlFor="seriesSelect" className="font-black text-xs uppercase block mb-1">Chá»n bá»™ truyá»‡n (Series)</label>
+          <label htmlFor="seriesSelect" className="font-black text-xs uppercase block mb-1">Chọn bộ truyện (Series)</label>
           <select
             id="seriesSelect"
             value={selectedSeriesId}
@@ -285,7 +285,7 @@ export default function StudioProgressPage() {
             disabled={isLoading}
           >
             {seriesList.length === 0 ? (
-              <option value="">-- KhÃ´ng tÃ¬m tháº¥y truyá»‡n --</option>
+              <option value="">-- Không tìm thấy truyện --</option>
             ) : (
               seriesList.map(s => (
                 <option key={s._id} value={s._id}>{s.title}</option>
@@ -295,7 +295,7 @@ export default function StudioProgressPage() {
         </div>
 
         <div className="kp-filter-group">
-          <label htmlFor="chapterSelect" className="font-black text-xs uppercase block mb-1">Chá»n chÆ°Æ¡ng (Chapter)</label>
+          <label htmlFor="chapterSelect" className="font-black text-xs uppercase block mb-1">Chọn chương (Chapter)</label>
           <select
             id="chapterSelect"
             value={selectedChapterId}
@@ -303,32 +303,39 @@ export default function StudioProgressPage() {
             className="kp-select"
             disabled={isLoading || chapters.length === 0}
           >
-            <option value="">Táº¥t cáº£ cÃ¡c chÆ°Æ¡ng</option>
-            {chapters.map(c => (
-              <option key={c._id} value={c._id}>ChÆ°Æ¡ng {c.chapter_number}: {c.title}</option>
-            ))}
+            <option value="">Tất cả các chương</option>
+            {chapters.map(c => {
+              const title = c.title || "";
+              const chapterLabel = title.toLowerCase().startsWith("chương")
+                ? title
+                : `Chương ${c.chapter_number}: ${title}`;
+
+              return (
+                <option key={c._id} value={c._id}>{chapterLabel}</option>
+              );
+            })}
           </select>
         </div>
       </section>
 
       {/* DASHBOARD METRICS */}
       <section className="kp-dashboard-grid shadow-brutal bg-white border-4 border-black p-5">
-        <h2 className="kp-dashboard-title">DASHBOARD GIÃM SÃT TIáº¾N Äá»˜</h2>
+        <h2 className="kp-dashboard-title">Dashboard giám sát tiến độ</h2>
         
         <div className="kp-metrics-wrapper">
           {/* Card 1: Annotation Progress */}
           <div className="kp-metric-card">
-            <span className="kp-card-label">BiÃªn táº­p Annotation</span>
+            <span className="kp-card-label">Biên tập annotation</span>
             <div className="kp-card-numbers">
               <span className="kp-main-num">{totalAnnotations}</span>
               <span className="kp-sub-num">
-                (ÄÃ£ xong: <strong className="text-green-600">{completedAnnotations}</strong> | Chá»: <strong className="text-red-500">{pendingAnnotations}</strong>)
+                (Đã xong: <strong className="text-green-600">{completedAnnotations}</strong> | Chờ: <strong className="text-red-500">{pendingAnnotations}</strong>)
               </span>
             </div>
             {/* Progress bar */}
             <div className="kp-progress-container mt-2">
               <div className="flex justify-between text-xs font-bold mb-1">
-                <span>Tá»· lá»‡ hoÃ n thÃ nh</span>
+                <span>Tỷ lệ hoàn thành</span>
                 <span>{annotationProgress}%</span>
               </div>
               <div className="kp-progress-bar bg-gray-200 h-3 border border-black rounded-full overflow-hidden">
@@ -357,15 +364,15 @@ export default function StudioProgressPage() {
           {/* Card 3: Deadline Alert box */}
           <div className="kp-metric-card alert-card">
             <span className="kp-card-label text-red-600 flex items-center gap-1">
-              <AlertTriangle size={14} /> Cáº£nh bÃ¡o háº¡n chÃ³t
+              <AlertTriangle size={14} /> Cảnh báo hạn chót
             </span>
             <div className="kp-alert-list mt-2">
               <div className="flex justify-between border-b border-gray-200 py-1 text-xs">
-                <span>âš ï¸ QuÃ¡ háº¡n váº½:</span>
+                <span>Quá hạn vẽ:</span>
                 <span className="font-black text-red-500">{overdueTasks.length} task</span>
               </div>
               <div className="flex justify-between py-1 text-xs">
-                <span>â° Sáº¯p Ä‘áº¿n háº¡n:</span>
+                <span>Sắp đến hạn:</span>
                 <span className="font-black text-orange-500">{upcomingTasks.length} task</span>
               </div>
             </div>
@@ -375,9 +382,9 @@ export default function StudioProgressPage() {
         {/* DEADLINE ALERTS DETAIL LISTS */}
         <div className="kp-alert-sections mt-4 grid grid-cols-2 gap-4">
           <div className="kp-alert-subpanel border-2 border-black p-3 bg-red-50">
-            <h3 className="font-black text-xs uppercase text-red-600 mb-2 border-b border-red-200 pb-1">ðŸ›‘ CÃ´ng viá»‡c quÃ¡ háº¡n</h3>
+            <h3 className="font-black text-xs uppercase text-red-600 mb-2 border-b border-red-200 pb-1">Công việc quá hạn</h3>
             {overdueTasks.length === 0 ? (
-              <p className="text-xs italic text-gray-500">KhÃ´ng cÃ³ cÃ´ng viá»‡c nÃ o quÃ¡ háº¡n.</p>
+              <p className="text-xs italic text-gray-500">Không có công việc nào quá hạn.</p>
             ) : (
               <div className="kp-mini-list max-h-24 overflow-y-auto">
                 {overdueTasks.map(t => (
@@ -391,9 +398,9 @@ export default function StudioProgressPage() {
           </div>
 
           <div className="kp-alert-subpanel border-2 border-black p-3 bg-orange-50">
-            <h3 className="font-black text-xs uppercase text-orange-600 mb-2 border-b border-orange-200 pb-1">â° CÃ´ng viá»‡c sáº¯p Ä‘áº¿n háº¡n</h3>
+            <h3 className="font-black text-xs uppercase text-orange-600 mb-2 border-b border-orange-200 pb-1">Công việc sắp đến hạn</h3>
             {upcomingTasks.length === 0 ? (
-              <p className="text-xs italic text-gray-500">KhÃ´ng cÃ³ cÃ´ng viá»‡c nÃ o cáº§n gáº¥p.</p>
+              <p className="text-xs italic text-gray-500">Không có công việc nào cần gấp.</p>
             ) : (
               <div className="kp-mini-list max-h-24 overflow-y-auto">
                 {upcomingTasks.map(t => (
@@ -410,7 +417,7 @@ export default function StudioProgressPage() {
 
       {/* KANBAN BOARD */}
       {isLoading && allTasks.length === 0 ? (
-        <Loading text="Äang táº£i dá»¯ liá»‡u tiáº¿n Ä‘á»™..." />
+        <Loading text="Đang tải dữ liệu tiến độ..." />
       ) : (
         <div className="kp-board">
           {THREE_COLUMNS.map((column) => {
@@ -441,7 +448,7 @@ export default function StudioProgressPage() {
                 <div className="kp-column-cards p-3 flex flex-col gap-3 overflow-y-auto [&::-webkit-scrollbar]:hidden">
                   {sortedTasks.length === 0 ? (
                     <div className="kp-empty-column text-center py-8 text-xs text-gray-400 border border-dashed border-gray-300">
-                      KÃ©o tháº£ tháº» vÃ o Ä‘Ã¢y
+                      Kéo thả thẻ vào đây
                     </div>
                   ) : (
                     sortedTasks.map((task) => {
@@ -462,7 +469,7 @@ export default function StudioProgressPage() {
                             </span>
                             {overdue && (
                               <span className="kanban-badge overdue font-black uppercase text-[9px] bg-red-200 text-red-700 border-2 border-red-600 px-1 py-0.5 flex items-center gap-0.5 animation-pulse">
-                                <AlertTriangle size={10} /> QuÃ¡ háº¡n
+                                <AlertTriangle size={10} /> Quá hạn
                               </span>
                             )}
                           </div>
@@ -472,15 +479,15 @@ export default function StudioProgressPage() {
                           <div className="kp-card-meta flex flex-col gap-1 text-[11px] text-gray-600 border-t border-gray-200 pt-2">
                             <div className="flex items-center gap-1.5">
                               <User size={12} />
-                              <span>Phá»¥ trÃ¡ch: <strong>{task.assigned_to?.name || "ChÆ°a rÃµ"}</strong></span>
+                              <span>Phụ trách: <strong>{task.assigned_to?.name || "Chưa rõ"}</strong></span>
                             </div>
                             <div className="flex items-center gap-1.5">
                               <DollarSign size={12} />
-                              <span>ÄÆ¡n giÃ¡: <strong>{task.price.toLocaleString()}Ä‘</strong></span>
+                              <span>Đơn giá: <strong>{task.price.toLocaleString()}đ</strong></span>
                             </div>
                             <div className="flex items-center gap-1.5">
                               <Calendar size={12} />
-                              <span>Háº¡n chÃ³t: <strong className={overdue ? "text-red-600 font-bold" : ""}>{new Date(task.deadline).toLocaleDateString("vi-VN")}</strong></span>
+                              <span>Hạn chót: <strong className={overdue ? "text-red-600 font-bold" : ""}>{new Date(task.deadline).toLocaleDateString("vi-VN")}</strong></span>
                             </div>
                           </div>
 
