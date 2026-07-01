@@ -31,6 +31,7 @@ const ROLE_MENUS = {
     { name: "Quản lý User", path: "/admin/users" },
     { name: "Quản lý Phát hành", path: "/admin/releases" },
     { name: "Ranking & Vote", path: "/admin/ranking" },
+    { name: "Quản lý tiến độ", path: "/editor/progress" },
     { name: "Danh sách Series", path: "/board/all-series" },
     { name: "Duyệt Series Mới", path: "/board/reviews" },
     { name: "Series có nguy cơ", path: "/admin/series" },
