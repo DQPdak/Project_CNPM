@@ -1,4 +1,5 @@
 import React from "react";
+import SeriesProgressTable from "../../../components/dashboard/SeriesProgressTable/SeriesProgressTable";
 import "./AssistantDashboard.css";
 
 const AssistantDashboard = () => {
@@ -27,8 +28,12 @@ const AssistantDashboard = () => {
             Trạng thái thanh toán: Pending / Paid
           </div>
         </div>
+        <div className="col-span-full">
+          <SeriesProgressTable />
+        </div>
       </div>
     </div>
   );
 };
+
 export default AssistantDashboard;
