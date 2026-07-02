@@ -99,7 +99,7 @@ export default function AllSeriesPage() {
       )}
 
       {!isLoading && filtered.length > 0 && (
-        <div className="series-grid">
+        <div className="all-series-grid">
           {filtered.map(({ series, proposal }) => (
             <Link
               key={series._id}

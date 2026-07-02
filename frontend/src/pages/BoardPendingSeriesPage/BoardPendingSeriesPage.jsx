@@ -42,7 +42,7 @@ export default function BoardPendingSeriesPage() {
       )}
 
       {!isLoading && items.length > 0 && (
-        <div className="series-grid">
+        <div className="board-pending-grid">
           {items.map(({ series, proposal }) => (
             <Link
               key={series?._id || proposal?._id}
