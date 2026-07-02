@@ -55,7 +55,7 @@ export default function MangakaSeriesListPage() {
       )}
 
       {!isLoading && items.length > 0 && (
-        <div className="series-grid">
+        <div className="mangaka-series-grid">
           {items.map(({ series, proposal }) => (
             <Link
               key={series._id}

@@ -1,7 +1,7 @@
 @reference "../../index.css";
 
 .all-series-wrapper {
-  @apply max-w-6xl mx-auto space-y-6 font-sans;
+  @apply w-full space-y-6 font-sans;
 }
 
 .page-header {
@@ -40,8 +40,10 @@
   @apply p-10 text-center bg-[#F4F4F0] border-4 border-dashed border-black font-black uppercase tracking-widest text-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)];
 }
 
-.series-grid {
-  @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6;
+.all-series-grid {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
 }
 
 .neo-card {
