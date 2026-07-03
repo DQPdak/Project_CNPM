@@ -12,9 +12,9 @@ const BoardAtRiskWidget = () => {
       try {
         setIsLoading(true);
         const res = await getAtRiskSeriesService();
-        if (res && res.data) {
-          setAtRiskSeries(res.data.slice(0, 3));
-        }
+        // FIX: Xử lý mảng an toàn
+        const dataList = Array.isArray(res) ? res : res?.data || [];
+        setAtRiskSeries(dataList.slice(0, 3));
       } catch (error) {
         console.error("Lỗi lấy danh sách at-risk:", error);
       } finally {
@@ -37,17 +37,19 @@ const BoardAtRiskWidget = () => {
           </div>
         ) : atRiskSeries.length > 0 ? (
           atRiskSeries.map((item) => (
-            <div key={item.id} className="list-item-danger">
+            // FIX: Bắt chuẩn ID từ MongoDB
+            <div key={item._id || item.id} className="list-item-danger">
               <div className="truncate pr-2">
                 <h3 className="font-black text-base uppercase truncate">
-                  {item.title}
+                  {item.title || "Chưa có tên"}
                 </h3>
                 <span className="text-xs font-bold uppercase tracking-widest text-[#FF4545]">
-                  Hạng: {item.rank || "N/A"}
+                  Hạng: {item.currentRank || item.rank || "N/A"}
                 </span>
               </div>
               <Link
-                to={`/board/series/${item.id}`}
+                // FIX: Tránh truyền /undefined vào thanh URL
+                to={`/board/series/${item._id || item.id}`}
                 className="btn-action-danger"
               >
                 Xử Lý
