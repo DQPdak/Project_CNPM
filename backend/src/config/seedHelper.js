@@ -9,6 +9,8 @@ const AssistantIncome = require("../models/AssistantIncomeModel");
 const Annotation = require("../models/AnnotationModel");
 const { hashPassword } = require("../modules/auth/utils/password");
 
+const daysFromNow = (days) => new Date(Date.now() + days * 24 * 60 * 60 * 1000);
+
 const runSeed = async () => {
   try {
     console.log("🌱 Auto-seeding database for development...");
@@ -72,10 +74,47 @@ const runSeed = async () => {
       { upsert: true, new: true, setDefaultsOnInsert: true }
     );
 
+    const extraMangakas = await Promise.all([
+      User.findOneAndUpdate(
+        { email: "aoi.hikari@example.com" },
+        {
+          name: "Aoi Hikari",
+          email: "aoi.hikari@example.com",
+          password: hashedPass,
+          role: "Mangaka",
+          status: "Active"
+        },
+        { upsert: true, new: true, setDefaultsOnInsert: true }
+      ),
+      User.findOneAndUpdate(
+        { email: "minh.hoa@example.com" },
+        {
+          name: "Minh Hoa",
+          email: "minh.hoa@example.com",
+          password: hashedPass,
+          role: "Mangaka",
+          status: "Active"
+        },
+        { upsert: true, new: true, setDefaultsOnInsert: true }
+      ),
+      User.findOneAndUpdate(
+        { email: "sora.nam@example.com" },
+        {
+          name: "Sora Nam",
+          email: "sora.nam@example.com",
+          password: hashedPass,
+          role: "Mangaka",
+          status: "Active"
+        },
+        { upsert: true, new: true, setDefaultsOnInsert: true }
+      ),
+    ]);
+
     console.log(`- Seeded Mangaka: ${mangaka.email}`);
     console.log(`- Seeded Assistant: ${assistant.email}`);
     console.log(`- Seeded Admin: ${admin.email}`);
     console.log(`- Seeded Editor: ${editor.email}`);
+    console.log(`- Seeded Extra Mangakas: ${extraMangakas.map((user) => user.email).join(", ")}`);
 
     // 2. Seed Series, Chapter, Page
     const series = await Series.findOneAndUpdate(
@@ -271,6 +310,168 @@ const runSeed = async () => {
     await ann3.save();
 
     console.log(`- Seeded Annotations (3 records)`);
+
+    const seedProgressSeries = async ({
+      title,
+      description,
+      genre,
+      targetAudience,
+      author,
+      status = "Active",
+      riskStatus = "Safe",
+      chapterTitle,
+      chapterStatus = "In Production",
+      chapterDeadline = daysFromNow(14),
+      taskStatuses,
+      annotationStatuses,
+    }) => {
+      const demoSeries = await Series.findOneAndUpdate(
+        { title },
+        {
+          title,
+          description,
+          genre,
+          target_audience: targetAudience,
+          author_id: author._id,
+          editor_id: editor._id,
+          status,
+          risk_status: riskStatus,
+        },
+        { upsert: true, new: true, setDefaultsOnInsert: true }
+      );
+
+      const demoChapter = await Chapter.findOneAndUpdate(
+        { series_id: demoSeries._id, chapter_number: 1 },
+        {
+          series_id: demoSeries._id,
+          chapter_number: 1,
+          title: chapterTitle,
+          deadline: chapterDeadline,
+          status: chapterStatus,
+        },
+        { upsert: true, new: true, setDefaultsOnInsert: true }
+      );
+
+      const pages = [];
+      for (const pageNumber of [1, 2]) {
+        const page = await Page.findOneAndUpdate(
+          { chapter_id: demoChapter._id, page_number: pageNumber },
+          {
+            chapter_id: demoChapter._id,
+            page_number: pageNumber,
+            current_preview_url: `https://images.unsplash.com/photo-${pageNumber === 1 ? "1518709268805-4e9042af2176" : "1498713301984-508015049dc1"}?w=600&auto=format&fit=crop&q=80`,
+            current_source_file_url: `https://manga-resources.s3.amazonaws.com/raw/${encodeURIComponent(title)}_${pageNumber}.psd`,
+            attached_resource_url: null,
+            current_version: 1,
+            status: pageNumber === 1 ? "In Progress" : "Ready For Review",
+          },
+          { upsert: true, new: true, setDefaultsOnInsert: true }
+        );
+        pages.push(page);
+      }
+
+      const regions = [];
+      for (const [index, page] of pages.entries()) {
+        const region = new PageRegion({
+          page_id: page._id,
+          coordinates: JSON.stringify({ x: 80 + index * 30, y: 100, width: 220, height: 160 }),
+          region_type: index === 0 ? "panel" : "background",
+          created_by: author._id,
+        });
+        await region.save();
+        regions.push(region);
+      }
+
+      for (const [index, taskStatus] of taskStatuses.entries()) {
+        const isDone = ["Submitted", "Approved", "Paid"].includes(taskStatus);
+        const page = pages[index % pages.length];
+        const region = regions[index % regions.length];
+        await new Task({
+          page_id: page._id,
+          region_id: region._id,
+          assigned_to: assistant._id,
+          assigned_by: author._id,
+          task_type: ["Line art", "Tone", "Background", "Lettering"][index % 4],
+          description: `${title} - demo task ${index + 1}`,
+          deadline: isDone ? daysFromNow(-index - 1) : daysFromNow(index === 0 ? -2 : 4 + index),
+          status: taskStatus,
+          price: 200000 + index * 50000,
+        }).save();
+      }
+
+      for (const [index, annotationStatus] of annotationStatuses.entries()) {
+        const page = pages[index % pages.length];
+        await new Annotation({
+          chapter_id: demoChapter._id,
+          page_id: page._id,
+          x: 40 + index * 35,
+          y: 55 + index * 20,
+          content: `${title} - editor note ${index + 1}`,
+          status: annotationStatus,
+          deadline: annotationStatus === "Resolved" ? daysFromNow(-1) : daysFromNow(3 + index),
+          created_by: editor._id,
+          role: "Tantou Editor",
+          category: ["layout", "dialogue", "drawing"][index % 3],
+        }).save();
+      }
+
+      return demoSeries;
+    };
+
+    const extraSeries = await Promise.all([
+      seedProgressSeries({
+        title: "Thanh Pho May",
+        description: "Mot doi dieu tra nhung bi mat trong thanh pho tren may.",
+        genre: "Mystery",
+        targetAudience: "Teen",
+        author: extraMangakas[0],
+        status: "Active",
+        riskStatus: "Warning",
+        chapterTitle: "Tap 1: Tin Hieu Luc Nua Dem",
+        taskStatuses: ["Assigned", "In Progress", "Submitted", "Approved"],
+        annotationStatuses: ["Open", "Resolved"],
+      }),
+      seedProgressSeries({
+        title: "Quan Ca Phe Sao Bang",
+        description: "Slice-of-life ve nhom ban van hanh quan ca phe chi mo cua luc mua sao bang.",
+        genre: "Slice of Life",
+        targetAudience: "Young Adult",
+        author: extraMangakas[1],
+        status: "Active",
+        riskStatus: "Safe",
+        chapterTitle: "Tap 1: Menu Mua Ha",
+        chapterStatus: "Waiting Review",
+        taskStatuses: ["Approved", "Paid", "Submitted"],
+        annotationStatuses: ["Resolved", "Resolved"],
+      }),
+      seedProgressSeries({
+        title: "Hoc Vien Rong Den",
+        description: "Hoc vien phep thuat noi cac hoc sinh phai thuan hoa rong bong toi.",
+        genre: "Fantasy",
+        targetAudience: "Teen",
+        author: extraMangakas[2],
+        status: "At Risk",
+        riskStatus: "Critical",
+        chapterTitle: "Tap 1: Bai Kiem Tra Lua Den",
+        chapterDeadline: daysFromNow(-3),
+        taskStatuses: ["Assigned", "Revision Requested", "In Progress", "Submitted", "Approved"],
+        annotationStatuses: ["Open", "In Progress", "Resolved"],
+      }),
+      seedProgressSeries({
+        title: "Duong Ray Bien Sau",
+        description: "Chuyen tau ngam ket noi nhung thanh pho duoi day dai duong.",
+        genre: "Adventure",
+        targetAudience: "All Ages",
+        author: mangaka,
+        status: "Active",
+        riskStatus: "Warning",
+        chapterTitle: "Tap 1: Ga So Khong",
+        taskStatuses: ["In Progress", "Submitted", "Approved"],
+        annotationStatuses: ["Open", "Resolved", "In Progress"],
+      }),
+    ]);
+
+    console.log(`- Seeded Extra Progress Series: ${extraSeries.map((item) => item.title).join(", ")}`);
     console.log("✅ Auto-seeding completed successfully!");
   } catch (err) {
     console.error("❌ Auto-seeding error:", err);
