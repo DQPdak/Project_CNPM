@@ -20,7 +20,7 @@ const EditorDashboard = () => {
           </div>
 
         </div>
-        <div>
+        <div className="editor-side-column">
           <div className="widget-editor">
             <h2 className="widget-title-blue">Hiệu suất Series phụ trách</h2>
             <p className="widget-desc-blue">
