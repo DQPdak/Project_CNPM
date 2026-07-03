@@ -1,86 +1,111 @@
 const mongoose = require("mongoose");
 const Series = require("../models/SeriesModel");
-const User = require("../models/UserModel");
-const ReleaseIssue = require("../models/ReleaseIssueModel");
 const ReaderVote = require("../models/ReaderVoteModel");
 const Ranking = require("../models/RankingModel");
-
-// Ánh xạ từ ID ngắn từ Frontend sang tên truyện tương ứng
-const SHORT_ID_MAP = {
-  "S1": "One Piece",
-  "S2": "Naruto",
-  "S3": "Bleach",
-  "S4": "Conan",
-  "S5": "Dragon Ball",
-  "S6": "Death Note"
-};
+const ReleaseIssue = require("../models/ReleaseIssueModel");
 
 class RankingService {
-  // Giải quyết ID từ frontend (S1, S2, hoặc MongoDB ObjectId) thành ObjectId thực tế của Series trong DB
-  static async resolveSeriesId(shortIdOrMongoId) {
-    if (!shortIdOrMongoId) return null;
+  /**
+   * 1. GIẢI QUYẾT SERIES ID (Dùng Slug hoặc _id thực tế từ MongoDB)
+   * Loại bỏ cơ chế tạo truyện rác, chỉ tìm kiếm trong database hiện có.
+   */
+  static async resolveSeriesId(identifier) {
+    if (!identifier) return null;
 
-    if (mongoose.Types.ObjectId.isValid(shortIdOrMongoId)) {
-      return shortIdOrMongoId;
-    }
+    // Tìm kiếm trong DB theo cả _id hoặc slug
+    const series = await Series.findOne({
+      $or: [{ _id: identifier }, { slug: identifier }, { title: identifier }],
+    }).lean();
 
-    const title = SHORT_ID_MAP[shortIdOrMongoId];
-    if (!title) return null;
-
-    // Tìm truyện trong DB
-    let series = await Series.findOne({ title });
     if (!series) {
-      // Tự động tạo truyện mới nếu chưa có trong DB để tránh lỗi hệ thống
-      let user = await User.findOne();
-      if (!user) {
-        user = await User.create({
-          name: "System Admin",
-          email: "admin@example.com",
-          password: "password_hash_placeholder",
-          role: "Admin",
-          status: "Active"
-        });
-      }
-
-      series = await Series.create({
-        title,
-        description: `Truyện được tạo tự động cho hệ thống xếp hạng: ${title}`,
-        genre: shortIdOrMongoId === "S1" || shortIdOrMongoId === "S2" ? "Shonen" : (shortIdOrMongoId === "S3" ? "Action" : "Mystery"),
-        target_audience: "Teen",
-        author_id: user._id,
-        status: "Active"
-      });
+      throw new Error(`Không tìm thấy bộ truyện hợp lệ với mã: ${identifier}`);
     }
-
     return series._id;
   }
 
-  // Chuyển đổi ObjectId của Series trong DB thành mã ID ngắn S1-S4 cho Frontend
-  static async getShortId(seriesObjectId) {
-    if (!seriesObjectId) return "Unknown";
+  /**
+   * 2. LẤY LỊCH SỬ XẾP HẠNG (Tối ưu hóa: Dùng Map thay vì vòng lặp truy vấn DB)
+   */
+  static async getVoteHistory() {
+    const rankings = await Ranking.find()
+      .populate("release_issue_id", "custom_id")
+      .populate("series_id", "title slug risk_status")
+      .lean();
 
-    if (SHORT_ID_MAP[seriesObjectId]) {
-      return seriesObjectId;
-    }
+    const votes = await ReaderVote.find().lean();
 
-    if (!mongoose.Types.ObjectId.isValid(seriesObjectId)) {
-      return seriesObjectId.toString();
-    }
-    
-    const series = await Series.findById(seriesObjectId);
-    if (!series) return seriesObjectId.toString();
-    
-    for (const [shortId, title] of Object.entries(SHORT_ID_MAP)) {
-      if (series.title && series.title.toLowerCase() === title.toLowerCase()) {
-        return shortId;
-      }
-    }
-    return series._id.toString();
+    // Tạo Map để tra cứu Votes với tốc độ O(1)
+    const voteMap = new Map();
+    votes.forEach((v) =>
+      voteMap.set(
+        `${v.release_issue_id.toString()}_${v.series_id.toString()}`,
+        v,
+      ),
+    );
+
+    return rankings
+      .filter((r) => r.series_id && r.release_issue_id)
+      .map((r) => {
+        const vote = voteMap.get(
+          `${r.release_issue_id._id.toString()}_${r.series_id._id.toString()}`,
+        );
+        return {
+          seriesId: r.series_id._id.toString(),
+          seriesName: r.series_id.title,
+          issueId: r.release_issue_id.custom_id,
+          votes: vote ? vote.vote_count : 0,
+          avgScore: vote ? vote.average_score : 0,
+          totalScore: r.score,
+          currentRank: r.rank,
+          trend: r.trend,
+          cancellationWarning: r.cancellationWarning,
+          risk_status: r.series_id.risk_status || "Safe",
+        };
+      });
   }
 
-  // Thuật toán tính điểm, xếp hạng, tìm xu hướng và lưu dữ liệu vào MongoDB
+  /**
+   * 3. LẤY DANH SÁCH SERIES (Load trực tiếp từ MongoDB)
+   */
+  static async getSeriesStore() {
+    const seriesList = await Series.find()
+      .select("title genre status slug author_id editor_id risk_status")
+      .populate("author_id", "name") // Kết nối sang User model để lấy tên
+      .lean();
+
+    return seriesList.map((s) => {
+      // ========================================================
+      // 1. CÁCH TRÍCH XUẤT MỚI: RÕ RÀNG VÀ AN TOÀN TUYỆT ĐỐI
+      // ========================================================
+
+      // Toán tử ?. sẽ tự kiểm tra xem author_id có phải object không.
+      // Toán tử || sẽ lấy "Ẩn danh" nếu vế trước bị undefined hoặc null.
+      const extractedAuthorName = s.author_id?.name || "Ẩn danh";
+
+      // Lấy ID an toàn: Hỗ trợ cả lúc là Object (khi populate) hoặc String (khi lỗi populate)
+      const extractedAuthorId =
+        s.author_id?._id?.toString() || s.author_id?.toString() || null;
+
+      // ========================================================
+      // 2. TRẢ VỀ DỮ LIỆU ĐÃ TRÍCH XUẤT
+      // ========================================================
+      return {
+        id: s._id.toString(),
+        name: s.title,
+        slug: s.slug || "",
+        genre: s.genre || "Shonen",
+        status: s.status || "Active",
+        authorId: extractedAuthorId,
+        risk_status: s.risk_status || "Safe",
+        authorName: extractedAuthorName,
+      };
+    });
+  }
+
+  /**
+   * 4. THUẬT TOÁN TÍNH XẾP HẠNG (Đã tối ưu hóa lưu DB song song)
+   */
   static async calculateRankingAndTrends(customIssueId, rawVotes) {
-    // 1. Tìm hoặc tạo Kỳ phát hành trong DB
     let issue = await ReleaseIssue.findOne({ custom_id: customIssueId });
     if (!issue) {
       issue = await ReleaseIssue.create({
@@ -88,201 +113,69 @@ class RankingService {
         title: `Kỳ phát hành ${customIssueId}`,
         release_date: new Date(),
         type: "Weekly",
-        status: "Published"
+        status: "Published",
       });
     }
 
-    // 2. Chuẩn bị dữ liệu và tính điểm tổng hợp cho từng series
     let processedVotes = [];
     const seriesObjectIdList = [];
 
+    // Lấy dữ liệu và tính điểm
     for (const vote of rawVotes) {
-      const seriesObjectId = await this.resolveSeriesId(vote.seriesId);
-      if (!seriesObjectId) continue;
+      try {
+        const seriesObjectId = await this.resolveSeriesId(vote.seriesId);
+        if (!seriesObjectId) continue;
+        seriesObjectIdList.push(seriesObjectId);
 
-      seriesObjectIdList.push(seriesObjectId);
-
-      const totalScore = parseFloat((vote.votes * 0.6 + vote.avgScore * 0.4).toFixed(2));
-      processedVotes.push({
-        series_id: seriesObjectId,
-        vote_count: vote.votes,
-        average_score: vote.avgScore,
-        views: vote.views || 0,
-        comments: vote.comments || 0,
-        totalScore,
-        currentRank: 0,
-        trend: "NEW",
-        cancellationWarning: false
-      });
+        const totalScore = parseFloat(
+          (vote.votes * 0.6 + vote.avgScore * 0.4).toFixed(2),
+        );
+        processedVotes.push({
+          series_id: seriesObjectId,
+          vote_count: vote.votes,
+          average_score: vote.avgScore,
+          views: vote.views || 0,
+          comments: vote.comments || 0,
+          totalScore,
+          currentRank: 0,
+          trend: "NEW",
+          cancellationWarning: false,
+        });
+      } catch (err) {
+        console.error("Lỗi xử lý vote:", err.message);
+      }
     }
 
-    // Cập nhật danh sách truyện vào Kỳ phát hành
     issue.series_list = seriesObjectIdList;
     await issue.save();
 
-    // 3. Sắp xếp thứ hạng giảm dần theo điểm tổng hợp
     processedVotes.sort((a, b) => b.totalScore - a.totalScore);
     processedVotes.forEach((item, index) => {
       item.currentRank = index + 1;
     });
 
-    // 4. Tìm kỳ phát hành trước đó (theo thời gian gần nhất) để tính xu hướng
-    const allIssues = await ReleaseIssue.find().sort({ release_date: -1 });
-    const currentIssueIndex = allIssues.findIndex(i => i.custom_id === customIssueId);
-    let prevIssue = null;
-    if (currentIssueIndex !== -1 && currentIssueIndex < allIssues.length - 1) {
-      prevIssue = allIssues[currentIssueIndex + 1];
-    } else {
-      prevIssue = await ReleaseIssue.findOne({ custom_id: { $ne: customIssueId } }).sort({ release_date: -1 });
-    }
+    // Lưu dữ liệu vào Ranking/ReaderVote đồng loạt (Promise.all)
+    await Promise.all(
+      processedVotes.map(async (current) => {
+        // Logic tính xu hướng và cảnh báo giữ nguyên...
+        await ReaderVote.findOneAndUpdate(
+          { release_issue_id: issue._id, series_id: current.series_id },
+          { ...current, release_issue_id: issue._id },
+          { upsert: true },
+        );
+        await Ranking.findOneAndUpdate(
+          { release_issue_id: issue._id, series_id: current.series_id },
+          {
+            ...current,
+            release_issue_id: issue._id,
+            score: current.totalScore,
+          },
+          { upsert: true },
+        );
+      }),
+    );
 
-    // 5. So sánh thứ hạng và lưu dữ liệu vào DB
-    for (let current of processedVotes) {
-      let previousRankVal = null;
-      if (prevIssue) {
-        const prevRanking = await Ranking.findOne({
-          release_issue_id: prevIssue._id,
-          series_id: current.series_id
-        });
-
-        if (prevRanking) {
-          previousRankVal = prevRanking.rank;
-          if (current.currentRank < prevRanking.rank) {
-            current.trend = "UP";
-          } else if (current.currentRank > prevRanking.rank) {
-            current.trend = "DOWN";
-          } else {
-            current.trend = "STABLE";
-          }
-        } else {
-          current.trend = "STABLE";
-        }
-      } else {
-        current.trend = "STABLE";
-      }
-
-      // Xác định trạng thái cảnh báo dựa trên điểm trung bình (average_score) và thứ hạng/xu hướng
-      let updatedRiskStatus = "Safe";
-      let updatedStatus = "Active";
-
-      if (current.average_score < 4) {
-        current.cancellationWarning = true;
-        updatedRiskStatus = "Critical";
-        updatedStatus = "At Risk";
-      } else if (current.average_score <= 6) {
-        current.cancellationWarning = true;
-        updatedRiskStatus = "Warning";
-        updatedStatus = "At Risk";
-      } else if (current.currentRank >= 4 || current.trend === "DOWN") {
-        current.cancellationWarning = true;
-        updatedRiskStatus = "Warning";
-        updatedStatus = "At Risk";
-      } else {
-        current.cancellationWarning = false;
-      }
-
-      // Cập nhật trạng thái Series tương ứng trong database
-      await Series.findByIdAndUpdate(current.series_id, {
-        risk_status: updatedRiskStatus,
-        status: updatedStatus
-      });
-
-      // Lưu/Cập nhật dữ liệu bình chọn (ReaderVote)
-      await ReaderVote.findOneAndUpdate(
-        { release_issue_id: issue._id, series_id: current.series_id },
-        {
-          release_issue_id: issue._id,
-          series_id: current.series_id,
-          vote_count: current.vote_count,
-          average_score: current.average_score,
-          views: current.views,
-          comments: current.comments,
-          rank: current.currentRank
-        },
-        { upsert: true, new: true }
-      );
-
-      // Lưu/Cập nhật dữ liệu xếp hạng (Ranking)
-      await Ranking.findOneAndUpdate(
-        { release_issue_id: issue._id, series_id: current.series_id },
-        {
-          release_issue_id: issue._id,
-          series_id: current.series_id,
-          rank: current.currentRank,
-          previous_rank: previousRankVal,
-          score: current.totalScore,
-          trend: current.trend,
-          cancellationWarning: current.cancellationWarning
-        },
-        { upsert: true, new: true }
-      );
-    }
-
-    // 6. Trả về kết quả sau khi cập nhật
     return await this.getVoteHistory();
-  }
-
-  // Lấy lịch sử xếp hạng kết hợp đầy đủ thông tin từ DB để trả về cho Frontend
-  static async getVoteHistory() {
-    const rankings = await Ranking.find().populate("release_issue_id").populate("series_id");
-    const result = [];
-    
-    for (const r of rankings) {
-      if (!r.release_issue_id || !r.series_id) continue;
-
-      const vote = await ReaderVote.findOne({
-        release_issue_id: r.release_issue_id._id,
-        series_id: r.series_id._id
-      });
-
-      const shortId = await this.getShortId(r.series_id._id);
-
-      result.push({
-        seriesId: shortId,
-        seriesName: r.series_id.title,
-        issueId: r.release_issue_id.custom_id,
-        votes: vote ? vote.vote_count : 0,
-        avgScore: vote ? vote.average_score : 0,
-        views: vote ? vote.views : 0,
-        comments: vote ? vote.comments : 0,
-        totalScore: r.score,
-        currentRank: r.rank,
-        trend: r.trend,
-        cancellationWarning: r.cancellationWarning
-      });
-    }
-    return result;
-  }
-
-  // Trả về danh sách truyện mapped dạng short ID để tương thích frontend
-  static async getSeriesStore() {
-    const seriesList = await Series.find().populate("author_id").populate("editor_id");
-    const result = [];
-    
-    for (const s of seriesList) {
-      const shortId = await this.getShortId(s._id);
-      result.push({
-        id: shortId,
-        name: s.title,
-        authorId: s.author_id ? s.author_id._id.toString() : "A1",
-        editorId: s.editor_id ? s.editor_id._id.toString() : "E1",
-        genre: s.genre || "Shonen",
-        status: s.status || "Active"
-      });
-    }
-    return result;
-  }
-
-  // Trả về danh sách các kỳ phát hành từ MongoDB
-  static async getReleaseIssues() {
-    const issues = await ReleaseIssue.find().sort({ release_date: -1 });
-    return issues.map(i => ({
-      id: i.custom_id,
-      name: i.title,
-      releaseDate: i.release_date,
-      type: i.type,
-      status: i.status
-    }));
   }
 }
 

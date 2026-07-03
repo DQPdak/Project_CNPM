@@ -28,7 +28,7 @@ exports.getAllSeries = async (req, res) => {
 
     const result = await attachProposals(seriesList);
 
-    return res.status(200).json({ series: result });
+    return res.status(200).json({ series: result, success: true });
   } catch (err) {
     return res.status(500).json({ error: "Lỗi server", details: err.message });
   }
