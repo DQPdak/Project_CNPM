@@ -1,5 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import SeriesProgressTable from "../../../components/dashboard/SeriesProgressTable/SeriesProgressTable";
 import "./AdminDashboard.css";
 
 const AdminDashboard = () => {
@@ -19,8 +20,9 @@ const AdminDashboard = () => {
               </Link>
             </div>
           </div>
+
         </div>
-        <div>
+        <div className="space-y-8">
           <div className="widget-admin">
             <h2 className="widget-title-emerald">Ban giám khảo</h2>
             <p className="widget-desc-emerald">
@@ -30,9 +32,12 @@ const AdminDashboard = () => {
               Xem báo cáo Ranking
             </Link>
           </div>
+
+          <SeriesProgressTable />
         </div>
       </div>
     </div>
   );
 };
+
 export default AdminDashboard;

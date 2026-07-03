@@ -11,6 +11,7 @@ const upsertProposal = require("../controllers/series/upsertProposal");
 const submitProposal = require("../controllers/series/submitProposal");
 const uploadCover = require("../controllers/series/uploadCover");
 const getAtRiskSeries = require("../controllers/series/getAtRiskSeries");
+const getSeriesProgress = require("../controllers/series/getSeriesProgress");
 const updateSeriesStatus = require("../controllers/series/updateSeriesStatus");
 const lifecycleVote = require("../controllers/series/lifecycleVote");
 const upload = require("../middlewares/upload.middleware");
@@ -45,6 +46,17 @@ router.get(
   "/at-risk",
   requireRole(ROLES.EDITORIAL_BOARD, ROLES.ADMIN),
   getAtRiskSeries.getAtRiskSeries,
+);
+router.get(
+  "/progress",
+  requireRole(
+    ROLES.MANGAKA,
+    ROLES.ASSISTANT,
+    ROLES.TANTOU_EDITOR,
+    ROLES.EDITORIAL_BOARD,
+    ROLES.ADMIN,
+  ),
+  getSeriesProgress.getSeriesProgress,
 );
 router.patch(
   "/:id/status",
