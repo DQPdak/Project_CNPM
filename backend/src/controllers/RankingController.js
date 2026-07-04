@@ -72,9 +72,39 @@ const getLeaderboard = async (req, res) => {
 const getPerformanceChartData = async (req, res) => {
   try {
     const { seriesId } = req.params;
+
+    // 1. THÊM MỚI: Lấy thông tin người dùng đang gọi API
+    const { role, id: userId } = req.user;
+
     const records = await RankingService.getVoteHistory();
 
-    const chartData = records
+    // 2. THÊM MỚI: Lấy kho series để kiểm tra chủ sở hữu
+    const seriesStore = await RankingService.getSeriesStore();
+    const targetSeries = seriesStore.find((s) => s.id === seriesId);
+
+    if (!targetSeries) {
+      return res
+        .status(404)
+        .json({ error: "Không tìm thấy dữ liệu truyện này." });
+    }
+
+    // 3. THÊM MỚI: CHẶN PHÂN QUYỀN (RBAC)
+    if (role === ROLES.MANGAKA && targetSeries.authorId !== userId) {
+      return res
+        .status(403)
+        .json({
+          error: "Từ chối truy cập: Bạn không phải tác giả của truyện này.",
+        });
+    }
+
+    if (role === ROLES.TANTOU_EDITOR && targetSeries.editorId !== userId) {
+      return res
+        .status(403)
+        .json({ error: "Từ chối truy cập: Bạn không quản lý truyện này." });
+    }
+
+    // 4. GIỮ NGUYÊN LOGIC CŨ CỦA BẠN: Format và giới hạn 10 kỳ
+    let chartData = records
       .filter((record) => record.seriesId === seriesId)
       .map((record) => ({
         issueId: record.issueId,
@@ -84,6 +114,7 @@ const getPerformanceChartData = async (req, res) => {
         votes: record.votes,
       }))
       .sort((left, right) => left.issueId.localeCompare(right.issueId));
+
     if (chartData.length > 10) {
       chartData = chartData.slice(-10);
     }

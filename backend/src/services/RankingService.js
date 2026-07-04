@@ -71,20 +71,22 @@ class RankingService {
     const seriesList = await Series.find()
       .select("title genre status slug author_id editor_id risk_status")
       .populate("author_id", "name") // Kết nối sang User model để lấy tên
+      .populate("editor_id", "name") // Kết nối sang User model để lấy tên
       .lean();
 
     return seriesList.map((s) => {
       // ========================================================
       // 1. CÁCH TRÍCH XUẤT MỚI: RÕ RÀNG VÀ AN TOÀN TUYỆT ĐỐI
       // ========================================================
-
-      // Toán tử ?. sẽ tự kiểm tra xem author_id có phải object không.
-      // Toán tử || sẽ lấy "Ẩn danh" nếu vế trước bị undefined hoặc null.
       const extractedAuthorName = s.author_id?.name || "Ẩn danh";
+      const extractedEditorName = s.editor_id?.name || "Ẩn danh";
 
       // Lấy ID an toàn: Hỗ trợ cả lúc là Object (khi populate) hoặc String (khi lỗi populate)
       const extractedAuthorId =
         s.author_id?._id?.toString() || s.author_id?.toString() || null;
+
+      const extractedEditorId =
+        s.editor_id?._id?.toString() || s.editor_id?.toString() || null;
 
       // ========================================================
       // 2. TRẢ VỀ DỮ LIỆU ĐÃ TRÍCH XUẤT
@@ -96,8 +98,10 @@ class RankingService {
         genre: s.genre || "Shonen",
         status: s.status || "Active",
         authorId: extractedAuthorId,
+        editorId: extractedEditorId,
         risk_status: s.risk_status || "Safe",
         authorName: extractedAuthorName,
+        editorName: extractedEditorName,
       };
     });
   }
