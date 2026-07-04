@@ -42,3 +42,79 @@
 .income-status {
   @apply inline-block bg-yellow-200 border-2 border-black px-3 py-1 text-xs font-black uppercase text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)];
 }
+
+/* THÀNH PHẦN MỚI CHO TASK LIST */
+.task-column-header,
+.income-column-header {
+  @apply flex justify-between items-start;
+}
+
+.view-all-link {
+  @apply bg-black text-white hover:bg-white hover:text-black border-2 border-black px-3 py-1 text-xs font-black uppercase transition-all shadow-[3px_3px_0px_rgba(0,0,0,1)] hover:shadow-none translate-y-0 active:translate-y-[3px];
+}
+
+.view-all-link-teal {
+  @apply bg-[#23A094] text-white hover:bg-black border-2 border-black px-3 py-1 text-xs font-black uppercase transition-all shadow-[3px_3px_0px_rgba(0,0,0,1)] hover:shadow-none translate-y-0 active:translate-y-[3px];
+}
+
+.task-loading-box,
+.income-loading-box {
+  @apply border-4 border-dashed border-black bg-white/50 p-8 text-center font-bold text-black;
+}
+
+.empty-tasks-box {
+  @apply border-4 border-dashed border-black bg-white p-8 text-center text-black font-bold flex flex-col items-center gap-4 shadow-[4px_4px_0px_rgba(0,0,0,1)];
+}
+
+.btn-go-tasks {
+  @apply bg-[#FFD000] text-black border-2 border-black px-4 py-2 font-black uppercase transition-all shadow-[4px_4px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px];
+}
+
+.dashboard-task-list {
+  @apply flex flex-col gap-4;
+}
+
+.dashboard-task-item {
+  @apply bg-white border-4 border-black p-4 shadow-[4px_4px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_rgba(0,0,0,1)] transition-all;
+}
+
+.task-item-top {
+  @apply flex justify-between items-center mb-2;
+}
+
+.task-item-badge {
+  @apply border-2 border-black px-2 py-0.5 text-xs font-black uppercase shadow-[2px_2px_0px_rgba(0,0,0,1)];
+}
+
+.task-item-price {
+  @apply font-black text-teal-700 text-sm md:text-base;
+}
+
+.task-item-title {
+  @apply text-lg font-black text-black uppercase mb-1;
+}
+
+.task-item-meta {
+  @apply text-gray-700 text-xs md:text-sm font-bold mb-3;
+}
+
+.task-item-footer {
+  @apply flex justify-between items-center border-t-2 border-black pt-3 text-xs md:text-sm font-bold text-gray-800;
+}
+
+.btn-action-task {
+  @apply bg-black text-white hover:bg-[#FFD000] hover:text-black border-2 border-black px-3 py-1 text-xs font-black uppercase transition-all shadow-[2px_2px_0px_rgba(0,0,0,1)];
+}
+
+/* THÀNH PHẦN MỚI CHO THỐNG KÊ THU NHẬP */
+.income-stats-box {
+  @apply flex flex-col;
+}
+
+.income-detail-rows {
+  @apply flex flex-col gap-2 mt-2 bg-gray-50 border-2 border-black p-4 shadow-[3px_3px_0px_rgba(0,0,0,1)];
+}
+
+.income-detail-row {
+  @apply flex justify-between items-center text-sm font-bold text-black;
+}
