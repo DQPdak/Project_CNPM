@@ -1,5 +1,4 @@
 import { useState, useEffect, useMemo } from "react";
-// Đổi tên icon để không bị trùng với component Line của recharts
 import { LineChart as LineChartIcon } from "lucide-react";
 import {
   ComposedChart,
@@ -12,7 +11,15 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { getAllSeries } from "../../../services/series/getSeriesByRoleService";
+
+// 1. BỔ SUNG IMPORTS: Lấy user và các hàm gọi API theo Role
+import { useAuthStore } from "../../../stores/authStore";
+import getMySeries from "../../../services/series/getMySeriesService";
+import {
+  getEditorSeries,
+  getAllSeries,
+} from "../../../services/series/getSeriesByRoleService";
+
 import getPerformanceChartData from "../../../services/ranking/getPerformanceChartDataService";
 
 export default function PerformanceChartPanel({ refreshTrigger }) {
@@ -20,21 +27,37 @@ export default function PerformanceChartPanel({ refreshTrigger }) {
   const [selectedId, setSelectedId] = useState("");
   const [chartData, setChartData] = useState([]);
 
+  // 2. LẤY THÔNG TIN USER TỪ STORE
+  const user = useAuthStore((state) => state.user);
+
   useEffect(() => {
     const loadSeriesList = async () => {
-      const result = await getAllSeries();
+      if (!user) return;
+
+      let result;
+      // 3. TỰ ĐỘNG PHÂN LUỒNG API THEO ROLE CỦA NGƯỜI ĐĂNG NHẬP
+      if (user.role === "Mangaka") {
+        result = await getMySeries();
+      } else if (user.role === "Tantou Editor") {
+        result = await getEditorSeries();
+      } else {
+        result = await getAllSeries();
+      }
+
       if (result && result.success !== false) {
         const dataList = result.series || (Array.isArray(result) ? result : []);
         const formatted = dataList.map((s) => ({
-          id: s.series._id || s.id,
-          name: s.series.title || s.name || "Chưa có tên",
+          // Bắt chuẩn biến thể ID và Tên từ các luồng API khác nhau
+          id: s.series?._id || s._id || s.id,
+          name: s.series?.title || s.title || s.name || "Chưa có tên",
         }));
+
         setSeriesOptions(formatted);
         if (formatted.length > 0) setSelectedId(formatted[0].id);
       }
     };
     loadSeriesList();
-  }, [refreshTrigger]);
+  }, [refreshTrigger, user]);
 
   useEffect(() => {
     if (!selectedId) return;
@@ -56,10 +79,13 @@ export default function PerformanceChartPanel({ refreshTrigger }) {
           <LineChartIcon size={24} />
           <h2>Biểu đồ hiệu suất (10 kỳ gần nhất)</h2>
         </div>
+
+        {/* 4. TỐI ƯU UX: Khóa dropdown nếu chỉ có 1 truyện hoặc đang tải */}
         <select
           className="neo-select !w-auto max-w-xs"
           value={selectedId}
           onChange={(e) => setSelectedId(e.target.value)}
+          disabled={seriesOptions.length <= 1}
         >
           {seriesOptions.map((s) => (
             <option key={s.id} value={s.id}>
@@ -94,7 +120,6 @@ export default function PerformanceChartPanel({ refreshTrigger }) {
                 dy={10}
               />
 
-              {/* TRỤC Y BÊN TRÁI: Thể hiện Điểm Trung Bình */}
               <YAxis
                 yAxisId="left"
                 orientation="left"
@@ -110,11 +135,10 @@ export default function PerformanceChartPanel({ refreshTrigger }) {
                 }}
               />
 
-              {/* TRỤC Y BÊN PHẢI: Thể hiện Thứ hạng (Reversed để hạng 1 lên đỉnh) */}
               <YAxis
                 yAxisId="right"
                 orientation="right"
-                reversed={true} // Đỉnh cao UX: Đảo ngược trục để Hạng 1 nằm trên cùng!
+                reversed={true}
                 axisLine={false}
                 tickLine={false}
                 tick={{ fill: "#f59e0b", fontWeight: 600 }}
@@ -138,18 +162,16 @@ export default function PerformanceChartPanel({ refreshTrigger }) {
               />
               <Legend verticalAlign="top" height={40} />
 
-              {/* KHỐI CỘT: Điểm Trung Bình */}
               <Bar
                 yAxisId="left"
                 dataKey="avgScore"
                 name="Điểm Trung Bình"
                 barSize={32}
                 fill="#4f46e5"
-                radius={[4, 4, 0, 0]} // Bo tròn góc trên của cột
+                radius={[4, 4, 0, 0]}
                 animationDuration={1500}
               />
 
-              {/* KHỐI ĐƯỜNG: Thứ hạng */}
               <Line
                 yAxisId="right"
                 type="monotone"
