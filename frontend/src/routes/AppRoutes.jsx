@@ -16,6 +16,7 @@ import BoardPendingSeriesPage from "../pages/BoardPendingSeriesPage/BoardPending
 import BoardSeriesReviewPage from "../pages/BoardSeriesReviewPage/BoardSeriesReviewPage";
 import BoardAtRiskSeriesPage from "../pages/BoardAtRiskSeriesPage/BoardAtRiskSeriesPage";
 import AllSeriesPage from "../pages/AllSeriesPage/AllSeriesPage";
+import EditorSeriesPage from "../pages/EditorSeriesPage/EditorSeriesPage";
 import PageVersionHistory from "../pages/PageVersionHistory/PageVersionHistory";
 import RequireRole from "../components/security/RequireRole";
 
@@ -125,6 +126,14 @@ export default function AppRoutes() {
             }
           />
 
+          <Route
+            path="/editor/series"
+            element={
+              <RequireRole allowedRoles={["Tantou Editor"]}>
+                <EditorSeriesPage />
+              </RequireRole>
+            }
+          />
           <Route
             path="/board/reviews"
             element={
