@@ -12,9 +12,9 @@ const BoardPendingWidget = () => {
       try {
         setIsLoading(true);
         const res = await getPendingSeriesService();
-        if (res && res.data) {
-          setPendingSeries(res.data.slice(0, 3)); // Lấy 3 tác phẩm mới nhất
-        }
+        // FIX: Xử lý mảng an toàn để chống crash khi .slice()
+        const dataList = Array.isArray(res) ? res : res?.data || [];
+        setPendingSeries(dataList.slice(0, 3));
       } catch (error) {
         console.error("Lỗi lấy danh sách chờ duyệt:", error);
       } finally {
@@ -36,17 +36,19 @@ const BoardPendingWidget = () => {
           <div className="empty-box">Đang tải dữ liệu...</div>
         ) : pendingSeries.length > 0 ? (
           pendingSeries.map((item) => (
-            <div key={item.id} className="list-item-pending group">
+            // FIX: Bắt trường hợp ID từ MongoDB (_id)
+            <div key={item._id || item.id} className="list-item-pending group">
               <div className="truncate pr-4">
                 <h3 className="font-black text-lg uppercase truncate">
-                  {item.title}
+                  {item.title || "Chưa có tên"}
                 </h3>
                 <span className="text-xs font-bold uppercase tracking-widest text-gray-600 group-hover:text-gray-200">
                   Thể loại: {item.genre || "Chưa cập nhật"}
                 </span>
               </div>
               <Link
-                to={`/board/series/${item.id}`}
+                // FIX: Sửa lỗi đường dẫn link bị undefined
+                to={`/board/series/${item._id || item.id}`}
                 className="btn-action-primary group-hover:bg-white group-hover:text-black"
               >
                 Review

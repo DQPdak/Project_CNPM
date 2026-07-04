@@ -5,16 +5,24 @@ import "./BoardLeaderboardWidget.css";
 
 const BoardLeaderboardWidget = () => {
   const [leaders, setLeaders] = useState([]);
+  const [isLoading, setIsLoading] = useState(true); // Bổ sung loading cho đồng bộ UX
 
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setIsLoading(true);
         const res = await getLeaderboardService();
-        if (res && res.data) {
-          setLeaders(res.data.slice(0, 3));
+
+        // FIX 1: Chống Crash do .slice() khi res không phải object {data}
+        const dataList = Array.isArray(res) ? res : res?.data || [];
+
+        if (dataList.length > 0) {
+          setLeaders(dataList.slice(0, 3));
         }
       } catch (error) {
         console.error("Lỗi lấy leaderboard:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
     fetchData();
@@ -33,15 +41,30 @@ const BoardLeaderboardWidget = () => {
       </div>
 
       <div className="leaderboard-grid">
-        {leaders.length > 0 ? (
+        {isLoading ? (
+          <div className="md:col-span-3 font-black uppercase text-center p-4">
+            Đang tải xếp hạng...
+          </div>
+        ) : leaders.length > 0 ? (
           leaders.map((item, index) => (
-            <div key={item.series_id || index} className="leaderboard-item">
-              <div className="rank-badge">#{index + 1}</div>
+            // FIX 2: Bắt _id hoặc id của MongoDB
+            <div
+              key={item.seriesId || item._id || item.id || index}
+              className="leaderboard-item"
+            >
+              <div className="rank-badge">#{item.currentRank || index + 1}</div>
+
+              {/* FIX 3: Bắt chuẩn tên biến của hệ thống Ranking (seriesName) */}
               <h3 className="font-black uppercase mb-1">
-                {item.series_title || `Tác phẩm ${index + 1}`}
+                {item.seriesName ||
+                  item.series_title ||
+                  item.title ||
+                  `Tác phẩm ${index + 1}`}
               </h3>
+
+              {/* FIX 4: Bắt chuẩn điểm của hệ thống Ranking (totalScore) */}
               <span className="text-[#23A094] font-black uppercase text-sm">
-                {item.score || 0} Điểm
+                {item.totalScore || item.score || 0} Điểm
               </span>
             </div>
           ))
