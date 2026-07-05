@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import RequirePermission from "../../components/security/RequirePermission";
 import PublishScanner from "../../components/publish/PublishScanner/PublishScanner";
 import publishChapter from "../../services/publish/publishChapterService";
+import getChapterById from "../../services/chapter/getChapterByIdService";
 import { useToast } from "../../contexts/ToastContext";
 import "./PublishApprovalPage.css";
 
@@ -19,6 +20,23 @@ export default function PublishApprovalPage() {
   const [scanStatus, setScanStatus] = useState("idle");
   const [currentStep, setCurrentStep] = useState(0);
   const [errorMessage, setErrorMessage] = useState("");
+
+  const [chapterTitle, setChapterTitle] = useState("Đang tải dữ liệu...");
+  const [seriesId, setSeriesId] = useState(null);
+
+  useEffect(() => {
+    const fetchChapterInfo = async () => {
+      const res = await getChapterById(chapterId);
+      // Tùy theo cấu trúc API trả về, lấy title tương ứng
+      if (res && res.chapter && res.chapter.title) {
+        setChapterTitle(res.chapter.title);
+        setSeriesId(res.chapter.series_id);
+      } else {
+        setChapterTitle("Không tìm thấy tên chapter");
+      }
+    };
+    fetchChapterInfo();
+  }, [chapterId]);
 
   const handleStartPublish = async () => {
     setScanStatus("scanning");
@@ -57,12 +75,16 @@ export default function PublishApprovalPage() {
   return (
     <div className="publish-page-container">
       <header className="publish-page-header">
-        <Link to="/chapter-list" className="publish-back-link">
-          ← Quay lai
-        </Link>
-        <h1 className="publish-title">Tram xuat ban chapter</h1>
+        {/* Bọc nút quay lại và tiêu đề vào chung 1 hàng */}
+        <div className="header-top-row">
+          <Link to={`/chapter-list/${seriesId}`} className="publish-back-link">
+            ← Quay lại
+          </Link>
+          <h1 className="publish-title">Trạm xuất bản chapter</h1>
+        </div>
+
         <p className="publish-subtitle">
-          Chapter ID: <span className="publish-badge">{chapterId}</span>
+          Tên Chapter: <span className="publish-badge">{chapterTitle}</span>
         </p>
       </header>
 
