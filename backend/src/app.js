@@ -13,6 +13,7 @@ const taskRoutes = require("./routes/task.routes");
 const incomeRoutes = require("./routes/income.routes");
 const annotationRoutes = require("./routes/annotation.routes");
 const regionRoutes = require("./routes/region.routes");
+const notificationRoutes = require("./routes/notificationRoutes");
 
 const app = express();
 const allowedOrigins = [
@@ -56,6 +57,7 @@ app.use("/api/tasks", taskRoutes);
 app.use("/api/income", incomeRoutes);
 app.use("/api/annotations", annotationRoutes);
 app.use("/api/regions", regionRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 app.use((error, req, res, next) => {
   if (res.headersSent) {
