@@ -235,7 +235,7 @@ export default function AdminUsersPage() {
                     onChange={(e) => handleFilterChange("role", e.target.value)}
                     className="filter-select"
                   >
-                    <option value="">Tat ca role</option>
+                    <option value="">Tất cả role</option>
                     {ROLE_OPTIONS.map((role) => (
                       <option key={role} value={role}>
                         {role}
