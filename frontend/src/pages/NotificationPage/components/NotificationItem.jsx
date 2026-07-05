@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { getNotificationPath } from "../utils/notificationLinks";
 
 const TYPE_CONFIG = {
   System: { icon: "🔔", label: "Hệ thống", color: "bg-gray-100 border-gray-300", iconBg: "bg-gray-200" },
@@ -23,10 +25,12 @@ function formatRelativeTime(dateString) {
   return date.toLocaleDateString("vi-VN");
 }
 
-export default function NotificationItem({ notification, onMarkRead, onDelete }) {
+export default function NotificationItem({ notification, onMarkRead, onDelete, onOpenDetail }) {
   const [deleting, setDeleting] = useState(false);
+  const navigate = useNavigate();
   const config = TYPE_CONFIG[notification.type] || TYPE_CONFIG.System;
   const isUnread = !notification.is_read;
+  const linkPath = getNotificationPath(notification);
 
   const handleDelete = async (e) => {
     e.stopPropagation();
@@ -40,9 +44,13 @@ export default function NotificationItem({ notification, onMarkRead, onDelete })
   };
 
   const handleClick = () => {
-    if (isUnread) {
-      onMarkRead(notification._id);
-    }
+    onOpenDetail(notification);
+  };
+
+  const handleDeepLink = (e) => {
+    e.stopPropagation();
+    if (!linkPath) return;
+    navigate(linkPath);
   };
 
   return (
@@ -80,15 +88,26 @@ export default function NotificationItem({ notification, onMarkRead, onDelete })
         </p>
       </div>
 
-      {/* Delete button */}
-      <button
-        onClick={handleDelete}
-        disabled={deleting}
-        className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 border-2 border-transparent hover:border-red-200 transition-all opacity-0 group-hover:opacity-100 shrink-0"
-        title="Xóa thông báo"
-      >
-        🗑
-      </button>
+      {/* Actions */}
+      <div className="flex items-center gap-1 shrink-0">
+        {linkPath && (
+          <button
+            onClick={handleDeepLink}
+            className="p-1.5 text-gray-400 hover:text-[#23A094] hover:bg-[#23A094]/10 border-2 border-transparent hover:border-[#23A094] transition-all"
+            title="Đi đến"
+          >
+            ↗
+          </button>
+        )}
+        <button
+          onClick={handleDelete}
+          disabled={deleting}
+          className={`p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 border-2 border-transparent hover:border-red-200 transition-all shrink-0 ${deleting ? "opacity-30" : ""}`}
+          title="Xóa thông báo"
+        >
+          🗑
+        </button>
+      </div>
     </div>
   );
 }
