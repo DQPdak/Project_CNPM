@@ -1,6 +1,8 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { useAuthStore } from "../../stores/authStore";
+import NotificationBadge from "../../pages/NotificationPage/components/NotificationBadge";
+import { getUnreadCountApi } from "../../services/notificationService";
 
 // Cấu hình menu động theo Role (Giữ nguyên logic 100%)
 const ROLE_MENUS = {
@@ -50,6 +52,19 @@ export default function ProtectedLayout() {
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
   const location = useLocation();
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    const fetchCount = async () => {
+      const result = await getUnreadCountApi();
+      if (result.success !== false) {
+        setUnreadCount(result.count || 0);
+      }
+    };
+    fetchCount();
+    const interval = setInterval(fetchCount, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   const userRole = user?.role || "";
   const dynamicMenus = ROLE_MENUS[userRole] || [];
@@ -87,6 +102,7 @@ export default function ProtectedLayout() {
             </p>
             {COMMON_MENUS.map((item, idx) => {
               const isActive = location.pathname === item.path;
+              const isNotif = item.path === "/notifications";
               return (
                 <Link
                   key={idx}
@@ -98,6 +114,7 @@ export default function ProtectedLayout() {
                   }`}
                 >
                   <span className="tracking-wide text-sm">{item.name}</span>
+                  {isNotif && <NotificationBadge count={unreadCount} />}
                 </Link>
               );
             })}
