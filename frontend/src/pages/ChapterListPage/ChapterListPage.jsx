@@ -22,6 +22,28 @@ export default function ChapterListPage() {
   const [chapters, setChapters] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Hàm xử lý URL quay lại dựa trên Role của user
+  const handleGoBack = () => {
+    if (!user) {
+      navigate("/");
+      return;
+    }
+    switch (user.role) {
+      case "Mangaka":
+        navigate("/mangaka/series");
+        break;
+      case "Tantou Editor":
+        navigate("/editor/series");
+        break;
+      case "Editorial Board":
+      case "Admin":
+        navigate("/board/all-series");
+        break;
+      default:
+        navigate("/");
+    }
+  };
+
   const resolveSeriesInfo = useCallback(async () => {
     if (seriesId) {
       setResolvedSeriesId(seriesId);
@@ -82,11 +104,10 @@ export default function ChapterListPage() {
     <div className="clp-wrapper">
       {isLoading && <Loading text="Đang tải danh sách chapter..." />}
 
-      {/* BỔ SUNG NÚT QUAY LẠI Ở ĐÂY */}
-      {/* BỔ SUNG NÚT QUAY LẠI Ở ĐÂY */}
+      {/* SỬ DỤNG HÀM ĐIỀU HƯỚNG MỚI */}
       <div>
-        <button onClick={() => navigate(-1)} className="clp-back-btn">
-          ← Quay lại
+        <button onClick={handleGoBack} className="clp-back-btn">
+          ← Quay lại danh sách
         </button>
       </div>
 
