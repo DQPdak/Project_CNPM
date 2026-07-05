@@ -72,7 +72,8 @@ export default function LeaderboardPanel({ refreshTrigger }) {
 
   useEffect(() => {
     fetchRows();
-  }, [fetchRows, refreshTrigger]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refreshTrigger]);
 
   return (
     <section className="neo-panel">

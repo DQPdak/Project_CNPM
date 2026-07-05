@@ -29,6 +29,7 @@ export default function PerformanceChartPanel({ refreshTrigger }) {
 
   // 2. LẤY THÔNG TIN USER TỪ STORE
   const user = useAuthStore((state) => state.user);
+  const role = user?.role;
 
   useEffect(() => {
     const loadSeriesList = async () => {
@@ -36,9 +37,9 @@ export default function PerformanceChartPanel({ refreshTrigger }) {
 
       let result;
       // 3. TỰ ĐỘNG PHÂN LUỒNG API THEO ROLE CỦA NGƯỜI ĐĂNG NHẬP
-      if (user.role === "Mangaka") {
+      if (role === "Mangaka") {
         result = await getMySeries();
-      } else if (user.role === "Tantou Editor") {
+      } else if (role === "Tantou Editor") {
         result = await getEditorSeries();
       } else {
         result = await getAllSeries();
@@ -53,11 +54,18 @@ export default function PerformanceChartPanel({ refreshTrigger }) {
         }));
 
         setSeriesOptions(formatted);
-        if (formatted.length > 0) setSelectedId(formatted[0].id);
+        if (formatted.length > 0) {
+          setSelectedId((prev) => {
+            if (prev && formatted.some((item) => item.id === prev)) {
+              return prev;
+            }
+            return formatted[0].id;
+          });
+        }
       }
     };
     loadSeriesList();
-  }, [refreshTrigger, user]);
+  }, [refreshTrigger, role]);
 
   useEffect(() => {
     if (!selectedId) return;
