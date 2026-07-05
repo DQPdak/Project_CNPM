@@ -124,9 +124,17 @@ export default function AllSeriesPage() {
 
               {/* Bổ sung thanh điều hướng ở cuối card */}
               <div className="card-actions">
-                <Link to={`/board/series/${series._id}`}>Xem xét duyệt</Link>
-                <Link to={`/chapter-list/${series._id}`}>
-                  Danh sách Chapter
+                <Link
+                  to={`/board/series/${series._id}`}
+                  className="btn-action-review"
+                >
+                  Xem xét duyệt
+                </Link>
+                <Link
+                  to={`/chapter-list/${series._id}`}
+                  className="btn-action-chapters"
+                >
+                  Chapter
                 </Link>
               </div>
             </div>
