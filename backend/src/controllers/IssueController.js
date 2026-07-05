@@ -66,18 +66,33 @@ const importVoteData = async (req, res) => {
         const seriesStore = await RankingService.getSeriesStore();
 
         for (const row of rawData) {
-            // Kiểm tra series hợp lệ và số phiếu hợp lệ
-            const seriesExists = seriesStore.some(s => s.id === row.seriesId);
-            if (!seriesExists) {
-                return res.status(400).json({ error: `Mã truyện (Series ID) ${row.seriesId} không tồn tại trên hệ thống.` });
+            if (!row.seriesId) continue;
+
+            // Tìm kiếm linh hoạt theo ID, slug, hoặc title (không phân biệt hoa thường)
+            const matchedSeries = seriesStore.find(s => 
+                s.id === row.seriesId || 
+                (s.slug && s.slug.toLowerCase() === row.seriesId.toString().toLowerCase()) ||
+                (s.name && s.name.toLowerCase() === row.seriesId.toString().toLowerCase())
+            );
+
+            // Nếu không tìm thấy truyện, bỏ qua dòng này để import diễn ra mượt mà
+            if (!matchedSeries) {
+                console.warn(`Bỏ qua dòng import do không tìm thấy Series: ${row.seriesId}`);
+                continue;
             }
-            if (row.votes < 0 || row.avgScore < 0) {
-                return res.status(400).json({ error: "Số phiếu bầu và điểm số phải là số dương hợp lệ." });
+
+            // Đảm bảo số phiếu bầu và điểm số hợp lệ, bỏ qua nếu âm
+            const votes = parseInt(row.votes);
+            const avgScore = parseFloat(row.avgScore);
+
+            if (isNaN(votes) || votes < 0 || isNaN(avgScore) || avgScore < 0) {
+                continue;
             }
+
             validVotes.push({
-                seriesId: row.seriesId,
-                votes: parseInt(row.votes),
-                avgScore: parseFloat(row.avgScore),
+                seriesId: matchedSeries.id,
+                votes: votes,
+                avgScore: avgScore,
                 comments: parseInt(row.comments || 0),
                 views: parseInt(row.views || 0)
             });
