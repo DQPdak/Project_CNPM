@@ -7,9 +7,12 @@ const attachProposals = require("./attachProposals");
 // Tantou Editor: lấy các series mình phụ trách (theo editor_id)
 exports.getEditorSeries = async (req, res) => {
   try {
-    const seriesList = await Series.find({ editor_id: req.user.id }).sort({
-      createdAt: -1,
-    });
+    const seriesList = await Series.find({ editor_id: req.user.id })
+      .populate("author_id", "name email")
+      .populate("editor_id", "name email")
+      .sort({
+        createdAt: -1,
+      });
 
     const result = await attachProposals(seriesList);
 
@@ -19,7 +22,7 @@ exports.getEditorSeries = async (req, res) => {
   }
 };
 
-// Editorial Board: lấy toàn bộ series trong hệ thống
+// Editorial Board / Admin: lấy toàn bộ series trong hệ thống
 exports.getAllSeries = async (req, res) => {
   try {
     const seriesList = await Series.find()
@@ -28,7 +31,7 @@ exports.getAllSeries = async (req, res) => {
 
     const result = await attachProposals(seriesList);
 
-    return res.status(200).json({ series: result });
+    return res.status(200).json({ series: result, success: true });
   } catch (err) {
     return res.status(500).json({ error: "Lỗi server", details: err.message });
   }

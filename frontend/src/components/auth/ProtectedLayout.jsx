@@ -1,12 +1,14 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { useAuthStore } from "../../stores/authStore";
+import NotificationBadge from "../../pages/NotificationPage/components/NotificationBadge";
+import { getUnreadCountApi } from "../../services/notificationService";
 
 // Cấu hình menu động theo Role (Giữ nguyên logic 100%)
 const ROLE_MENUS = {
   Mangaka: [
     { name: "Series của tôi", path: "/mangaka/series" },
-    { name: "Tạo Chapter mới", path: "/mangaka/chapter/create" },
+    { name: "Tạo Chapter mới", path: "/chapter-list" },
     { name: "Quản lý Task Trợ lý", path: "/mangaka/tasks" },
     { name: "Ranking Series", path: "/mangaka/ranking" },
   ],
@@ -21,7 +23,7 @@ const ROLE_MENUS = {
     { name: "Ranking Series", path: "/editor/ranking" },
   ],
   "Editorial Board": [
-    { name: "Danh sách Series", path: "/vd" },
+    { name: "Danh sách Series", path: "/board/all-series" },
     { name: "Duyệt Series Mới", path: "/board/reviews" },
     { name: "Series có nguy cơ", path: "/board/at-risk" },
     { name: "Quản lý Phát hành", path: "/board/releases" },
@@ -31,11 +33,10 @@ const ROLE_MENUS = {
     { name: "Quản lý User", path: "/admin/users" },
     { name: "Quản lý Phát hành", path: "/admin/releases" },
     { name: "Ranking & Vote", path: "/admin/ranking" },
-    { name: "Danh sách Series", path: "/vd" },
+    { name: "Quản lý tiến độ", path: "/editor/progress" },
+    { name: "Danh sách Series", path: "/board/all-series" },
     { name: "Duyệt Series Mới", path: "/board/reviews" },
     { name: "Series có nguy cơ", path: "/admin/series" },
-    { name: "Cấu hình Hệ thống", path: "/admin/settings" },
-    { name: "System Logs", path: "/admin/logs" },
   ],
 };
 
@@ -49,6 +50,19 @@ export default function ProtectedLayout() {
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
   const location = useLocation();
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    const fetchCount = async () => {
+      const result = await getUnreadCountApi();
+      if (result.success !== false) {
+        setUnreadCount(result.count || 0);
+      }
+    };
+    fetchCount();
+    const interval = setInterval(fetchCount, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   const userRole = user?.role || "";
   const dynamicMenus = ROLE_MENUS[userRole] || [];
@@ -86,6 +100,7 @@ export default function ProtectedLayout() {
             </p>
             {COMMON_MENUS.map((item, idx) => {
               const isActive = location.pathname === item.path;
+              const isNotif = item.path === "/notifications";
               return (
                 <Link
                   key={idx}
@@ -97,6 +112,7 @@ export default function ProtectedLayout() {
                   }`}
                 >
                   <span className="tracking-wide text-sm">{item.name}</span>
+                  {isNotif && <NotificationBadge count={unreadCount} />}
                 </Link>
               );
             })}

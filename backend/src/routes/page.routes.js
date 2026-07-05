@@ -12,12 +12,25 @@ const uploadPages = require("../controllers/page/uploadPages");
 const updatePageVersion = require("../controllers/page/updatePageVersion");
 const approvePage = require("../controllers/page/approvedPage");
 const getPagesByChapter = require("../controllers/page/getPagesByChapter");
+const getPageById = require("../controllers/page/getPageById");
 const upload = require("../middlewares/upload.middleware");
 const getPageVersions = require("../controllers/page/getPageVersions");
 
 const router = express.Router();
 
 router.use(requireAuth);
+
+router.get(
+  "/:page_id",
+  requireRole(
+    ROLES.MANGAKA,
+    ROLES.ASSISTANT,
+    ROLES.TANTOU_EDITOR,
+    ROLES.EDITORIAL_BOARD,
+    ROLES.ADMIN,
+  ),
+  getPageById.getPageById
+);
 
 router.get(
   "/chapter/:chapter_id",

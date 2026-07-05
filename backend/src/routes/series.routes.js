@@ -1,8 +1,12 @@
 const express = require("express");
 const { ROLES } = require("../constants/roles");
 const { requireAuth } = require("../modules/auth/middlewares/requireAuth");
-const { requireRole } = require("../modules/authorization/middlewares/requireRole");
-const { requireSeriesScope } = require("../modules/authorization/middlewares/scope");
+const {
+  requireRole,
+} = require("../modules/authorization/middlewares/requireRole");
+const {
+  requireSeriesScope,
+} = require("../modules/authorization/middlewares/scope");
 const createSeries = require("../controllers/series/createSeries");
 const getMySeries = require("../controllers/series/getMySeries");
 const getSeriesByRole = require("../controllers/series/getSeriesByRole");
@@ -11,6 +15,7 @@ const upsertProposal = require("../controllers/series/upsertProposal");
 const submitProposal = require("../controllers/series/submitProposal");
 const uploadCover = require("../controllers/series/uploadCover");
 const getAtRiskSeries = require("../controllers/series/getAtRiskSeries");
+const getSeriesProgress = require("../controllers/series/getSeriesProgress");
 const updateSeriesStatus = require("../controllers/series/updateSeriesStatus");
 const lifecycleVote = require("../controllers/series/lifecycleVote");
 const upload = require("../middlewares/upload.middleware");
@@ -31,11 +36,7 @@ router.get(
   requireRole(ROLES.TANTOU_EDITOR),
   getSeriesByRole.getEditorSeries,
 );
-router.get(
-  "/all",
-  requireRole(ROLES.EDITORIAL_BOARD),
-  getSeriesByRole.getAllSeries,
-);
+router.get("/all", getSeriesByRole.getAllSeries);
 router.get(
   "/assistant",
   requireRole(ROLES.ASSISTANT),
@@ -45,6 +46,17 @@ router.get(
   "/at-risk",
   requireRole(ROLES.EDITORIAL_BOARD, ROLES.ADMIN),
   getAtRiskSeries.getAtRiskSeries,
+);
+router.get(
+  "/progress",
+  requireRole(
+    ROLES.MANGAKA,
+    ROLES.ASSISTANT,
+    ROLES.TANTOU_EDITOR,
+    ROLES.EDITORIAL_BOARD,
+    ROLES.ADMIN,
+  ),
+  getSeriesProgress.getSeriesProgress,
 );
 router.patch(
   "/:id/status",

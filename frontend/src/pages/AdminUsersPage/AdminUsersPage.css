@@ -188,3 +188,81 @@
 .btn-confirm {
   @apply bg-[#23A094] border-4 border-black text-white font-black uppercase tracking-widest py-3 px-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:bg-[#1a7f75] hover:-translate-y-1 hover:shadow-[6px_6px_0px_0px_rgba(35,160,148,1)] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none disabled:bg-[#D1D5DB] disabled:text-gray-600 disabled:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] disabled:cursor-not-allowed;
 }
+
+/* ===== FILTER BAR ===== */
+.filter-bar {
+  @apply flex flex-wrap gap-4 mb-6;
+}
+
+.filter-input {
+  @apply flex-1 min-w-[200px] p-3 border-4 border-black bg-[#F4F4F0] font-bold text-gray-800 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] outline-none transition-all;
+}
+.filter-input:focus {
+  @apply bg-white -translate-y-1 shadow-[6px_6px_0px_0px_rgba(35,160,148,1)];
+}
+
+.filter-select {
+  @apply p-3 border-4 border-black bg-[#F4F4F0] font-bold text-gray-800 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] outline-none transition-all cursor-pointer min-w-[150px];
+}
+.filter-select:focus {
+  @apply bg-white -translate-y-1 shadow-[6px_6px_0px_0px_rgba(35,160,148,1)];
+}
+
+/* ===== ACTION BUTTONS ===== */
+.action-buttons {
+  @apply flex items-center gap-2;
+}
+
+.btn-icon {
+  @apply w-10 h-10 flex items-center justify-center border-4 border-black text-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all cursor-pointer;
+}
+.btn-icon:hover {
+  @apply -translate-y-1 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)];
+}
+.btn-icon:active {
+  @apply translate-x-[4px] translate-y-[4px] shadow-none;
+}
+
+.btn-delete {
+  @apply bg-[#FF0000] text-white;
+}
+.btn-delete:hover {
+  @apply bg-[#cc0000];
+}
+
+.btn-edit {
+  @apply bg-[#23A094] text-white;
+}
+.btn-edit:hover {
+  @apply bg-[#1a7f75];
+}
+
+.btn-suspend {
+  @apply bg-[#0066CC] text-white;
+}
+.btn-suspend:hover {
+  @apply bg-[#0052a3];
+}
+
+.btn-activate {
+  @apply bg-[#23A094] text-white;
+}
+.btn-activate:hover {
+  @apply bg-[#1a7f75];
+}
+
+/* ===== PAGINATION ===== */
+.pagination {
+  @apply flex items-center justify-center gap-4 p-4 border-t-4 border-black;
+}
+
+.page-btn {
+  @apply w-10 h-10 border-4 border-black bg-white font-black text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all disabled:opacity-50 disabled:cursor-not-allowed;
+}
+.page-btn:not(:disabled):hover {
+  @apply bg-[#FF90E8] -translate-y-1 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)];
+}
+
+.page-info {
+  @apply font-bold text-gray-800;
+}

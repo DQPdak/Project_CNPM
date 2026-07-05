@@ -14,7 +14,7 @@ router.get(
   "/users",
   requireAuth,
   requireRole(ROLES.ADMIN),
-  authController.listUsers,
+  authController.listUsersWithFilter,
 );
 router.post(
   "/users",
@@ -28,6 +28,14 @@ router.post(
   requireRole(ROLES.ADMIN),
   authController.resetPassword,
 );
+// Cập nhật thông tin user
+router.put(
+  "/users/:id",
+  requireAuth,
+  requireRole(ROLES.ADMIN),
+  authController.updateUser,
+);
+
 // Khóa/Mở khóa/Xóa tài khoản
 router.patch(
   "/users/:id/status",

@@ -1,5 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import SeriesProgressTable from "../../../components/dashboard/SeriesProgressTable/SeriesProgressTable";
 import "./MangakaDashboard.css";
 
 const MangakaDashboard = () => {
@@ -22,6 +23,7 @@ const MangakaDashboard = () => {
               </Link>
             </div>
           </div>
+
         </div>
         <div className="space-y-6">
           <div className="widget-mangaka">
@@ -31,15 +33,18 @@ const MangakaDashboard = () => {
             </p>
             <div className="ranking-item">
               <span>Series A</span>
-              <span className="text-status">Hạng 3 (↑2)</span>
+              <span className="text-status">Hạng 3 (+2)</span>
             </div>
             <Link to="/mangaka/ranking" className="btn-indigo">
               Xem bảng chi tiết
             </Link>
           </div>
+
+          <SeriesProgressTable />
         </div>
       </div>
     </div>
   );
 };
+
 export default MangakaDashboard;

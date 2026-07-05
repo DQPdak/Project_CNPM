@@ -15,8 +15,18 @@ import MangakaSeriesFormPage from "../pages/MangakaSeriesFormPage/MangakaSeriesF
 import BoardPendingSeriesPage from "../pages/BoardPendingSeriesPage/BoardPendingSeriesPage";
 import BoardSeriesReviewPage from "../pages/BoardSeriesReviewPage/BoardSeriesReviewPage";
 import BoardAtRiskSeriesPage from "../pages/BoardAtRiskSeriesPage/BoardAtRiskSeriesPage";
+import AllSeriesPage from "../pages/AllSeriesPage/AllSeriesPage";
+import EditorSeriesPage from "../pages/EditorSeriesPage/EditorSeriesPage";
 import PageVersionHistory from "../pages/PageVersionHistory/PageVersionHistory";
 import RequireRole from "../components/security/RequireRole";
+
+// Import các trang bị thiếu hoặc mới thêm
+import AssistantTasksPage from "../pages/AssistantTasksPage/AssistantTasksPage";
+import AssistantIncomePage from "../pages/AssistantIncomePage/AssistantIncomePage";
+import MangakaTasksPage from "../pages/MangakaTasksPage/MangakaTasksPage";
+import PageWorkspacePage from "../pages/PageWorkspacePage/PageWorkspacePage";
+import StudioProgressPage from "../pages/StudioProgressPage/StudioProgressPage";
+import NotificationPage from "../pages/NotificationPage/NotificationPage";
 
 export default function AppRoutes() {
   return (
@@ -31,6 +41,7 @@ export default function AppRoutes() {
           }
         >
           <Route path="/" element={<DashboardIndex />} />
+          <Route path="/notifications" element={<NotificationPage />} />
           <Route path="/chapter-list" element={<ChapterListPage />} />
           <Route path="/chapter-list/:seriesId" element={<ChapterListPage />} />
           <Route
@@ -72,6 +83,59 @@ export default function AppRoutes() {
               </RequireRole>
             }
           />
+          
+          {/* Assistant Tasks & Income */}
+          <Route
+            path="/assistant/tasks"
+            element={
+              <RequireRole allowedRoles={["Assistant", "Admin"]}>
+                <AssistantTasksPage />
+              </RequireRole>
+            }
+          />
+          <Route
+            path="/assistant/income"
+            element={
+              <RequireRole allowedRoles={["Assistant", "Admin"]}>
+                <AssistantIncomePage />
+              </RequireRole>
+            }
+          />
+
+          {/* Mangaka Tasks */}
+          <Route
+            path="/mangaka/tasks"
+            element={
+              <RequireRole allowedRoles={["Mangaka", "Admin"]}>
+                <MangakaTasksPage />
+              </RequireRole>
+            }
+          />
+
+          {/* Interactive Workspace (Canvas, Annotations & Region Tasks) */}
+          <Route
+            path="/workspace/:pageId"
+            element={<PageWorkspacePage />}
+          />
+
+          {/* Studio Kanban Progress Board */}
+          <Route
+            path="/editor/progress"
+            element={
+              <RequireRole allowedRoles={["Tantou Editor", "Mangaka", "Editorial Board", "Admin"]}>
+                <StudioProgressPage />
+              </RequireRole>
+            }
+          />
+
+          <Route
+            path="/editor/series"
+            element={
+              <RequireRole allowedRoles={["Tantou Editor"]}>
+                <EditorSeriesPage />
+              </RequireRole>
+            }
+          />
           <Route
             path="/board/reviews"
             element={
@@ -93,6 +157,14 @@ export default function AppRoutes() {
             element={
               <RequireRole allowedRoles={["Editorial Board", "Admin"]}>
                 <BoardAtRiskSeriesPage />
+              </RequireRole>
+            }
+          />
+          <Route
+            path="/board/all-series"
+            element={
+              <RequireRole allowedRoles={["Editorial Board", "Admin"]}>
+                <AllSeriesPage />
               </RequireRole>
             }
           />

@@ -9,12 +9,22 @@ const seriesRoutes = require("./routes/series.routes");
 const boardRoutes = require("./routes/board.routes");
 const issueRoutes = require("./routes/IssueRoutes");
 const rankingRoutes = require("./routes/RankingRoutes");
+const taskRoutes = require("./routes/task.routes");
+const incomeRoutes = require("./routes/income.routes");
+const annotationRoutes = require("./routes/annotation.routes");
+const regionRoutes = require("./routes/region.routes");
+const notificationRoutes = require("./routes/notificationRoutes");
+const adminDashboardRoutes = require("./routes/adminDashboardRoutes");
 
 const app = express();
 const allowedOrigins = [
   process.env.FRONTEND_ORIGIN,
   "http://localhost:5173",
+  "http://localhost:5174",
+  "http://localhost:5175",
   "http://127.0.0.1:5173",
+  "http://127.0.0.1:5174",
+  "http://127.0.0.1:5175",
 ].filter(Boolean);
 
 app.use(
@@ -44,6 +54,12 @@ app.use("/api/series", seriesRoutes);
 app.use("/api/board", boardRoutes);
 app.use("/api/issues", issueRoutes);
 app.use("/api/rankings", rankingRoutes);
+app.use("/api/tasks", taskRoutes);
+app.use("/api/income", incomeRoutes);
+app.use("/api/annotations", annotationRoutes);
+app.use("/api/regions", regionRoutes);
+app.use("/api/notifications", notificationRoutes);
+app.use("/api/admin", adminDashboardRoutes);
 
 app.use((error, req, res, next) => {
   if (res.headersSent) {

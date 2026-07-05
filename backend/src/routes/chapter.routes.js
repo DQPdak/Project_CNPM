@@ -11,6 +11,7 @@ const {
 const createChapter = require("../controllers/chapter/createChapter");
 const getChapterById = require("../controllers/chapter/getChapterById");
 const getChaptersBySeries = require("../controllers/chapter/getChaptersBySeries");
+const getChapterProgressStats = require("../controllers/chapter/getChapterProgressStats");
 const updateChapterStatus = require("../controllers/chapter/updateChapterStatus");
 
 const router = express.Router();
@@ -41,6 +42,19 @@ router.get(
   ),
   requireSeriesScope("series_id", "read"),
   getChaptersBySeries.getChaptersBySeries,
+);
+
+router.get(
+  "/:chapter_id/progress-stats",
+  requireRole(
+    ROLES.MANGAKA,
+    ROLES.ASSISTANT,
+    ROLES.TANTOU_EDITOR,
+    ROLES.EDITORIAL_BOARD,
+    ROLES.ADMIN,
+  ),
+  requireChapterScope("chapter_id", "read"),
+  getChapterProgressStats.getChapterProgressStats,
 );
 
 router.get(
