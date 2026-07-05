@@ -27,8 +27,11 @@ export default function PerformanceChartPanel({ refreshTrigger }) {
         const dataList = Array.isArray(result) ? result : result?.data || [];
         
         // Trích xuất danh sách các Kỳ phát hành duy nhất và sắp xếp mới nhất lên đầu
-        const allIssueIds = dataList.map((item) => item.issueId).filter(Boolean);
-        const uniqueIssues = [...new Set(allIssueIds)].sort((a, b) => b.localeCompare(a));
+        let uniqueIssues = result?.availableIssues || [];
+        if (uniqueIssues.length === 0) {
+          const allIssueIds = dataList.map((item) => item.issueId).filter(Boolean);
+          uniqueIssues = [...new Set(allIssueIds)].sort((a, b) => b.localeCompare(a));
+        }
         
         setIssues(uniqueIssues);
         if (uniqueIssues.length > 0) {
@@ -53,7 +56,7 @@ export default function PerformanceChartPanel({ refreshTrigger }) {
       if (result && result.success !== false) {
         const dataList = Array.isArray(result) ? result : result?.data || [];
         
-        // Format dữ liệu vẽ biểu đồ, xếp từ hạng cao nhất (#1) -> thấp
+        // Format dữ liệu vẽ biểu đồ, xếp từ tổng điểm cao nhất -> thấp
         const formatted = dataList.map((item) => ({
           name: item.seriesName,
           totalScore: item.totalScore,
@@ -61,7 +64,7 @@ export default function PerformanceChartPanel({ refreshTrigger }) {
           votes: item.votes,
           avgScore: item.avgScore,
           cancellationWarning: item.cancellationWarning
-        })).sort((a, b) => a.currentRank - b.currentRank);
+        })).sort((a, b) => b.totalScore - a.totalScore);
 
         setChartData(formatted);
       }
@@ -137,7 +140,7 @@ export default function PerformanceChartPanel({ refreshTrigger }) {
           className="neo-select !w-auto max-w-xs"
           value={selectedIssue}
           onChange={(e) => setSelectedIssue(e.target.value)}
-          disabled={loading || issues.length <= 1}
+          disabled={loading || issues.length === 0}
         >
           {issues.map((issue) => (
             <option key={issue} value={issue}>
