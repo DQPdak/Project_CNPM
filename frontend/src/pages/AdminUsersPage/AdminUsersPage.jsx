@@ -61,7 +61,7 @@ export default function AdminUsersPage() {
       ...filters,
     });
     if (result.success === false) {
-      toast.error("Khong the tai danh sach user: " + result.message);
+      toast.error("Không thể tải danh sách user: " + result.message);
       setUsers([]);
     } else {
       setUsers(result.users || []);
@@ -106,7 +106,7 @@ export default function AdminUsersPage() {
 
     const result = await createUser(form);
     if (result.success === false) {
-      toast.error("Khong the tao tai khoan: " + result.message);
+      toast.error("Không thể tạo tài khoản: " + result.message);
     } else {
       toast.success("Da tao tai khoan nhan vien.");
       setForm(initialForm);
@@ -130,9 +130,9 @@ export default function AdminUsersPage() {
     setIsSubmitting(true);
     const result = await updateUser(editTarget.id, editForm);
     if (result.success === false) {
-      toast.error("Khong the cap nhat: " + result.message);
+      toast.error("Không thể cập nhật: " + result.message);
     } else {
-      toast.success("Da cap nhat thong tin user.");
+      toast.success("Đã cập nhật thông tin user.");
       setEditTarget(null);
       await fetchUsers();
     }
@@ -143,15 +143,15 @@ export default function AdminUsersPage() {
   const handleUpdateStatus = async (target, newStatus) => {
     const actionText =
       newStatus === "Suspended"
-        ? "khoa"
+        ? "khóa"
         : newStatus === "Active"
-          ? "mo khoa"
-          : "vo hieu hoa";
+          ? "mở khóa"
+          : "vô hiệu hóa";
     const result = await updateUserStatus(target.id, newStatus);
     if (result.success === false) {
-      toast.error("Khong the " + actionText + ": " + result.message);
+      toast.error("Không thể " + actionText + ": " + result.message);
     } else {
-      toast.success("Da " + actionText + " tai khoan.");
+      toast.success("Đã " + actionText + " tài khoản.");
       await fetchUsers();
     }
   };
@@ -160,9 +160,9 @@ export default function AdminUsersPage() {
   const handleDeleteUser = async (target) => {
     const result = await deleteUser(target.id);
     if (result.success === false) {
-      toast.error("Khong the xoa: " + result.message);
+      toast.error("Không thể xóa: " + result.message);
     } else {
-      toast.success("Da xoa tai khoan.");
+      toast.success("Đã xóa tài khoản.");
       await fetchUsers();
     }
   };
@@ -175,9 +175,9 @@ export default function AdminUsersPage() {
     setIsSubmitting(true);
     const result = await resetUserPassword(resetTarget.id, newPassword);
     if (result.success === false) {
-      toast.error("Khong the reset mat khau: " + result.message);
+      toast.error("Không thể reset mật khẩu: " + result.message);
     } else {
-      toast.success("Da reset mat khau va thu hoi session hien tai.");
+      toast.success("Đã reset mật khẩu và thu hồi session hiện tại.");
       setResetTarget(null);
       setNewPassword("");
     }
@@ -188,12 +188,12 @@ export default function AdminUsersPage() {
     <RequirePermission required="CAN_MANAGE_USERS">
       <div className="admin-users-page">
         <div className="page-container">
-          {isLoading && <Loading text="Dang tai danh sach tai khoan..." />}
+          {isLoading && <Loading text="Đang tải danh sách tài khoản..." />}
 
           <header className="page-header">
-            <h1 className="page-title">Quan ly tai khoan</h1>
+            <h1 className="page-title">Quản lý tài khoản</h1>
             <p className="page-subtitle">
-              Tao, chinh sua, khoa/mo khoa va xoa tai khoan nhan vien.
+              Tạo, chỉnh sửa, khóa/mở khóa và xóa tài khoản nhân viên.
             </p>
           </header>
 
@@ -204,26 +204,26 @@ export default function AdminUsersPage() {
               onClick={() => setActiveTab("list")}
               className={`tab-btn ${activeTab === "list" ? "tab-active" : "tab-inactive"}`}
             >
-              Danh sach tai khoan
+              Danh sách tài khoản
             </button>
             <button
               type="button"
               onClick={() => setActiveTab("create")}
               className={`tab-btn ${activeTab === "create" ? "tab-active" : "tab-inactive"}`}
             >
-              Tao tai khoan moi
+              Tạo tài khoản mới
             </button>
           </div>
 
           <div className="tab-content-area">
-            {/* Tab 1: Danh sach tai khoan */}
+            {/* Tab 1: Danh sách tài khoản */}
             {activeTab === "list" && (
               <>
                 {/* Filter Bar */}
                 <div className="filter-bar">
                   <input
                     type="text"
-                    placeholder="Tim kiem theo ten hoac email..."
+                    placeholder="Tìm kiếm theo tên hoặc email..."
                     value={filters.search}
                     onChange={(e) =>
                       handleFilterChange("search", e.target.value)
@@ -249,7 +249,7 @@ export default function AdminUsersPage() {
                     }
                     className="filter-select"
                   >
-                    <option value="">Tat ca trang thai</option>
+                    <option value="">Tất cả trạng thái</option>
                     {STATUS_OPTIONS.map((status) => (
                       <option key={status} value={status}>
                         {status}
@@ -264,11 +264,11 @@ export default function AdminUsersPage() {
                     <table className="neo-table">
                       <thead>
                         <tr className="tr-head">
-                          <Th>Ten</Th>
+                          <Th>Tên</Th>
                           <Th>Email</Th>
                           <Th>Role</Th>
-                          <Th>Trang thai</Th>
-                          <Th>Hanh dong</Th>
+                          <Th>Trạng thái</Th>
+                          <Th>Hành động</Th>
                         </tr>
                       </thead>
                       <tbody>
@@ -333,7 +333,7 @@ export default function AdminUsersPage() {
                         ))}
                         {!isLoading && users.length === 0 ? (
                           <tr>
-                            <Td colSpan={5}>Khong co tai khoan nao.</Td>
+                            <Td colSpan={5}>Không có tài khoản nào.</Td>
                           </tr>
                         ) : null}
                       </tbody>
@@ -369,13 +369,13 @@ export default function AdminUsersPage() {
               </>
             )}
 
-            {/* Tab 2: Form Tao tai khoan */}
+            {/* Tab 2: Form Tạo tài khoản */}
             {activeTab === "create" && (
               <form onSubmit={handleCreateUser} className="form-card">
                 <h2 className="card-title">Nhap thong tin nhan vien</h2>
 
                 <div className="form-grid">
-                  <Field label="Ho ten">
+                  <Field label="Họ tên">
                     <input
                       value={form.name}
                       onChange={(event) =>
@@ -398,7 +398,7 @@ export default function AdminUsersPage() {
                     />
                   </Field>
 
-                  <Field label="Mat khau khoi tao">
+                  <Field label="Mật khẩu khởi tạo">
                     <input
                       type="password"
                       value={form.password}
@@ -427,7 +427,7 @@ export default function AdminUsersPage() {
                     </select>
                   </Field>
 
-                  <Field label="Trang thai">
+                  <Field label="Trạng thái">
                     <select
                       value={form.status}
                       onChange={(event) =>
@@ -450,7 +450,7 @@ export default function AdminUsersPage() {
                     disabled={isSubmitting}
                     className="btn-primary"
                   >
-                    {isSubmitting ? "Dang tao..." : "Tao tai khoan"}
+                    {isSubmitting ? "Đang tạo..." : "Tạo tài khoản"}
                   </button>
                 </div>
               </form>
@@ -463,10 +463,10 @@ export default function AdminUsersPage() {
           <div className="modal-overlay">
             <form onSubmit={handleResetPassword} className="modal-card">
               <div className="tape-deco"></div>
-              <h2 className="modal-title">Reset password</h2>
+              <h2 className="modal-title">Reset mật khẩu</h2>
               <p className="modal-subtitle">Target: {resetTarget.email}</p>
 
-              <Field label="Mat khau moi">
+              <Field label="Mật khẩu mới">
                 <input
                   type="password"
                   value={newPassword}
@@ -486,7 +486,7 @@ export default function AdminUsersPage() {
                   }}
                   className="btn-cancel"
                 >
-                  Huy
+                  Hủy
                 </button>
                 <button
                   type="submit"
@@ -505,11 +505,11 @@ export default function AdminUsersPage() {
           <div className="modal-overlay">
             <form onSubmit={handleUpdateUser} className="modal-card">
               <div className="tape-deco"></div>
-              <h2 className="modal-title">Cap nhat thong tin user</h2>
-              <p className="modal-subtitle">Dang sua: {editTarget.email}</p>
+              <h2 className="modal-title">Cập nhật thông tin user</h2>
+              <p className="modal-subtitle">Đang sửa: {editTarget.email}</p>
 
               <div className="form-grid">
-                <Field label="Ho ten">
+                <Field label="Họ tên">
                   <input
                     value={editForm.name}
                     onChange={(e) => updateEditForm("name", e.target.value)}
@@ -556,7 +556,7 @@ export default function AdminUsersPage() {
                   disabled={isSubmitting}
                   className="btn-confirm"
                 >
-                  {isSubmitting ? "Dang luu..." : "Luu thay doi"}
+                  {isSubmitting ? "Đang lưu..." : "Lưu thay đổi"}
                 </button>
               </div>
             </form>
