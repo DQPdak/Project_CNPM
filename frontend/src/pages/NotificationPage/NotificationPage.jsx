@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import NotificationItem from "./components/NotificationItem";
+import NotificationDetailModal from "./components/NotificationDetailModal";
 import NotificationSkeleton from "./components/NotificationSkeleton";
 import {
   getNotificationsApi,
@@ -23,6 +24,7 @@ export default function NotificationPage() {
   const [error, setError] = useState(null);
   const [activeFilter, setActiveFilter] = useState("");
   const [unreadCount, setUnreadCount] = useState(0);
+  const [selectedNotification, setSelectedNotification] = useState(null);
 
   const fetchNotifications = useCallback(async (page = 1) => {
     setLoading(true);
@@ -88,6 +90,14 @@ export default function NotificationPage() {
     await deleteNotificationApi(id);
     fetchNotifications(pagination.page);
     fetchUnreadCount();
+  };
+
+  const handleOpenDetail = (notification) => {
+    setSelectedNotification(notification);
+  };
+
+  const handleCloseDetail = () => {
+    setSelectedNotification(null);
   };
 
   return (
@@ -172,6 +182,7 @@ export default function NotificationPage() {
                 notification={notif}
                 onMarkRead={handleMarkAsRead}
                 onDelete={handleDelete}
+                onOpenDetail={handleOpenDetail}
               />
             ))}
           </div>
@@ -200,8 +211,16 @@ export default function NotificationPage() {
               </button>
             </div>
           )}
-        </>
-      )}
-    </div>
+        </>)}
+
+        {/* Detail Modal */}
+        {selectedNotification && (
+          <NotificationDetailModal
+            notification={selectedNotification}
+            onClose={handleCloseDetail}
+            onMarkRead={handleMarkAsRead}
+          />
+        )}
+      </div>
   );
 }

@@ -5,7 +5,7 @@
 ### ✅ Có sẵn:
 1. **Notification Model** (`backend/src/models/NotificationModel.js`)
    - Cấu trúc cơ bản với các trường: `user_id`, `target_type`, `target_id`, `title`, `message`, `type`, `is_read`
-   - Phân loại thông báo: `System`, `Task_Update`, `Warning`, `Payment`
+   - Phân loại thông báo: `System`, `Task_Update`, `Warning`
 
 2. **Menu "Thông báo"** trong `ProtectedLayout.jsx`
    - Đường dẫn: `/notifications`
@@ -42,7 +42,7 @@ DELETE /api/notifications/:id       - Xóa thông báo
 #### Pages:
 - **NotificationPage** (`/notifications`)
   - Hiển thị danh sách thông báo
-  - Filter theo loại (Task, Series, System, Payment, Warning)
+  - Filter theo loại (Task, Series, System, Warning)
   - Sort theo thời gian (mới nhất, cũ nhất)
   - Bulk actions (mark all read, delete selected)
 
@@ -82,17 +82,12 @@ DELETE /api/notifications/:id       - Xóa thông báo
 - Chapter cần chỉnh sửa
 - Chapter bị từ chối
 
-#### D. Payment Notifications (Assistant):
-- Thanh toán hàng tháng
-- Thanh toán bị delay
-- Payment confirmation
-
-#### E. System Announcements (All users):
+#### D. System Announcements (All users):
 - Thông báo hệ thống từ Admin
 - Maintenance schedule
 - Feature updates
 
-#### F. Warning Notifications (All users):
+#### E. Warning Notifications (All users):
 - Series có nguy cơ bị hủy
 - Deadline sắp hết hạn
 - Quality warnings
@@ -118,14 +113,12 @@ DELETE /api/notifications/:id       - Xóa thông báo
 - **Color coding**: Màu sắc khác nhau cho từng loại thông báo
   - Task: Blue
   - Series: Green  
-  - Payment: Purple
   - Warning: Orange
   - System: Gray
 
 - **Icons**: Icon phù hợp với từng loại
   - Task: 📝
   - Series: 📚
-  - Payment: 💰
   - Warning: ⚠️
   - System: 🔔
 
@@ -157,11 +150,7 @@ DELETE /api/notifications/:id       - Xóa thông báo
    - `chapter.published` → Thông báo cho Mangaka, Editor
    - `chapter.needsRevision` → Thông báo cho Mangaka
 
-4. **Payment Service**:
-   - `payment.processed` → Thông báo cho Assistant
-   - `payment.failed` → Thông báo cho Admin, Assistant
-
-5. **System Events**:
+4. **System Events**:
    - `system.announcement` → Thông báo cho tất cả users
    - `system.maintenance` → Thông báo cho tất cả users
 
@@ -214,7 +203,7 @@ DELETE /api/notifications/:id       - Xóa thông báo
   action_url: { type: String }, // URL để navigate khi click
   metadata: { type: mongoose.Schema.Types.Mixed }, // Additional data
   expires_at: { type: Date }, // Auto-delete after expiry
-  category: { type: String, enum: ["task", "series", "chapter", "payment", "system", "warning"] }
+  category: { type: String, enum: ["task", "series", "chapter", "system", "warning"] }
 }
 ```
 
