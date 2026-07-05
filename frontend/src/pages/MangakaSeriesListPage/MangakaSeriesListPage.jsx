@@ -57,11 +57,8 @@ export default function MangakaSeriesListPage() {
       {!isLoading && items.length > 0 && (
         <div className="mangaka-series-grid">
           {items.map(({ series, proposal }) => (
-            <Link
-              key={series._id}
-              to={`/mangaka/series/${series._id}`}
-              className="series-card"
-            >
+            // Chuyển thẻ bọc ngoài cùng từ Link thành div
+            <div key={series._id} className="series-card">
               <div className="series-card-header">
                 <div>
                   <h2 className="series-card-title">{series.title}</h2>
@@ -76,7 +73,22 @@ export default function MangakaSeriesListPage() {
                   </span>
                 )}
               </div>
-            </Link>
+
+              <div className="series-card-actions">
+                <Link
+                  to={`/mangaka/series/${series._id}`}
+                  className="btn-action-secondary"
+                >
+                  Thông tin chi tiết
+                </Link>
+                <Link
+                  to={`/chapter-list/${series._id}`}
+                  className="btn-action-primary"
+                >
+                  Quản lý Chapter
+                </Link>
+              </div>
+            </div>
           ))}
         </div>
       )}
