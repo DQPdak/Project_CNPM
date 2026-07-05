@@ -37,8 +37,6 @@ const ROLE_MENUS = {
     { name: "Danh sách Series", path: "/board/all-series" },
     { name: "Duyệt Series Mới", path: "/board/reviews" },
     { name: "Series có nguy cơ", path: "/admin/series" },
-    { name: "Cấu hình Hệ thống", path: "/admin/settings" },
-    { name: "System Logs", path: "/admin/logs" },
   ],
 };
 
