@@ -4,6 +4,7 @@ const AssistantIncome = require("../../models/AssistantIncomeModel");
 const Page = require("../../models/PageModel");
 const PageVersionHistory = require("../../models/PageVersionHistoryModel");
 const PageRegion = require("../../models/PageRegionModel");
+const NotificationService = require("../../services/notificationService");
 
 // Get list of tasks
 exports.getTasks = async (req, res) => {
@@ -140,6 +141,16 @@ exports.createTask = async (req, res) => {
 
     await newTask.save();
 
+    // Notify the assigned assistant
+    await NotificationService.createNotification({
+      user_id: assigned_to,
+      type: "Task_Update",
+      title: "Bạn có task mới",
+      message: `Bạn đã được giao task "${task_type}" mới: ${description || "Không có mô tả"}. Hạn: ${new Date(deadline).toLocaleDateString("vi-VN")}.`,
+      target_type: "Task",
+      target_id: newTask._id,
+    });
+
     return res.status(201).json({ success: true, message: "Phân công công việc thành công", task: newTask });
   } catch (error) {
     return res.status(500).json({ success: false, message: "Lỗi server", error: error.message });
@@ -182,6 +193,16 @@ exports.submitTask = async (req, res) => {
     // Update Task status
     task.status = "Submitted";
     await task.save();
+
+    // Notify the mangaka who created the task
+    await NotificationService.createNotification({
+      user_id: task.assigned_by,
+      type: "Task_Update",
+      title: "Task đã được nộp",
+      message: `Task "${task.task_type}" đã được nộp bởi ${req.user.name}. Vui lòng kiểm tra và duyệt.`,
+      target_type: "Task",
+      target_id: task._id,
+    });
 
     return res.status(200).json({
       success: true,
@@ -282,6 +303,33 @@ exports.reviewTask = async (req, res) => {
       }
     }
 
+    // Notify the assistant about the review result
+    const reviewMessages = {
+      "Approved": `Task "${task.task_type}" của bạn đã được duyệt.${note ? ` Nhận xét: ${note}` : ""}`,
+      "Revision Requested": `Task "${task.task_type}" cần chỉnh sửa lại.${note ? ` Lý do: ${note}` : ""}`,
+      "Rejected": `Task "${task.task_type}" đã bị từ chối.${note ? ` Lý do: ${note}` : ""}`,
+    };
+    await NotificationService.createNotification({
+      user_id: task.assigned_to,
+      type: "Task_Update",
+      title: `Task ${status === "Approved" ? "đã duyệt" : status === "Revision Requested" ? "cần sửa" : "bị từ chối"}`,
+      message: reviewMessages[status] || `Task "${task.task_type}" đã được đánh giá: ${status}.`,
+      target_type: "Task",
+      target_id: task._id,
+    });
+
+    // Also notify the mangaka if someone else (e.g. Admin) reviews their task
+    if (String(task.assigned_by) !== req.user.id) {
+      await NotificationService.createNotification({
+        user_id: task.assigned_by,
+        type: "Task_Update",
+        title: `Task "${task.task_type}" đã được duyệt`,
+        message: `Task "${task.task_type}" của bạn đã được đánh giá: "${reviewMessages[status]}" bởi ${req.user.name}.`,
+        target_type: "Task",
+        target_id: task._id,
+      });
+    }
+
     return res.status(200).json({
       success: true,
       message: `Đã đánh giá task thành công: ${status}`,
@@ -340,6 +388,25 @@ exports.updateTaskStatus = async (req, res) => {
 
     task.status = status;
     await task.save();
+
+    // Notify the mangaka about status changes (except when the mangaka is the one changing)
+    if (!isCreator && task.assigned_by) {
+      const statusLabels = {
+        "In Progress": "đang thực hiện",
+        "Approved": "đã duyệt",
+        "Revision Requested": "cần chỉnh sửa",
+        "Rejected": "bị từ chối",
+        "Paid": "đã thanh toán",
+      };
+      await NotificationService.createNotification({
+        user_id: task.assigned_by,
+        type: "Task_Update",
+        title: `Task ${task.task_type} chuyển trạng thái`,
+        message: `Task "${task.task_type}" đã chuyển sang trạng thái "${statusLabels[status] || status}" bởi ${req.user.name}.`,
+        target_type: "Task",
+        target_id: task._id,
+      });
+    }
 
     return res.status(200).json({ success: true, message: `Đã cập nhật trạng thái nhiệm vụ thành ${status}`, task });
   } catch (error) {
