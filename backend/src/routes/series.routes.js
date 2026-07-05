@@ -1,8 +1,12 @@
 const express = require("express");
 const { ROLES } = require("../constants/roles");
 const { requireAuth } = require("../modules/auth/middlewares/requireAuth");
-const { requireRole } = require("../modules/authorization/middlewares/requireRole");
-const { requireSeriesScope } = require("../modules/authorization/middlewares/scope");
+const {
+  requireRole,
+} = require("../modules/authorization/middlewares/requireRole");
+const {
+  requireSeriesScope,
+} = require("../modules/authorization/middlewares/scope");
 const createSeries = require("../controllers/series/createSeries");
 const getMySeries = require("../controllers/series/getMySeries");
 const getSeriesByRole = require("../controllers/series/getSeriesByRole");
@@ -32,11 +36,7 @@ router.get(
   requireRole(ROLES.TANTOU_EDITOR),
   getSeriesByRole.getEditorSeries,
 );
-router.get(
-  "/all",
-  requireRole(ROLES.EDITORIAL_BOARD, ROLES.ADMIN),
-  getSeriesByRole.getAllSeries,
-);
+router.get("/all", getSeriesByRole.getAllSeries);
 router.get(
   "/assistant",
   requireRole(ROLES.ASSISTANT),

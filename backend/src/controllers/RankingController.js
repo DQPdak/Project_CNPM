@@ -13,7 +13,9 @@ const getLeaderboard = async (req, res) => {
       const mySeriesIds = seriesStore
         .filter((series) => series.authorId === userId)
         .map((series) => series.id);
-      records = records.filter((record) => mySeriesIds.includes(record.seriesId));
+      records = records.filter((record) =>
+        mySeriesIds.includes(record.seriesId),
+      );
     } else if (role === ROLES.TANTOU_EDITOR) {
       const managedSeriesIds = seriesStore
         .filter((series) => series.editorId === userId)
@@ -23,9 +25,20 @@ const getLeaderboard = async (req, res) => {
       );
     }
 
-    if (issueId) {
-      records = records.filter((record) => record.issueId === issueId);
+    let targetIssueId = issueId;
+    if (!targetIssueId && records.length > 0) {
+      const allIssueIds = records.map((record) => record.issueId);
+
+      const uniqueSortedIssues = [...new Set(allIssueIds)].sort((a, b) =>
+        b.localeCompare(a),
+      );
+      targetIssueId = uniqueSortedIssues[0];
     }
+
+    if (targetIssueId) {
+      records = records.filter((record) => record.issueId === targetIssueId);
+    }
+
     if (authorId) {
       records = records.filter((record) => {
         const series = seriesStore.find((item) => item.id === record.seriesId);
@@ -41,34 +54,76 @@ const getLeaderboard = async (req, res) => {
 
     const detailedRecords = records.map((record) => {
       const series = seriesStore.find((item) => item.id === record.seriesId);
-      return { ...record, seriesName: series ? series.name : "Unknown series" };
+      return {
+        ...record,
+        seriesName: series ? series.name : "Unknown series",
+        authorName: series ? series.authorName : "Ẩn danh",
+      };
     });
 
     res.json(detailedRecords);
   } catch (error) {
-    res.status(500).json({ error: "Lỗi hệ thống khi lấy bảng xếp hạng: " + error.message });
+    res
+      .status(500)
+      .json({ error: "Lỗi hệ thống khi lấy bảng xếp hạng: " + error.message });
   }
 };
 
 const getPerformanceChartData = async (req, res) => {
   try {
     const { seriesId } = req.params;
-    const records = await RankingService.getVoteHistory();
-    const targetShortId = await RankingService.getShortId(seriesId);
 
-    const chartData = records
-      .filter((record) => record.seriesId === targetShortId || record.seriesId === seriesId)
+    // 1. THÊM MỚI: Lấy thông tin người dùng đang gọi API
+    const { role, id: userId } = req.user;
+
+    const records = await RankingService.getVoteHistory();
+
+    // 2. THÊM MỚI: Lấy kho series để kiểm tra chủ sở hữu
+    const seriesStore = await RankingService.getSeriesStore();
+    const targetSeries = seriesStore.find((s) => s.id === seriesId);
+
+    if (!targetSeries) {
+      return res
+        .status(404)
+        .json({ error: "Không tìm thấy dữ liệu truyện này." });
+    }
+
+    // 3. THÊM MỚI: CHẶN PHÂN QUYỀN (RBAC)
+    if (role === ROLES.MANGAKA && targetSeries.authorId !== userId) {
+      return res
+        .status(403)
+        .json({
+          error: "Từ chối truy cập: Bạn không phải tác giả của truyện này.",
+        });
+    }
+
+    if (role === ROLES.TANTOU_EDITOR && targetSeries.editorId !== userId) {
+      return res
+        .status(403)
+        .json({ error: "Từ chối truy cập: Bạn không quản lý truyện này." });
+    }
+
+    // 4. GIỮ NGUYÊN LOGIC CŨ CỦA BẠN: Format và giới hạn 10 kỳ
+    let chartData = records
+      .filter((record) => record.seriesId === seriesId)
       .map((record) => ({
         issueId: record.issueId,
         rank: record.currentRank,
         totalScore: record.totalScore,
+        avgScore: record.avgScore,
         votes: record.votes,
       }))
       .sort((left, right) => left.issueId.localeCompare(right.issueId));
 
+    if (chartData.length > 10) {
+      chartData = chartData.slice(-10);
+    }
+
     res.json(chartData);
   } catch (error) {
-    res.status(500).json({ error: "Lỗi hệ thống khi lấy biểu đồ hiệu suất: " + error.message });
+    res.status(500).json({
+      error: "Lỗi hệ thống khi lấy biểu đồ hiệu suất: " + error.message,
+    });
   }
 };
 

@@ -21,6 +21,16 @@ const runSeed = async () => {
     await AssistantIncome.deleteMany({});
     await PageRegion.deleteMany({});
     await Annotation.deleteMany({});
+    await Series.deleteMany({
+      title: {
+        $in: [
+          "Thanh Pho May",
+          "Quan Ca Phe Sao Bang",
+          "Hoc Vien Rong Den",
+          "Duong Ray Bien Sau",
+        ],
+      },
+    });
 
     // Hash password
     const hashedPass = await hashPassword("password123");
@@ -420,52 +430,52 @@ const runSeed = async () => {
 
     const extraSeries = await Promise.all([
       seedProgressSeries({
-        title: "Thanh Pho May",
-        description: "Mot doi dieu tra nhung bi mat trong thanh pho tren may.",
+        title: "Thành Phố Mây",
+        description: "Một đội điều tra những bí mật trong thành phố trên mây.",
         genre: "Mystery",
         targetAudience: "Teen",
         author: extraMangakas[0],
         status: "Active",
         riskStatus: "Warning",
-        chapterTitle: "Tap 1: Tin Hieu Luc Nua Dem",
+        chapterTitle: "Tập 1: Tín Hiệu Lúc Nửa Đêm",
         taskStatuses: ["Assigned", "In Progress", "Submitted", "Approved"],
         annotationStatuses: ["Open", "Resolved"],
       }),
       seedProgressSeries({
-        title: "Quan Ca Phe Sao Bang",
-        description: "Slice-of-life ve nhom ban van hanh quan ca phe chi mo cua luc mua sao bang.",
+        title: "Quán Cà Phê Sao Băng",
+        description: "Slice-of-life về nhóm bạn vận hành quán cà phê chỉ mở cửa lúc mưa sao băng.",
         genre: "Slice of Life",
         targetAudience: "Young Adult",
         author: extraMangakas[1],
         status: "Active",
         riskStatus: "Safe",
-        chapterTitle: "Tap 1: Menu Mua Ha",
+        chapterTitle: "Tập 1: Menu Mùa Hạ",
         chapterStatus: "Waiting Review",
         taskStatuses: ["Approved", "Paid", "Submitted"],
         annotationStatuses: ["Resolved", "Resolved"],
       }),
       seedProgressSeries({
-        title: "Hoc Vien Rong Den",
-        description: "Hoc vien phep thuat noi cac hoc sinh phai thuan hoa rong bong toi.",
+        title: "Học Viện Rồng Đen",
+        description: "Học viện phép thuật nơi các học sinh phải thuần hóa rồng bóng tối.",
         genre: "Fantasy",
         targetAudience: "Teen",
         author: extraMangakas[2],
         status: "At Risk",
         riskStatus: "Critical",
-        chapterTitle: "Tap 1: Bai Kiem Tra Lua Den",
+        chapterTitle: "Tập 1: Bài Kiểm Tra Lửa Đen",
         chapterDeadline: daysFromNow(-3),
         taskStatuses: ["Assigned", "Revision Requested", "In Progress", "Submitted", "Approved"],
         annotationStatuses: ["Open", "In Progress", "Resolved"],
       }),
       seedProgressSeries({
-        title: "Duong Ray Bien Sau",
-        description: "Chuyen tau ngam ket noi nhung thanh pho duoi day dai duong.",
+        title: "Đường Ray Biển Sâu",
+        description: "Chuyến tàu ngầm kết nối những thành phố dưới đáy đại dương.",
         genre: "Adventure",
         targetAudience: "All Ages",
         author: mangaka,
         status: "Active",
         riskStatus: "Warning",
-        chapterTitle: "Tap 1: Ga So Khong",
+        chapterTitle: "Tập 1: Ga Số Không",
         taskStatuses: ["In Progress", "Submitted", "Approved"],
         annotationStatuses: ["Open", "Resolved", "In Progress"],
       }),
