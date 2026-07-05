@@ -1,4 +1,5 @@
 const Series = require("../../models/SeriesModel");
+const NotificationService = require("../../services/notificationService");
 
 const ALLOWED_STATUSES = [
   "Active",
@@ -49,6 +50,24 @@ exports.updateSeriesStatus = async (req, res) => {
     }
 
     await series.save();
+
+    // Notify the mangaka about the status change
+    const statusLabels = {
+      "Active": "Đang hoạt động",
+      "At Risk": "Có nguy cơ",
+      "Hiatus": "Tạm ngưng",
+      "Cancelled": "Đã hủy",
+      "Completed": "Hoàn thành",
+      "Changed Schedule": "Đổi lịch",
+    };
+    await NotificationService.createNotification({
+      user_id: series.author_id,
+      type: "System",
+      title: "Trạng thái series đã thay đổi",
+      message: `Series "${series.title}" đã được cập nhật trạng thái thành "${statusLabels[status] || status}".`,
+      target_type: "Series",
+      target_id: series._id,
+    });
 
     res.status(200).json({
       message: "Cập nhật trạng thái series thành công",

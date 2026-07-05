@@ -85,6 +85,18 @@ const runSeed = async () => {
       { upsert: true, new: true, setDefaultsOnInsert: true }
     );
 
+    const board = await User.findOneAndUpdate(
+      { email: "board@example.com" },
+      {
+        name: "Lê Hội Đồng",
+        email: "board@example.com",
+        password: hashedPass,
+        role: "Editorial Board",
+        status: "Active"
+      },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
+
     const extraMangakas = await Promise.all([
       User.findOneAndUpdate(
         { email: "aoi.hikari@example.com" },
@@ -125,6 +137,7 @@ const runSeed = async () => {
     console.log(`- Seeded Assistant: ${assistant.email}`);
     console.log(`- Seeded Admin: ${admin.email}`);
     console.log(`- Seeded Editor: ${editor.email}`);
+    console.log(`- Seeded Board: ${board.email}`);
     console.log(`- Seeded Extra Mangakas: ${extraMangakas.map((user) => user.email).join(", ")}`);
 
     // 2. Seed Series, Chapter, Page
@@ -484,68 +497,19 @@ const runSeed = async () => {
 
     console.log(`- Seeded Extra Progress Series: ${extraSeries.map((item) => item.title).join(", ")}`);
 
-    // 7. Seed Notifications
+    // 7. Seeded a few sample notifications for demo
     await Notification.deleteMany({});
-    const allUsers = [mangaka, assistant, admin, editor, ...extraMangakas];
-    let notifCount = 0;
+    const allUsers = [mangaka, assistant, admin, editor, board, ...extraMangakas];
     for (const user of allUsers) {
-      const roleNotifications = [];
-      if (user.role === "Admin") {
-        roleNotifications.push(
-          { type: "System", title: "Chào mừng bạn đến với Hệ thống", message: "Hệ thống quản lý Manga đã sẵn sàng để sử dụng." },
-          { type: "System", title: "Cập nhật tính năng mới", message: "Tính năng thông báo đã được triển khai trên toàn hệ thống." },
-          { type: "Warning", title: "Series 'One Piece' có nguy cơ", message: "Series One Piece đang có ranking thấp trong tháng này. Cần xem xét." },
-          { type: "System", title: "Bảo trì hệ thống sắp diễn ra", message: "Hệ thống sẽ bảo trì vào lúc 20h ngày 10/07/2026." },
-          { type: "Task_Update", title: "Task #123 đang chờ phê duyệt", message: "Task tô bóng chapter 5 đang chờ admin phê duyệt.", target_type: "Task", target_id: task1._id },
-        );
-      } else if (user.role === "Mangaka") {
-        roleNotifications.push(
-          { type: "System", title: "Series 'Kiếm Sĩ Huyền Thoại' đã được duyệt", message: "Series của bạn đã được Editorial Board phê duyệt.", target_type: "Series", target_id: series._id },
-          { type: "System", title: "Series mới được tạo thành công", message: "Series 'Cuộc Chiến Vũ Trụ' đã được tạo." },
-          { type: "Task_Update", title: "Task vẽ background hoàn thành", message: "Trợ lý đã hoàn thành task vẽ background cho Chapter 3.", target_type: "Task", target_id: task1._id },
-          { type: "Task_Update", title: "Task cần chỉnh sửa", message: "Task tô bóng của Trợ lý cần revision. Vui lòng kiểm tra.", target_type: "Task", target_id: task2._id },
-          { type: "Warning", title: "Chapter 5 sắp đến hạn", message: "Chapter 5 cần hoàn thành trước 20/07/2026." },
-          { type: "Task_Update", title: "Chapter 2 đã được publish", message: "Chapter 2 của series 'Kiếm Sĩ Huyền Thoại' đã được xuất bản.", target_type: "Chapter", target_id: chapter._id },
-        );
-      } else if (user.role === "Assistant") {
-        roleNotifications.push(
-          { type: "Task_Update", title: "Task mới được giao", message: "Mangaka vừa giao task vẽ background cho Chapter 4.", target_type: "Task", target_id: task1._id },
-          { type: "Task_Update", title: "Task đã được duyệt", message: "Task tô bóng page #45 đã được Mangaka chấp thuận.", target_type: "Task", target_id: task2._id },
-          { type: "Task_Update", title: "Task cần chỉnh sửa", message: "Task đi nét page #12 bị từ chối. Cần sửa lại theo góp ý.", target_type: "Task", target_id: task3._id },
-          { type: "Warning", title: "Deadline sắp đến hạn", message: "Task vẽ background cần hoàn thành trước 18/07/2026." },
-        );
-      } else if (user.role === "Tantou Editor") {
-        roleNotifications.push(
-          { type: "System", title: "Series mới được phân công", message: "Bạn được phân công phụ trách series 'Kiếm Sĩ Huyền Thoại'." },
-          { type: "Task_Update", title: "Chapter 3 sẵn sàng review", message: "Chapter 3 của series 'Kiếm Sĩ Huyền Thoại' đã hoàn thành và chờ bạn review.", target_type: "Chapter", target_id: chapter._id },
-          { type: "Task_Update", title: "Chapter 1 đã được publish", message: "Chapter 1 của series 'Cuộc Chiến Vũ Trụ' đã được xuất bản." },
-          { type: "Warning", title: "Series cần chú ý", message: "Series 'Kiếm Sĩ Huyền Thoại' đang có dấu hiệu chậm tiến độ." },
-          { type: "Warning", title: "Deadline sắp đến", message: "Chapter 4 cần review trước 22/07/2026." },
-        );
-      } else if (user.role === "Editorial Board") {
-        roleNotifications.push(
-          { type: "System", title: "Series mới chờ duyệt", message: "Series 'Cuộc Chiến Vũ Trụ' cần được phê duyệt." },
-          { type: "Task_Update", title: "Chapter chờ phát hành", message: "Chapter 2 của series 'One Piece' đã sẵn sàng để lên lịch phát hành.", target_type: "Chapter", target_id: chapter._id },
-          { type: "Task_Update", title: "Lịch phát hành cập nhật", message: "Lịch phát hành tháng 8 đã có thay đổi. Vui lòng kiểm tra." },
-          { type: "Warning", title: "Series có nguy cơ", message: "Series 'Naruto' đang có ranking thấp, cần đánh giá lại." },
-        );
-      }
-      for (const notif of roleNotifications) {
-        const randomHoursAgo = Math.floor(Math.random() * 7 * 24);
-        await Notification.create({
-          user_id: user._id,
-          type: notif.type,
-          title: notif.title,
-          message: notif.message,
-          is_read: false,
-          target_type: notif.target_type || null,
-          target_id: notif.target_id || null,
-          createdAt: new Date(Date.now() - randomHoursAgo * 60 * 60 * 1000),
-        });
-        notifCount++;
-      }
+      await Notification.create({
+        user_id: user._id,
+        type: "System",
+        title: "Chào mừng bạn đến với Hệ thống",
+        message: "Hệ thống quản lý Manga đã sẵn sàng. Thông báo sẽ được tạo tự động khi bạn thao tác trên hệ thống.",
+        is_read: false,
+      });
     }
-    console.log(`- Seeded Notifications: ${notifCount} records`);
+    const notifCount = allUsers.length;
 
     console.log("✅ Auto-seeding completed successfully!");
   } catch (err) {
