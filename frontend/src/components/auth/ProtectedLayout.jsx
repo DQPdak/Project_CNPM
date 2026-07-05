@@ -8,7 +8,6 @@ import { getUnreadCountApi } from "../../services/notificationService";
 const ROLE_MENUS = {
   Mangaka: [
     { name: "Series của tôi", path: "/mangaka/series" },
-    { name: "Tạo Chapter mới", path: "/chapter-list" },
     { name: "Quản lý Task Trợ lý", path: "/mangaka/tasks" },
     { name: "Bảng xếp hạng", path: "/mangaka/ranking" },
   ],

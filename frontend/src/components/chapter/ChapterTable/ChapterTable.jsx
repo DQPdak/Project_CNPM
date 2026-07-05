@@ -1,5 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import RequirePermission from "../../security/RequirePermission";
 import "./ChapterTable.css";
 
 // Dịch tiếng Anh sang tiếng Việt hiển thị
@@ -58,12 +59,14 @@ export default function ChapterTable({ chapters }) {
                   >
                     Quản lý bản thảo
                   </Link>
-                  <Link
-                    to={`/publish-approval/${chap._id}`}
-                    className="link-mod10"
-                  >
-                    Trạm xuất bản
-                  </Link>
+                  <RequirePermission required="CAN_PUBLISH_CHAPTER">
+                    <Link
+                      to={`/publish-approval/${chap._id}`}
+                      className="link-mod10"
+                    >
+                      Trạm xuất bản
+                    </Link>
+                  </RequirePermission>
                 </div>
               </td>
             </tr>
