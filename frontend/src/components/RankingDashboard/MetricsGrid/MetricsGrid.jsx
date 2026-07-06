@@ -47,14 +47,9 @@ export default function MetricsGrid({ refreshTrigger, activeFilters }) {
               ) / dataList.length
             : 0;
 
-        // Đếm số lượng rủi ro dựa trên risk_status (Critical/Warning) của MongoDB
+        // Đếm số lượng rủi ro dựa trên cancellationWarning (tổng điểm dưới 500)
         const risk = dataList.filter(
-          (item) =>
-            item.cancellationWarning === true ||
-            item.risk_status === "Critical" ||
-            item.risk_status === "Warning" ||
-            item.series?.risk_status === "Critical" ||
-            item.series?.risk_status === "Warning",
+          (item) => item.cancellationWarning === true,
         ).length;
 
         setMetrics({

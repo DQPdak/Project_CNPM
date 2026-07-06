@@ -57,7 +57,6 @@ const createReleaseIssue = async (req, res) => {
     }
 };
 
-// Xử lý Import dữ liệu bình chọn từ Excel/CSV
 const importVoteData = async (req, res) => {
     const { issueId } = req.params;
     if (!req.file) {
@@ -65,46 +64,106 @@ const importVoteData = async (req, res) => {
     }
 
     try {
-        // Đọc dữ liệu từ luồng buffer của file tải lên
+        // 1. Kiểm tra kỳ phát hành tồn tại
+        const issue = await ReleaseIssue.findOne({ custom_id: issueId }).populate("series_list");
+        if (!issue) {
+            return res.status(404).json({ error: `Không tìm thấy kỳ phát hành với mã: ${issueId}` });
+        }
+
+        // Lấy danh sách ID các bộ truyện được lên kế hoạch trong kỳ phát hành này
+        const plannedSeriesIds = issue.series_list.map(s => s._id.toString());
+
+        // 2. Đọc dữ liệu từ file
         const workbook = xlsx.read(req.file.buffer, { type: 'buffer' });
         const sheetName = workbook.SheetNames[0];
         const sheet = workbook.Sheets[sheetName];
+        
+        // Kiểm tra các cột bắt buộc
+        const headers = xlsx.utils.sheet_to_json(sheet, { header: 1 })[0] || [];
+        const requiredHeaders = ["seriesId", "votes", "avgScore"];
+        const missingHeaders = requiredHeaders.filter(h => !headers.includes(h));
+        if (missingHeaders.length > 0) {
+            return res.status(400).json({ 
+                error: `Cấu trúc file CSV không hợp lệ. Thiếu các cột bắt buộc: ${missingHeaders.join(", ")}` 
+            });
+        }
+
         const rawData = xlsx.utils.sheet_to_json(sheet);
+        if (rawData.length === 0) {
+            return res.status(400).json({ error: "File CSV không chứa dòng dữ liệu nào." });
+        }
 
-        const validVotes = [];
         const seriesStore = await RankingService.getSeriesStore();
+        const validVotes = [];
+        const csvSeriesIds = new Set();
 
-        for (const row of rawData) {
-            if (!row.seriesId) continue;
+        // 3. Kiểm tra chi tiết từng dòng trong file CSV
+        for (let i = 0; i < rawData.length; i++) {
+            const row = rawData[i];
+            const rowNum = i + 2; // Dòng 1 là tiêu đề, data bắt đầu từ dòng 2
 
-            // Tìm kiếm linh hoạt theo ID, slug, hoặc title (không phân biệt hoa thường)
+            if (!row.seriesId) {
+                return res.status(400).json({ 
+                    error: `Lỗi dòng ${rowNum}: Cột 'seriesId' không được để trống.` 
+                });
+            }
+
+            // Tìm kiếm series tương ứng trong DB
             const matchedSeries = seriesStore.find(s => 
                 s.id === row.seriesId || 
                 (s.slug && s.slug.toLowerCase() === row.seriesId.toString().toLowerCase()) ||
                 (s.name && s.name.toLowerCase() === row.seriesId.toString().toLowerCase())
             );
 
-            // Nếu không tìm thấy truyện, bỏ qua dòng này để import diễn ra mượt mà
             if (!matchedSeries) {
-                console.warn(`Bỏ qua dòng import do không tìm thấy Series: ${row.seriesId}`);
-                continue;
+                return res.status(400).json({ 
+                    error: `Lỗi dòng ${rowNum}: Không tìm thấy bộ truyện có mã/tên '${row.seriesId}' trong hệ thống.` 
+                });
             }
 
-            // Đảm bảo số phiếu bầu và điểm số hợp lệ, bỏ qua nếu âm
+            // Kiểm tra số phiếu (votes)
             const votes = parseInt(row.votes);
-            const avgScore = parseFloat(row.avgScore);
-
-            if (isNaN(votes) || votes < 0 || isNaN(avgScore) || avgScore < 0) {
-                continue;
+            if (isNaN(votes) || votes < 0) {
+                return res.status(400).json({ 
+                    error: `Lỗi dòng ${rowNum}: Số phiếu bầu 'votes' phải là số nguyên không âm (nhận được: '${row.votes}').` 
+                });
             }
+
+            // Kiểm tra điểm số trung bình (avgScore)
+            const avgScore = parseFloat(row.avgScore);
+            if (isNaN(avgScore) || avgScore < 0 || avgScore > 10) {
+                return res.status(400).json({ 
+                    error: `Lỗi dòng ${rowNum}: Điểm trung bình 'avgScore' phải là số từ 0 đến 10 (nhận được: '${row.avgScore}').` 
+                });
+            }
+
+            const seriesIdStr = matchedSeries.id;
+            csvSeriesIds.add(seriesIdStr);
 
             validVotes.push({
-                seriesId: matchedSeries.id,
+                seriesId: seriesIdStr,
                 votes: votes,
                 avgScore: avgScore,
                 comments: parseInt(row.comments || 0),
                 views: parseInt(row.views || 0)
             });
+        }
+
+        // 4. Kiểm tra số lượng truyện có khớp với kỳ phát hành hay không
+        if (csvSeriesIds.size !== plannedSeriesIds.length) {
+            return res.status(400).json({
+                error: `Số lượng bộ truyện trong file CSV (${csvSeriesIds.size} bộ) không khớp với số lượng được lên kế hoạch của kỳ phát hành này (${plannedSeriesIds.length} bộ).`
+            });
+        }
+
+        // 5. Kiểm tra tính trùng khớp của danh sách truyện
+        for (const id of csvSeriesIds) {
+            if (!plannedSeriesIds.includes(id)) {
+                const nonPlannedSeries = seriesStore.find(s => s.id === id);
+                return res.status(400).json({
+                    error: `Bộ truyện '${nonPlannedSeries ? nonPlannedSeries.name : id}' không nằm trong kế hoạch phát hành của kỳ này.`
+                });
+            }
         }
 
         // Thực thi thuật toán xếp hạng và lưu DB
