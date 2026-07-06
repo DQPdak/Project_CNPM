@@ -25,6 +25,10 @@ export default function RankingDashboardPage() {
 
   // State dùng chung tối thiểu để các component đồng bộ khi có cập nhật lớn
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [activeFilters, setActiveFilters] = useState({
+    issueId: "",
+    genre: "",
+  });
 
   const handleRefreshAll = () => {
     setRefreshTrigger((prev) => prev + 1);
@@ -68,10 +72,14 @@ export default function RankingDashboardPage() {
         ) : (
           <>
             {/* Component quản lý các thẻ đo lường metrics */}
-            <MetricsGrid refreshTrigger={refreshTrigger} />
+            <MetricsGrid refreshTrigger={refreshTrigger} activeFilters={activeFilters} />
 
             {/* Component quản lý bảng xếp hạng và các bộ lọc */}
-            <LeaderboardPanel refreshTrigger={refreshTrigger} />
+            <LeaderboardPanel
+              refreshTrigger={refreshTrigger}
+              activeFilters={activeFilters}
+              setActiveFilters={setActiveFilters}
+            />
 
             {/* Component biểu đồ hiệu suất xử lý API riêng */}
             <PerformanceChartPanel

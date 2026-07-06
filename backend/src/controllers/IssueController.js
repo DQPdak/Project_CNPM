@@ -2,6 +2,15 @@ const RankingService = require("../services/RankingService");
 const ReleaseIssue = require("../models/ReleaseIssueModel");
 const xlsx = require('xlsx');
 
+const getReleaseIssues = async (req, res) => {
+    try {
+        const issues = await ReleaseIssue.find({}).populate("series_list");
+        res.status(200).json({ success: true, data: issues });
+    } catch (error) {
+        res.status(500).json({ error: "Lỗi hệ thống khi lấy danh sách kỳ phát hành: " + error.message });
+    }
+};
+
 // Tạo Kỳ phát hành mới kèm Validate đầu vào
 const createReleaseIssue = async (req, res) => {
     try {
@@ -108,4 +117,4 @@ const importVoteData = async (req, res) => {
     }
 };
 
-module.exports = { createReleaseIssue, importVoteData };
+module.exports = { getReleaseIssues, createReleaseIssue, importVoteData };

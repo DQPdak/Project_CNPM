@@ -6,18 +6,18 @@ import Loading from "../../../common/Loading/Loading";
 
 const numberFormatter = new Intl.NumberFormat("vi-VN");
 
-export default function LeaderboardPanel({ refreshTrigger }) {
+export default function LeaderboardPanel({ refreshTrigger, activeFilters, setActiveFilters }) {
   const [rows, setRows] = useState([]);
   const [filters, setFilters] = useState({
-    issueId: "",
-    genre: "",
+    issueId: activeFilters?.issueId || "",
+    genre: activeFilters?.genre || "",
   });
   const [loading, setLoading] = useState(true);
   const [dynamicGenres, setDynamicGenres] = useState([]);
 
   const fetchRows = useCallback(async () => {
     setLoading(true);
-    const result = await getLeaderboard(filters);
+    const result = await getLeaderboard(activeFilters || {});
     const dataList = Array.isArray(result) ? result : result?.data || [];
 
     // CHUẨN HÓA DỮ LIỆU TỪ DB TRƯỚC KHI RENDER
@@ -41,7 +41,7 @@ export default function LeaderboardPanel({ refreshTrigger }) {
 
     setRows(mappedRows);
     setLoading(false);
-  }, [filters]);
+  }, [activeFilters]);
 
   useEffect(() => {
     const loadDynamicGenres = async () => {
@@ -71,8 +71,11 @@ export default function LeaderboardPanel({ refreshTrigger }) {
 
   useEffect(() => {
     fetchRows();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [refreshTrigger]);
+  }, [refreshTrigger, fetchRows]);
+
+  const handleFilterClick = () => {
+    setActiveFilters(filters);
+  };
 
   return (
     <section className="neo-panel">
@@ -105,7 +108,7 @@ export default function LeaderboardPanel({ refreshTrigger }) {
           <button
             className="btn-primary !py-2 !px-4"
             type="button"
-            onClick={fetchRows}
+            onClick={handleFilterClick}
             disabled={loading}
           >
             Lọc

@@ -4,7 +4,7 @@ import getLeaderboard from "../../../services/ranking/getLeaderboardService";
 
 const numberFormatter = new Intl.NumberFormat("vi-VN");
 
-export default function MetricsGrid({ refreshTrigger }) {
+export default function MetricsGrid({ refreshTrigger, activeFilters }) {
   const [metrics, setMetrics] = useState({
     topSeries: "Chưa có",
     totalVotes: 0,
@@ -14,10 +14,18 @@ export default function MetricsGrid({ refreshTrigger }) {
 
   useEffect(() => {
     const loadMetrics = async () => {
-      const result = await getLeaderboard({});
+      const result = await getLeaderboard(activeFilters || {});
       if (result && result.success !== false) {
         const dataList = Array.isArray(result) ? result : result.data || [];
-        if (dataList.length === 0) return;
+        if (dataList.length === 0) {
+          setMetrics({
+            topSeries: "Chưa có",
+            totalVotes: 0,
+            avgScore: 0,
+            riskCount: 0,
+          });
+          return;
+        }
 
         // MAPPING DỮ LIỆU
         // Ưu tiên đọc từ 'title' nếu 'seriesName' không tồn tại
@@ -58,7 +66,7 @@ export default function MetricsGrid({ refreshTrigger }) {
       }
     };
     loadMetrics();
-  }, [refreshTrigger]);
+  }, [refreshTrigger, activeFilters]);
 
   return (
     <section className="metrics-grid" aria-label="Thống kê xếp hạng">
