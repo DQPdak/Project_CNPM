@@ -10,14 +10,20 @@ const parseResponse = async (response) => {
   return response.json();
 };
 
-const buildHeaders = (headers = {}, accessToken) => {
+const buildHeaders = (headers = {}, accessToken, body) => {
   const finalHeaders = new Headers(headers);
   if (accessToken) {
     finalHeaders.set("Authorization", `Bearer ${accessToken}`);
   }
+  // Khi body là FormData, để browser tự set Content-Type kèm boundary
+  // Nếu set thủ công sẽ thiếu boundary → lỗi "Failed to fetch"
+  if (body instanceof FormData) {
+    finalHeaders.delete("Content-Type");
+  }
 
   return finalHeaders;
 };
+
 
 const getErrorMessage = (data) => {
   if (!data) {
@@ -38,7 +44,7 @@ export const apiFetch = async (path, options = {}) => {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
     credentials: "include",
-    headers: buildHeaders(options.headers, accessToken),
+    headers: buildHeaders(options.headers, accessToken, options.body),
   });
 
   if (response.status === 401 && !options._retry) {
@@ -50,7 +56,7 @@ export const apiFetch = async (path, options = {}) => {
         ...options,
         _retry: undefined,
         credentials: "include",
-        headers: buildHeaders(options.headers, nextState.accessToken),
+        headers: buildHeaders(options.headers, nextState.accessToken, options.body),
       });
 
       const retriedData = await parseResponse(retriedResponse);

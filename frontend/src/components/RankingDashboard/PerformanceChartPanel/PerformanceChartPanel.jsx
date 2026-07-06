@@ -1,189 +1,211 @@
-import { useState, useEffect, useMemo } from "react";
-import { LineChart as LineChartIcon } from "lucide-react";
+import { useState, useEffect } from "react";
+import { BarChart3 } from "lucide-react";
 import {
-  ComposedChart,
-  Line,
+  BarChart,
   Bar,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
+  Cell
 } from "recharts";
-
-// 1. BỔ SUNG IMPORTS: Lấy user và các hàm gọi API theo Role
-import { useAuthStore } from "../../../stores/authStore";
-import getMySeries from "../../../services/series/getMySeriesService";
-import {
-  getEditorSeries,
-  getAllSeries,
-} from "../../../services/series/getSeriesByRoleService";
-
-import getPerformanceChartData from "../../../services/ranking/getPerformanceChartDataService";
+import getLeaderboard from "../../../services/ranking/getLeaderboardService";
 
 export default function PerformanceChartPanel({ refreshTrigger }) {
-  const [seriesOptions, setSeriesOptions] = useState([]);
-  const [selectedId, setSelectedId] = useState("");
+  const [issues, setIssues] = useState([]);
+  const [selectedIssue, setSelectedIssue] = useState("");
   const [chartData, setChartData] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // 2. LẤY THÔNG TIN USER TỪ STORE
-  const user = useAuthStore((state) => state.user);
-
+  // 1. Tải danh sách các kỳ phát hành duy nhất
   useEffect(() => {
-    const loadSeriesList = async () => {
-      if (!user) return;
-
-      let result;
-      // 3. TỰ ĐỘNG PHÂN LUỒNG API THEO ROLE CỦA NGƯỜI ĐĂNG NHẬP
-      if (user.role === "Mangaka") {
-        result = await getMySeries();
-      } else if (user.role === "Tantou Editor") {
-        result = await getEditorSeries();
-      } else {
-        result = await getAllSeries();
-      }
-
+    const loadIssuesList = async () => {
+      setLoading(true);
+      const result = await getLeaderboard({});
       if (result && result.success !== false) {
-        const dataList = result.series || (Array.isArray(result) ? result : []);
-        const formatted = dataList.map((s) => ({
-          // Bắt chuẩn biến thể ID và Tên từ các luồng API khác nhau
-          id: s.series?._id || s._id || s.id,
-          name: s.series?.title || s.title || s.name || "Chưa có tên",
-        }));
+        const dataList = Array.isArray(result) ? result : result?.data || [];
+        
+        // Trích xuất danh sách các Kỳ phát hành duy nhất và sắp xếp mới nhất lên đầu
+        let uniqueIssues = result?.availableIssues || [];
+        if (uniqueIssues.length === 0) {
+          const allIssueIds = dataList.map((item) => item.issueId).filter(Boolean);
+          uniqueIssues = [...new Set(allIssueIds)].sort((a, b) => b.localeCompare(a));
+        }
+        
+        setIssues(uniqueIssues);
+        if (uniqueIssues.length > 0) {
+          setSelectedIssue((prev) => {
+            if (prev && uniqueIssues.includes(prev)) {
+              return prev;
+            }
+            return uniqueIssues[0];
+          });
+        }
+      }
+      setLoading(false);
+    };
+    loadIssuesList();
+  }, [refreshTrigger]);
 
-        setSeriesOptions(formatted);
-        if (formatted.length > 0) setSelectedId(formatted[0].id);
+  // 2. Tải dữ liệu các bộ truyện thuộc kỳ phát hành được chọn
+  useEffect(() => {
+    if (!selectedIssue) return;
+    const loadChartData = async () => {
+      const result = await getLeaderboard({ issueId: selectedIssue });
+      if (result && result.success !== false) {
+        const dataList = Array.isArray(result) ? result : result?.data || [];
+        
+        // Format dữ liệu vẽ biểu đồ, xếp từ tổng điểm cao nhất -> thấp
+        const formatted = dataList.map((item) => ({
+          name: item.seriesName,
+          totalScore: item.totalScore,
+          currentRank: item.currentRank,
+          votes: item.votes,
+          avgScore: item.avgScore,
+          cancellationWarning: item.cancellationWarning
+        })).sort((a, b) => b.totalScore - a.totalScore);
+
+        setChartData(formatted);
       }
     };
-    loadSeriesList();
-  }, [refreshTrigger, user]);
+    loadChartData();
+  }, [selectedIssue, refreshTrigger]);
 
-  useEffect(() => {
-    if (!selectedId) return;
-    const loadChart = async () => {
-      const result = await getPerformanceChartData(selectedId);
-      setChartData(Array.isArray(result) ? result : []);
-    };
-    loadChart();
-  }, [selectedId, refreshTrigger]);
+  // Render nhãn hiển thị thứ hạng trên đầu cột
+  const renderCustomizedLabel = (props) => {
+    const { x, y, width, value } = props;
+    return (
+      <text
+        x={x + width / 2}
+        y={y - 8}
+        fill="#374151"
+        textAnchor="middle"
+        fontSize={12}
+        fontWeight="bold"
+      >
+        {value}đ
+      </text>
+    );
+  };
 
-  const activeName = useMemo(() => {
-    return seriesOptions.find((s) => s.id === selectedId)?.name || "Manga";
-  }, [selectedId, seriesOptions]);
+  // Custom Tooltip hiển thị kính mờ (Glassmorphism) cực kỳ đẹp và trực quan
+  const CustomTooltip = ({ active, payload }) => {
+    if (active && payload && payload.length) {
+      const data = payload[0].payload;
+      return (
+        <div
+          className="custom-tooltip"
+          style={{
+            background: "rgba(255, 255, 255, 0.9)",
+            border: "1px solid #e2e8f0",
+            padding: "12px",
+            borderRadius: "8px",
+            boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)"
+          }}
+        >
+          <p style={{ margin: 0, fontWeight: "bold", color: "#1e293b" }}>{data.name}</p>
+          <p style={{ margin: "4px 0 0", fontSize: "13px", color: "#4f46e5" }}>
+            <strong>Hạng:</strong> #{data.currentRank}
+          </p>
+          <p style={{ margin: "2px 0 0", fontSize: "13px", color: "#0f172a" }}>
+            <strong>Tổng điểm:</strong> {data.totalScore}
+          </p>
+          <p style={{ margin: "2px 0 0", fontSize: "13px", color: "#475569" }}>
+            <strong>Số phiếu:</strong> {data.votes}
+          </p>
+          <p style={{ margin: "2px 0 0", fontSize: "13px", color: "#475569" }}>
+            <strong>Điểm TB:</strong> {data.avgScore}
+          </p>
+          {data.cancellationWarning && (
+            <p style={{ margin: "4px 0 0", fontSize: "12px", color: "#ef4444", fontWeight: "bold" }}>
+              ⚠️ Nguy cơ cao (Tổng điểm &lt; 500)
+            </p>
+          )}
+        </div>
+      );
+    }
+    return null;
+  };
 
   return (
     <section className="neo-panel mt-8">
       <div className="ranking-toolbar">
         <div className="panel-title border-b-0 mb-0">
-          <LineChartIcon size={24} />
-          <h2>Biểu đồ hiệu suất (10 kỳ gần nhất)</h2>
+          <BarChart3 size={24} />
+          <h2>So sánh điểm số manga trong kỳ</h2>
         </div>
 
-        {/* 4. TỐI ƯU UX: Khóa dropdown nếu chỉ có 1 truyện hoặc đang tải */}
         <select
           className="neo-select !w-auto max-w-xs"
-          value={selectedId}
-          onChange={(e) => setSelectedId(e.target.value)}
-          disabled={seriesOptions.length <= 1}
+          value={selectedIssue}
+          onChange={(e) => setSelectedIssue(e.target.value)}
+          disabled={loading || issues.length === 0}
         >
-          {seriesOptions.map((s) => (
-            <option key={s.id} value={s.id}>
-              {s.name}
+          {issues.map((issue) => (
+            <option key={issue} value={issue}>
+              Kỳ phát hành: {issue}
             </option>
           ))}
         </select>
       </div>
 
-      <div style={{ width: "100%", height: 400, marginTop: "24px" }}>
-        {!chartData.length ? (
+      <div style={{ width: "100%", height: 400, marginTop: "32px" }}>
+        {loading ? (
+          <div className="ranking-empty">Đang tải danh sách kỳ phát hành...</div>
+        ) : !chartData.length ? (
           <div className="ranking-empty">
-            Chưa có lịch sử hiệu suất cho truyện này.
+            Chưa có dữ liệu so sánh cho kỳ phát hành này.
           </div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
-            <ComposedChart
+            <BarChart
               data={chartData}
-              margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
+              margin={{ top: 24, right: 20, bottom: 20, left: 20 }}
             >
               <CartesianGrid
                 strokeDasharray="3 3"
                 vertical={false}
-                stroke="#e0e0e0"
+                stroke="#e2e8f0"
               />
-
               <XAxis
-                dataKey="issueId"
+                dataKey="name"
                 axisLine={false}
                 tickLine={false}
-                tick={{ fill: "#666", fontSize: 12 }}
+                tick={{ fill: "#475569", fontSize: 13, fontWeight: 500 }}
                 dy={10}
               />
-
               <YAxis
-                yAxisId="left"
-                orientation="left"
                 axisLine={false}
                 tickLine={false}
-                tick={{ fill: "#4f46e5", fontWeight: 600 }}
+                tick={{ fill: "#64748b" }}
                 label={{
-                  value: "Điểm TB",
+                  value: "Tổng điểm",
                   angle: -90,
                   position: "insideLeft",
-                  fill: "#4f46e5",
-                  dx: -10,
+                  fill: "#64748b",
+                  dx: -10
                 }}
               />
-
-              <YAxis
-                yAxisId="right"
-                orientation="right"
-                reversed={true}
-                axisLine={false}
-                tickLine={false}
-                tick={{ fill: "#f59e0b", fontWeight: 600 }}
-                domain={[1, "dataMax"]}
-                allowDecimals={false}
-                label={{
-                  value: "Hạng",
-                  angle: 90,
-                  position: "insideRight",
-                  fill: "#f59e0b",
-                  dx: 10,
-                }}
-              />
-
-              <Tooltip
-                contentStyle={{
-                  borderRadius: "8px",
-                  border: "none",
-                  boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                }}
-              />
-              <Legend verticalAlign="top" height={40} />
-
+              <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(226, 232, 240, 0.4)" }} />
               <Bar
-                yAxisId="left"
-                dataKey="avgScore"
-                name="Điểm Trung Bình"
-                barSize={32}
-                fill="#4f46e5"
-                radius={[4, 4, 0, 0]}
-                animationDuration={1500}
-              />
-
-              <Line
-                yAxisId="right"
-                type="monotone"
-                dataKey="rank"
-                name="Thứ hạng"
-                stroke="#f59e0b"
-                strokeWidth={3}
-                dot={{ r: 5, fill: "#f59e0b", strokeWidth: 2, stroke: "#fff" }}
-                activeDot={{ r: 8 }}
-                animationDuration={1500}
-              />
-            </ComposedChart>
+                dataKey="totalScore"
+                name="Tổng điểm"
+                barSize={45}
+                radius={[6, 6, 0, 0]}
+                label={{ content: renderCustomizedLabel, position: "top" }}
+              >
+                {chartData.map((entry, index) => {
+                  const isWarning = entry.cancellationWarning;
+                  return (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={isWarning ? "#f59e0b" : "#4f46e5"}
+                    />
+                  );
+                })}
+              </Bar>
+            </BarChart>
           </ResponsiveContainer>
         )}
       </div>

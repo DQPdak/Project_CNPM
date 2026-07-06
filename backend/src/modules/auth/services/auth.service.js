@@ -249,6 +249,14 @@ const createUser = async ({ name, email, password, role, status = "Active" }) =>
     status,
   });
 
+  // Welcome notification for new user
+  await NotificationService.createNotification({
+    user_id: user._id,
+    type: "System",
+    title: "Chào mừng bạn đến với Hệ thống",
+    message: `Chào mừng ${name} đến với Hệ thống quản lý Manga. Tài khoản ${role} của bạn đã được tạo thành công.`,
+  });
+
   return { user: sanitizeUser(user) };
 };
 

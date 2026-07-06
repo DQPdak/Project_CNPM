@@ -25,14 +25,17 @@ const getLeaderboard = async (req, res) => {
       );
     }
 
-    let targetIssueId = issueId;
-    if (!targetIssueId && records.length > 0) {
+    let allAvailableIssues = [];
+    if (records.length > 0) {
       const allIssueIds = records.map((record) => record.issueId);
-
-      const uniqueSortedIssues = [...new Set(allIssueIds)].sort((a, b) =>
+      allAvailableIssues = [...new Set(allIssueIds)].sort((a, b) =>
         b.localeCompare(a),
       );
-      targetIssueId = uniqueSortedIssues[0];
+    }
+
+    let targetIssueId = issueId;
+    if (!targetIssueId && allAvailableIssues.length > 0) {
+      targetIssueId = allAvailableIssues[0];
     }
 
     if (targetIssueId) {
@@ -61,7 +64,10 @@ const getLeaderboard = async (req, res) => {
       };
     });
 
-    res.json(detailedRecords);
+    res.json({
+      data: detailedRecords,
+      availableIssues: allAvailableIssues
+    });
   } catch (error) {
     res
       .status(500)

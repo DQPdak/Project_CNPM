@@ -3,6 +3,7 @@ const Series = require("../../models/SeriesModel");
 const {
   canAccessSeries,
 } = require("../../modules/authorization/middlewares/scope");
+const NotificationService = require("../../services/notificationService");
 
 exports.Chapter = async (req, res) => {
   try {
@@ -30,6 +31,20 @@ exports.Chapter = async (req, res) => {
     });
 
     await newChapter.save();
+
+    // Notify the series author and editor about new chapter
+    const notifyUsers = [series.author_id];
+    if (series.editor_id) notifyUsers.push(series.editor_id);
+    for (const userId of notifyUsers) {
+      await NotificationService.createNotification({
+        user_id: userId,
+        type: "Task_Update",
+        title: "Chapter mới được tạo",
+        message: `Chapter ${chapter_number}: "${title}" vừa được tạo cho series "${series.title}".`,
+        target_type: "Chapter",
+        target_id: newChapter._id,
+      });
+    }
 
     return res.status(201).json({
       message: "Tạo chapter thành công",

@@ -8,9 +8,8 @@ import { getUnreadCountApi } from "../../services/notificationService";
 const ROLE_MENUS = {
   Mangaka: [
     { name: "Series của tôi", path: "/mangaka/series" },
-    { name: "Tạo Chapter mới", path: "/chapter-list" },
     { name: "Quản lý Task Trợ lý", path: "/mangaka/tasks" },
-    { name: "Ranking Series", path: "/mangaka/ranking" },
+    { name: "Bảng xếp hạng", path: "/mangaka/ranking" },
   ],
   Assistant: [
     { name: "Công việc của tôi", path: "/assistant/tasks" },
@@ -20,19 +19,19 @@ const ROLE_MENUS = {
     { name: "Series phụ trách", path: "/editor/series" },
     { name: "Biên tập & Phản hồi", path: "/editor/feedbacks" },
     { name: "Tiến độ Studio", path: "/editor/progress" },
-    { name: "Ranking Series", path: "/editor/ranking" },
+    { name: "Bảng xếp hạng", path: "/editor/ranking" },
   ],
   "Editorial Board": [
     { name: "Danh sách Series", path: "/board/all-series" },
     { name: "Duyệt Series Mới", path: "/board/reviews" },
     { name: "Series có nguy cơ", path: "/board/at-risk" },
     { name: "Quản lý Phát hành", path: "/board/releases" },
-    { name: "Bảng xếp hạng (Ranking)", path: "/board/ranking" },
+    { name: "Bảng xếp hạng", path: "/board/ranking" },
   ],
   Admin: [
     { name: "Quản lý User", path: "/admin/users" },
     { name: "Quản lý Phát hành", path: "/admin/releases" },
-    { name: "Ranking & Vote", path: "/admin/ranking" },
+    { name: "Bảng xếp hạng", path: "/admin/ranking" },
     { name: "Quản lý tiến độ", path: "/editor/progress" },
     { name: "Danh sách Series", path: "/board/all-series" },
     { name: "Duyệt Series Mới", path: "/board/reviews" },

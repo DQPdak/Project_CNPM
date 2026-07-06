@@ -1,6 +1,7 @@
 const Series = require("../../models/SeriesModel");
 const SeriesProposal = require("../../models/SeriesProposalModel");
 const BoardVote = require("../../models/BoardVoteModel");
+const NotificationService = require("../../services/notificationService");
 
 const SCHEDULE_VALUES = ["weekly", "monthly", "one-shot", "online only"];
 
@@ -67,6 +68,21 @@ exports.finalizeSeries = async (req, res) => {
 
     await proposal.save();
     await series.save();
+
+    // Notify the mangaka about the final decision
+    const decisionLabels = {
+      "Approve": "Đã được duyệt",
+      "Reject": "Đã bị từ chối",
+      "Need Revision": "Cần chỉnh sửa lại",
+    };
+    await NotificationService.createNotification({
+      user_id: series.author_id,
+      type: "System",
+      title: `Kết quả duyệt series: ${decisionLabels[decision] || decision}`,
+      message: `Series "${series.title}" đã có kết quả duyệt: ${decisionLabels[decision] || decision}.`,
+      target_type: "Series",
+      target_id: series._id,
+    });
 
     return res.status(200).json({
       message: "Tổng hợp kết quả duyệt thành công",

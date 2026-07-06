@@ -11,7 +11,6 @@ export default function LeaderboardPanel({ refreshTrigger }) {
   const [filters, setFilters] = useState({
     issueId: "",
     genre: "",
-    authorId: "",
   });
   const [loading, setLoading] = useState(true);
   const [dynamicGenres, setDynamicGenres] = useState([]);
@@ -72,7 +71,8 @@ export default function LeaderboardPanel({ refreshTrigger }) {
 
   useEffect(() => {
     fetchRows();
-  }, [fetchRows, refreshTrigger]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refreshTrigger]);
 
   return (
     <section className="neo-panel">
@@ -102,14 +102,6 @@ export default function LeaderboardPanel({ refreshTrigger }) {
               </option>
             ))}
           </select>
-          <input
-            className="neo-input !py-2 !w-auto"
-            value={filters.authorId}
-            onChange={(e) =>
-              setFilters({ ...filters, authorId: e.target.value })
-            }
-            placeholder="Author ID..."
-          />
           <button
             className="btn-primary !py-2 !px-4"
             type="button"

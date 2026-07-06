@@ -61,7 +61,8 @@ class RankingService {
           cancellationWarning: r.cancellationWarning,
           risk_status: r.series_id.risk_status || "Safe",
         };
-      });
+      })
+      .sort((a, b) => a.currentRank - b.currentRank);
   }
 
   /**
@@ -141,9 +142,9 @@ class RankingService {
           views: vote.views || 0,
           comments: vote.comments || 0,
           totalScore,
-          currentRank: 0,
+          rank: 0,
           trend: "NEW",
-          cancellationWarning: false,
+          cancellationWarning: totalScore < 500,
         });
       } catch (err) {
         console.error("Lỗi xử lý vote:", err.message);
@@ -155,7 +156,7 @@ class RankingService {
 
     processedVotes.sort((a, b) => b.totalScore - a.totalScore);
     processedVotes.forEach((item, index) => {
-      item.currentRank = index + 1;
+      item.rank = index + 1;
     });
 
     // Lưu dữ liệu vào Ranking/ReaderVote đồng loạt (Promise.all)
