@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { BarChart3 } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { BarChart3, ChevronDown } from "lucide-react";
 import {
   BarChart,
   Bar,
@@ -17,29 +17,42 @@ export default function PerformanceChartPanel({ refreshTrigger }) {
   const [selectedIssue, setSelectedIssue] = useState("");
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
 
-  // 1. Tải danh sách các kỳ phát hành duy nhất
+  // Óng ngắm click bên ngoài để đóng dropdown
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // 1. Tải danh sách các kỳ phát hành dụy nhất
   useEffect(() => {
     const loadIssuesList = async () => {
       setLoading(true);
       const result = await getLeaderboard({});
       if (result && result.success !== false) {
-        const dataList = Array.isArray(result) ? result : result?.data || [];
-        
-        // Trích xuất danh sách các Kỳ phát hành duy nhất và sắp xếp mới nhất lên đầu
-        let uniqueIssues = result?.availableIssues || [];
-        if (uniqueIssues.length === 0) {
-          const allIssueIds = dataList.map((item) => item.issueId).filter(Boolean);
-          uniqueIssues = [...new Set(allIssueIds)].sort((a, b) => b.localeCompare(a));
+        // Sử dụng availableIssues trực tiếp từ backend (object {id, label, createdAt})
+        // Đã được sắp xếp theo createdAt giảm dần phía backend
+        let issueList = result?.availableIssues || [];
+
+        // Fallback nếu backend cũ vẫn trả về mảng string
+        if (issueList.length > 0 && typeof issueList[0] === "string") {
+          issueList = issueList.map(id => ({ id, label: id }));
+          issueList.sort((a, b) => b.id.localeCompare(a.id));
         }
-        
-        setIssues(uniqueIssues);
-        if (uniqueIssues.length > 0) {
+
+        setIssues(issueList);
+        if (issueList.length > 0) {
           setSelectedIssue((prev) => {
-            if (prev && uniqueIssues.includes(prev)) {
-              return prev;
-            }
-            return uniqueIssues[0];
+            const isStillValid = issueList.some(iss => iss.id === prev);
+            if (prev && isStillValid) return prev;
+            return issueList[0].id;
           });
         }
       }
@@ -136,18 +149,92 @@ export default function PerformanceChartPanel({ refreshTrigger }) {
           <h2>So sánh điểm số manga trong kỳ</h2>
         </div>
 
-        <select
-          className="neo-select !w-auto max-w-xs"
-          value={selectedIssue}
-          onChange={(e) => setSelectedIssue(e.target.value)}
-          disabled={loading || issues.length === 0}
+        {/* Scrollable custom dropdown cho kỳ phát hành */}
+        <div
+          ref={dropdownRef}
+          style={{ position: "relative", display: "inline-block", minWidth: "220px" }}
         >
-          {issues.map((issue) => (
-            <option key={issue} value={issue}>
-              Kỳ phát hành: {issue}
-            </option>
-          ))}
-        </select>
+          {/* Nút trigger */}
+          <button
+            type="button"
+            className="neo-select !w-auto"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: "8px",
+              minWidth: "220px",
+              cursor: loading || issues.length === 0 ? "not-allowed" : "pointer",
+              opacity: loading || issues.length === 0 ? 0.6 : 1,
+            }}
+            onClick={() => !loading && issues.length > 0 && setDropdownOpen((o) => !o)}
+            disabled={loading || issues.length === 0}
+          >
+            <span>
+              {selectedIssue
+                ? (issues.find(i => i.id === selectedIssue)?.label || `Kỳ phát hành: ${selectedIssue}`)
+                : "Chọn kỳ phát hành"}
+            </span>
+            <ChevronDown
+              size={16}
+              style={{
+                flexShrink: 0,
+                transition: "transform 0.2s",
+                transform: dropdownOpen ? "rotate(180deg)" : "rotate(0deg)",
+              }}
+            />
+          </button>
+
+          {/* Danh sách kỳ – scroll bên trong, không ảnh hưởng layout trang */}
+          {dropdownOpen && (
+            <ul
+              style={{
+                position: "absolute",
+                top: "calc(100% + 4px)",
+                right: 0,
+                zIndex: 9999,
+                background: "#fff",
+                border: "2px solid #111",
+                borderRadius: "6px",
+                boxShadow: "4px 4px 0 #111",
+                maxHeight: "260px",
+                overflowY: "auto",
+                overflowX: "hidden",
+                minWidth: "220px",
+                margin: 0,
+                padding: "4px 0",
+                listStyle: "none",
+              }}
+            >
+              {issues.map((issue) => (
+                <li
+                  key={issue.id}
+                  onClick={() => {
+                    setSelectedIssue(issue.id);
+                    setDropdownOpen(false);
+                  }}
+                  style={{
+                    padding: "8px 14px",
+                    cursor: "pointer",
+                    fontWeight: selectedIssue === issue.id ? "700" : "500",
+                    fontSize: "14px",
+                    background: selectedIssue === issue.id ? "#111" : "transparent",
+                    color: selectedIssue === issue.id ? "#fff" : "#111",
+                    transition: "background 0.15s",
+                  }}
+                  onMouseEnter={(e) => {
+                    if (selectedIssue !== issue.id) e.currentTarget.style.background = "#f3f4f6";
+                  }}
+                  onMouseLeave={(e) => {
+                    if (selectedIssue !== issue.id) e.currentTarget.style.background = "transparent";
+                  }}
+                >
+                  {issue.label || issue.id}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </div>
 
       <div style={{ width: "100%", height: 400, marginTop: "32px" }}>
