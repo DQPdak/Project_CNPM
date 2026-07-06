@@ -68,7 +68,7 @@ export default function PerformanceChartPanel({ refreshTrigger }) {
       const result = await getLeaderboard({ issueId: selectedIssue });
       if (result && result.success !== false) {
         const dataList = Array.isArray(result) ? result : result?.data || [];
-        
+
         // Format dữ liệu vẽ biểu đồ, xếp từ tổng điểm cao nhất -> thấp
         const formatted = dataList.map((item) => ({
           name: item.seriesName,
