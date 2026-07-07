@@ -90,6 +90,10 @@ export default function BoardSeriesReviewPage() {
 
   const { series, proposal, votes } = data;
   const canVote = ["Submitted", "Under Review"].includes(proposal?.status);
+  const backPath = canVote ? "/board/reviews" : "/board/all-series";
+  const backLabel = canVote
+    ? "← Quay lại danh sách chờ duyệt"
+    : "← Quay lại danh sách series";
   const myVote = votes?.find(
     (v) => String(v.board_member_id?._id) === String(currentUser?.id),
   );
@@ -97,8 +101,8 @@ export default function BoardSeriesReviewPage() {
 
   return (
     <div className="board-review-wrapper">
-      <Link to="/board/reviews" className="back-link">
-        ← Quay lại danh sách chờ duyệt
+      <Link to={backPath} className="back-link">
+        {backLabel}
       </Link>
 
       <header className="page-header">

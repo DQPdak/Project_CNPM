@@ -116,7 +116,8 @@ export default function PageWorkspacePage() {
 
   useEffect(() => {
     fetchAllData();
-  }, [fetchAllData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pageId]);
 
   // ── Annotation: Click ảnh để đặt pin ─────────────────────
   const handleImageClick = (e) => {
@@ -312,8 +313,7 @@ export default function PageWorkspacePage() {
         throw new Error(taskRes.message || "Lỗi giao việc");
       }
       toast.success("Đã giao việc thành công cho Assistant!");
-      setRegions((prev) => [...prev, regionRes.region]);
-      setTasks((prev) => [...prev, taskRes.task]);
+      await fetchAllData();
       setShowTaskModal(false);
       setTempBox(null);
       setMode("view");
@@ -381,7 +381,7 @@ export default function PageWorkspacePage() {
             ← Quay lại trang duyệt
           </Link>
           <h1 className="ws-title">
-            Chương {page.chapter_id.chapter_number}: {page.chapter_id.title} — Trang {page.page_number}
+            {page.chapter_id.title} — Trang {page.page_number}
           </h1>
           <p className="ws-subtitle">
             Truyện: <strong>{page.chapter_id.series_id.title}</strong> | Phiên bản: <strong>V{page.current_version}</strong>
@@ -708,7 +708,7 @@ export default function PageWorkspacePage() {
           <hr className="border-t-2 border-black my-1" />
 
           {/* ANNOTATIONS LIST */}
-          <div className="ws-sidebar-section flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          <div className="ws-sidebar-section">
             <h2 className="ws-section-title">
               <MessageSquare size={14} className="inline mr-1" />
               Góp ý ({annotations.length})

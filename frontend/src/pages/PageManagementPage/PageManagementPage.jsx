@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import approvePage from "../../services/page/approvePageService";
 import getPagesByChapter from "../../services/page/getPagesByChapterService";
+import deletePage from "../../services/page/deletePageService";
 import getChapterById from "../../services/chapter/getChapterByIdService";
 import updatePageVersion from "../../services/page/updatePageVersionService";
 import updateChapterStatus from "../../services/chapter/updateChapterStatusService";
@@ -286,6 +287,7 @@ export default function PageManagementPage() {
           onRestore={handleRestorePage}
           onChangeStatus={handleStatusChange}
           onUpdateVersion={handleUpdateVersion}
+          onDeletePage={handleDeletePage}
         />
       </div>
     </div>

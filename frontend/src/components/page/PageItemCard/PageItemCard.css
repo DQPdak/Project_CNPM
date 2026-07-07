@@ -169,3 +169,7 @@
     active:translate-y-[2px]
     active:shadow-none;
 }
+
+.btn-delete-page {
+  @apply bg-[#FF4545] text-black hover:bg-white;
+}

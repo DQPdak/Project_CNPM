@@ -413,3 +413,34 @@ exports.updateTaskStatus = async (req, res) => {
     return res.status(500).json({ success: false, message: "Lỗi server", error: error.message });
   }
 };
+
+// Hủy và xóa Task
+exports.deleteTask = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const task = await Task.findById(id);
+    if (!task) {
+      return res.status(404).json({ success: false, message: "Không tìm thấy nhiệm vụ" });
+    }
+
+    // Chỉ người giao (Mangaka) hoặc Admin mới được xóa
+    if (String(task.assigned_by) !== req.user.id && req.user.role !== "Admin") {
+      return res.status(403).json({ success: false, message: "Bạn không có quyền hủy nhiệm vụ này" });
+    }
+
+    if (task.status === "Approved" || task.status === "Paid") {
+      return res.status(400).json({ success: false, message: "Không thể hủy nhiệm vụ đã duyệt hoặc thanh toán" });
+    }
+
+    // Xóa phân vùng của task nếu có
+    if (task.region_id) {
+      await PageRegion.findByIdAndDelete(task.region_id);
+    }
+
+    await Task.findByIdAndDelete(id);
+
+    return res.status(200).json({ success: true, message: "Đã hủy nhiệm vụ thành công" });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: "Lỗi server khi hủy nhiệm vụ", error: error.message });
+  }
+};
