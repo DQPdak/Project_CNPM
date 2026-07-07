@@ -50,26 +50,27 @@ export default function PageItemCard({
         <div className="page-number-badge">Trang {displayPageNumber}</div>
 
         {/* Nút Xóa/Khôi phục ở góc trên bên phải */}
-        <div className="card-corner-actions group-hover:opacity-100">
-          {!isTrashView ? (
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="btn-corner-delete"
-              title="Xóa trang này"
-            >
-              <Trash2 size={16} />
-            </button>
-          ) : (
-            <button
-              onClick={() => onRestore(page._id)}
-              className="btn-corner-restore"
-              title="Khôi phục"
-            >
-              <RotateCcw size={14} /> KHÔI PHỤC
-            </button>
-          )}
-        </div>
-
+        <RequirePermission required="CAN_DELETE_RESTORE_CHAPTER_PAGE">
+          <div className="card-corner-actions group-hover:opacity-100">
+            {!isTrashView ? (
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="btn-corner-delete"
+                title="Xóa trang này"
+              >
+                <Trash2 size={16} />
+              </button>
+            ) : (
+              <button
+                onClick={() => onRestore(page._id)}
+                className="btn-corner-restore"
+                title="Khôi phục"
+              >
+                <RotateCcw size={14} /> KHÔI PHỤC
+              </button>
+            )}
+          </div>
+        </RequirePermission>
         {/* Ẩn trạng thái nếu đang ở trong thùng rác */}
         {!isTrashView && renderStatusBadge(page.status)}
 

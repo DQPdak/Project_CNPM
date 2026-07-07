@@ -15,7 +15,7 @@ export default function CreateChapterAction({
   const [title, setTitle] = useState("");
 
   const handleOpenModal = () => {
-    setTitle(`Chương ${currentCount + 1}: `);
+    setTitle(``);
     setIsModalOpen(true);
   };
 

@@ -39,6 +39,10 @@ const chapterSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    is_deleted: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true },
 ); // Tự động tạo created_at và updated_at

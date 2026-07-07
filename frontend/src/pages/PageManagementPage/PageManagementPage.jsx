@@ -270,13 +270,15 @@ export default function PageManagementPage() {
           <ImageIcon size={18} />
           Đang hiển thị ({activePages.length})
         </button>
-        <button
-          onClick={() => setIsTrashView(true)}
-          className={`pmp-view-toggle-btn ${isTrashView ? "trash-view" : ""}`}
-        >
-          <Trash2 size={18} />
-          Thùng rác ({deletedPages.length})
-        </button>
+        <RequirePermission required="CAN_DELETE_RESTORE_CHAPTER_PAGE">
+          <button
+            onClick={() => setIsTrashView(true)}
+            className={`pmp-view-toggle-btn ${isTrashView ? "trash-view" : ""}`}
+          >
+            <Trash2 size={18} />
+            Thùng rác ({deletedPages.length})
+          </button>
+        </RequirePermission>
       </div>
 
       <div className="pmp-gallery-container">
