@@ -13,6 +13,7 @@ const getChapterById = require("../controllers/chapter/getChapterById");
 const getChaptersBySeries = require("../controllers/chapter/getChaptersBySeries");
 const getChapterProgressStats = require("../controllers/chapter/getChapterProgressStats");
 const updateChapterStatus = require("../controllers/chapter/updateChapterStatus");
+const deleteChapter = require("../controllers/chapter/deleteChapter");
 
 const router = express.Router();
 
@@ -68,6 +69,13 @@ router.get(
   ),
   requireChapterScope("chapter_id", "read"),
   getChapterById.getChapterById,
+);
+
+router.delete(
+  "/:chapter_id",
+  requireRole(ROLES.MANGAKA, ROLES.ADMIN),
+  requireChapterScope("chapter_id", "write"),
+  deleteChapter.deleteChapter
 );
 
 module.exports = router;

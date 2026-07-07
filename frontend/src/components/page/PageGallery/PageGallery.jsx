@@ -6,6 +6,7 @@ export default function PageGallery({
   pages,
   onChangeStatus,
   onUpdateVersion,
+  onDeletePage,
 }) {
   if (!pages || pages.length === 0) {
     return (
@@ -25,6 +26,7 @@ export default function PageGallery({
           page={page}
           onChangeStatus={onChangeStatus}
           onUpdateVersion={onUpdateVersion}
+          onDelete={onDeletePage}
         />
       ))}
     </div>

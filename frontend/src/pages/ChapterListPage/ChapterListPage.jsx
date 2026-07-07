@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import getChaptersBySeries from "../../services/chapter/getChaptersBySeriesService";
 import getMySeries from "../../services/series/getMySeriesService";
 import getSeriesById from "../../services/series/getSeriesByIdService";
+import deleteChapter from "../../services/chapter/deleteChapterService";
 import RequirePermission from "../../components/security/RequirePermission";
 import CreateChapterAction from "../../components/chapter/CreateChapterAction/CreateChapterAction";
 import ChapterTable from "../../components/chapter/ChapterTable/ChapterTable";
@@ -100,6 +101,24 @@ export default function ChapterListPage() {
     fetchChaptersList();
   }, [fetchChaptersList]);
 
+  const handleDeleteChapter = async (chapterId) => {
+    if (!window.confirm("Bạn có chắc chắn muốn hủy chương truyện này không? Tất cả trang bản thảo, phân vùng và task liên quan sẽ bị xóa sạch.")) return;
+    setIsLoading(true);
+    try {
+      const result = await deleteChapter(chapterId);
+      if (result.success === false) {
+        toast.error(result.message || "Không thể hủy chương truyện");
+      } else {
+        toast.success("Đã hủy chương truyện thành công!");
+        await fetchChaptersList();
+      }
+    } catch (error) {
+      toast.error("Lỗi khi hủy chương: " + error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="clp-wrapper">
       {isLoading && <Loading text="Đang tải danh sách chapter..." />}
@@ -141,7 +160,7 @@ export default function ChapterListPage() {
 
       {!isLoading && resolvedSeriesId ? (
         <div className="clp-table-container">
-          <ChapterTable chapters={chapters} />
+          <ChapterTable chapters={chapters} onDelete={handleDeleteChapter} />
         </div>
       ) : null}
     </div>

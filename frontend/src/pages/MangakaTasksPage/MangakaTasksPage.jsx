@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import getMySeries from "../../services/series/getMySeriesService";
 import getChaptersBySeries from "../../services/chapter/getChaptersBySeriesService";
 import getPagesByChapter from "../../services/page/getPagesByChapterService";
-import { getTasksApi, getTaskByIdApi, createTaskApi, reviewTaskApi, getAssistantsApi } from "../../services/task/taskService";
+import { getTasksApi, getTaskByIdApi, createTaskApi, reviewTaskApi, getAssistantsApi, deleteTaskApi } from "../../services/task/taskService";
 import { useToast } from "../../contexts/ToastContext";
 import Loading from "../../common/Loading/Loading";
 import "./MangakaTasksPage.css";
@@ -200,6 +200,25 @@ export default function MangakaTasksPage() {
     setReviewing(false);
   };
 
+  const handleDeleteTask = async (taskId) => {
+    if (!window.confirm("Bạn có chắc chắn muốn hủy nhiệm vụ này không? Phân vùng liên quan cũng sẽ bị xóa.")) return;
+    setLoading(true);
+    try {
+      const result = await deleteTaskApi(taskId);
+      if (result.success === false) {
+        toast.error(result.message || "Không thể hủy nhiệm vụ");
+      } else {
+        toast.success("Đã hủy nhiệm vụ thành công!");
+        setSelectedTask(null);
+        fetchTasks();
+      }
+    } catch (err) {
+      toast.error("Lỗi khi hủy nhiệm vụ: " + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const translateStatus = (status) => {
     const s = (status || "").toLowerCase().trim();
     if (s === "assigned") return "Mới phân công";
@@ -240,32 +259,14 @@ export default function MangakaTasksPage() {
         <p className="mtp-subtitle">Giao việc cho trợ lý vẽ kỹ thuật và nghiệm thu bản thảo qua tính năng so sánh trước/sau</p>
       </header>
 
-      {/* TAB MENU - NEO BRUTALISM */}
-      <div className="mtp-tabs">
-        <button
-          onClick={() => setActiveTab("list")}
-          className={`mtp-tab-btn ${activeTab === "list" ? "active" : ""}`}
-        >
-          📂 Danh sách Task đã giao
-        </button>
-        <button
-          onClick={() => setActiveTab("create")}
-          className={`mtp-tab-btn ${activeTab === "create" ? "active" : ""}`}
-        >
-          ✏️ Tạo & Phân công Task mới
-        </button>
-      </div>
-
       <div className="mtp-layout">
-        {/* LEFT COLUMN - CONTENT DEPENDS ON TAB */}
+        {/* LEFT COLUMN */}
         <section className="mtp-left-section">
-          {activeTab === "list" ? (
-            /* LIST TAB */
-            tasks.length === 0 ? (
-              <div className="mtp-empty-state">
-                <h3>Chưa giao việc cho trợ lý</h3>
-                <p>Bạn chưa tạo task phân công nào. Nhấp tab "Tạo & Phân công Task mới" để bắt đầu.</p>
-              </div>
+          {tasks.length === 0 ? (
+            <div className="mtp-empty-state">
+              <h3>Chưa giao việc cho trợ lý</h3>
+              <p>Bạn chưa tạo task phân công nào.</p>
+            </div>
             ) : (
               <div className="mtp-list">
                 {tasks.map((task) => {
@@ -305,142 +306,7 @@ export default function MangakaTasksPage() {
                   );
                 })}
               </div>
-            )
-          ) : (
-            /* CREATE TAB - ASSIGN FORM */
-            <form onSubmit={handleAssignTask} className="mtp-assign-form">
-              <h2>Phân công công việc mới</h2>
-              <p className="form-helper">Chọn trang truyện, trợ lý và đặt yêu cầu để giao task vẽ kỹ thuật.</p>
-
-              <div className="form-group">
-                <label htmlFor="series">1. Chọn Series truyện:</label>
-                <select
-                  id="series"
-                  value={formData.series_id}
-                  onChange={(e) => setFormData(prev => ({ ...prev, series_id: e.target.value }))}
-                  required
-                  className="form-select"
-                >
-                  <option value="">-- Chọn Series --</option>
-                  {seriesList.map(s => (
-                    <option key={s._id} value={s._id}>{s.title}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="chapter">2. Chọn Chapter:</label>
-                <select
-                  id="chapter"
-                  value={formData.chapter_id}
-                  onChange={(e) => setFormData(prev => ({ ...prev, chapter_id: e.target.value }))}
-                  disabled={!formData.series_id}
-                  required
-                  className="form-select"
-                >
-                  <option value="">-- Chọn Chapter --</option>
-                  {chapters.map(c => (
-                    <option key={c._id} value={c._id}>Chương {c.chapter_number}: {c.title}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="page">3. Chọn Trang truyện:</label>
-                <select
-                  id="page"
-                  value={formData.page_id}
-                  onChange={(e) => setFormData(prev => ({ ...prev, page_id: e.target.value }))}
-                  disabled={!formData.chapter_id}
-                  required
-                  className="form-select"
-                >
-                  <option value="">-- Chọn Trang --</option>
-                  {pages.map(p => (
-                    <option key={p._id} value={p._id}>Trang số {p.page_number}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="assistant">4. Phân công cho Trợ lý:</label>
-                <select
-                  id="assistant"
-                  value={formData.assigned_to}
-                  onChange={(e) => setFormData(prev => ({ ...prev, assigned_to: e.target.value }))}
-                  required
-                  className="form-select"
-                >
-                  <option value="">-- Chọn Trợ lý --</option>
-                  {assistants.map(a => (
-                    <option key={a._id} value={a._id}>{a.name} ({a.email})</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="form-row">
-                <div className="form-group half">
-                  <label htmlFor="task_type">Loại công việc:</label>
-                  <select
-                    id="task_type"
-                    value={formData.task_type}
-                    onChange={(e) => setFormData(prev => ({ ...prev, task_type: e.target.value }))}
-                    className="form-select"
-                  >
-                    <option value="Vẽ background">Vẽ background</option>
-                    <option value="Tô bóng">Tô bóng</option>
-                    <option value="Đi nét">Đi nét</option>
-                    <option value="Khớp thoại">Khớp thoại</option>
-                  </select>
-                </div>
-
-                <div className="form-group half">
-                  <label htmlFor="price">Mức lương (VNĐ):</label>
-                  <input
-                    id="price"
-                    type="number"
-                    min="0"
-                    value={formData.price}
-                    onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
-                    required
-                    className="form-input"
-                  />
-                </div>
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="deadline">Hạn chót hoàn thành:</label>
-                <input
-                  id="deadline"
-                  type="datetime-local"
-                  value={formData.deadline}
-                  onChange={(e) => setFormData(prev => ({ ...prev, deadline: e.target.value }))}
-                  required
-                  className="form-input"
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="description">Ghi chú chi tiết yêu cầu:</label>
-                <textarea
-                  id="description"
-                  rows={3}
-                  value={formData.description}
-                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                  placeholder="Ghi chú cụ thể nét vẽ vẽ ở vùng panel nào..."
-                  className="form-textarea"
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={assigning}
-                className="mtp-assign-submit-btn"
-              >
-                {assigning ? "Đang giao việc..." : "Xác nhận Phân công 🚀"}
-              </button>
-            </form>
-          )}
+            )}
         </section>
 
         {/* RIGHT COLUMN - REVIEW PANEL */}
@@ -468,6 +334,17 @@ export default function MangakaTasksPage() {
                 <div><strong>Trang:</strong> Trang {selectedTask.task.page_id?.page_number}</div>
                 <div><strong>Hạn chót:</strong> {new Date(selectedTask.task.deadline).toLocaleDateString("vi-VN")}</div>
               </div>
+
+              {selectedTask.task.status !== "Approved" && selectedTask.task.status !== "Paid" && (
+                <div className="mtp-cancel-task-area">
+                  <button
+                    onClick={() => handleDeleteTask(selectedTask.task._id)}
+                    className="mtp-cancel-task-btn"
+                  >
+                    Hủy nhiệm vụ 🗑️
+                  </button>
+                </div>
+              )}
 
               {/* IMAGE COMPARISON (BEFORE / AFTER) */}
               {selectedTask.submissions && selectedTask.submissions.length > 0 ? (

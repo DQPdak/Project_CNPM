@@ -159,4 +159,100 @@ const { coordinates, region_type } = req.body;
 ```
 Giải pháp này vừa sửa dứt điểm lỗi trên giao diện thực tế của người dùng, vừa đảm bảo tương thích 100% với các bộ Unit Test hiện có của backend (vốn truyền `page_id` trực tiếp trong body).
 
+---
+
+## 7. Giải Thích & Sửa Lỗi: "Tràn viền" và "Mất góp ý" ở thanh Sidebar
+
+### Nguyên nhân xảy ra lỗi:
+1. **Lỗi Tràn Viền (Overflow)**: Khung Sidebar `.ws-sidebar` có giới hạn chiều cao `max-height: 100%` để vừa vặn chiều cao màn hình. Tuy nhiên, nó thiếu thuộc tính `overflow-y: auto`. Khi danh sách nhiệm vụ trợ lý hoặc vùng chi tiết mở rộng quá dài, các thẻ con sẽ bị vẽ lòi ra bên ngoài viền khung đen của Sidebar (tràn viền).
+2. **Lỗi Mất Góp Ý**: Container hiển thị góp ý được thiết lập class `flex-1 overflow-y-auto`. Khi vùng chi tiết và vùng nhiệm vụ trợ lý chiếm dụng hết không gian trống của Sidebar, flexbox sẽ ép chiều cao của vùng góp ý này co lại về `0px`, khiến nó hoàn toàn bị ẩn đi trên giao diện mặc dù dữ liệu vẫn tồn tại.
+
+### Cách khắc phục:
+Chúng tôi đã điều chỉnh đồng bộ giữa JSX và CSS như sau:
+1. **Tại file CSS** [PageWorkspacePage.css](file:///d:/thang/Project_CNPM/frontend/src/pages/PageWorkspacePage/PageWorkspacePage.css):
+   - Thêm thuộc tính `overflow-y: auto` vào lớp `.ws-sidebar` để toàn bộ Sidebar có khả năng tự cuộn khi nội dung vượt quá chiều cao màn hình.
+   - Thêm quy tắc ẩn thanh cuộn trình duyệt (`-ms-overflow-style: none`, `scrollbar-width: none` và `::-webkit-scrollbar { display: none; }`) để đảm bảo thẩm mỹ thiết kế Brutalism.
+2. **Tại file JSX** [PageWorkspacePage.jsx](file:///d:/thang/Project_CNPM/frontend/src/pages/PageWorkspacePage/PageWorkspacePage.jsx):
+   - Loại bỏ các class giới hạn `flex-1 overflow-y-auto` cùng các lệnh ẩn thanh cuộn cụ bộ khỏi container danh sách Góp ý. Cho phép vùng Góp ý tự động co giãn theo kích thước tự nhiên để hiển thị đầy đủ tiêu đề và nội dung, nhường việc cuộn lại cho scrollbar tổng của Sidebar.
+
+---
+
+## 8. Cập Nhật Trang Quản Lý Task Trợ Lý: Hủy Nhiệm Vụ & Cân Đối Giao Diện
+
+Chúng tôi đã thực hiện cập nhật quy trình và giao diện theo yêu cầu mới tại trang `/mangaka/tasks`:
+
+### 1. Thêm tính năng Hủy nhiệm vụ đã giao:
+- **Backend**:
+  - Tạo hàm controller `deleteTask` tại [taskController.js](file:///d:/thang/Project_CNPM/backend/src/controllers/task/taskController.js) để xử lý việc hủy task. Hàm này sẽ xóa tài liệu Task khỏi DB, đồng thời tự động xóa vùng bản vẽ tương ứng (`PageRegion`) để giải phóng bản thảo.
+  - Đăng ký route `DELETE /api/tasks/:id` yêu cầu quyền Mangaka/Admin tại [task.routes.js](file:///d:/thang/Project_CNPM/backend/src/routes/task.routes.js).
+- **Frontend**:
+  - Viết service gọi API `deleteTaskApi` tại [taskService.js](file:///d:/thang/Project_CNPM/frontend/src/services/task/taskService.js).
+  - Tích hợp nút **`"Hủy nhiệm vụ 🗑️"`** màu đỏ Brutalism tại panel chi tiết bên phải của [MangakaTasksPage.jsx](file:///d:/thang/Project_CNPM/frontend/src/pages/MangakaTasksPage/MangakaTasksPage.jsx). Nút này chỉ xuất hiện khi nhiệm vụ chưa được `Approved` (Đã duyệt) hoặc `Paid` (Đã thanh toán).
+
+### 2. Xóa mục "Tạo & Phân công Task mới":
+- Đã loại bỏ hoàn toàn thanh chọn Tab menu (`mtp-tabs`), nút `"Tạo & Phân công Task mới"`, cùng toàn bộ form phân công việc cũ khỏi mã nguồn của [MangakaTasksPage.jsx](file:///d:/thang/Project_CNPM/frontend/src/pages/MangakaTasksPage/MangakaTasksPage.jsx).
+- Việc phân công vẽ vùng và giao task nay được tích hợp trực tiếp, trực quan hơn qua thao tác vẽ/kéo thả chuột tại trang Workspace của trang truyện (`PageWorkspacePage`), giúp đồng bộ tọa độ chính xác.
+
+### 3. Cân đối giao diện:
+- Cấu hình lại hệ lưới và căn lề cho [MangakaTasksPage.css](file:///d:/thang/Project_CNPM/frontend/src/pages/MangakaTasksPage/MangakaTasksPage.css) để trang chỉ tập trung vào danh sách công việc đã giao ở bên trái (MD: col-span-5) và khung nghiệm thu / so sánh Before-After / Hủy nhiệm vụ ở bên phải (MD: col-span-7), giúp bố cục cân đối, gọn gàng và dễ nhìn.
+
+---
+
+## 9. Cập Nhật Giao Diện: Thêm Chức Năng Hủy Chương Truyện
+
+Chúng tôi đã tích hợp tính năng Hủy chương (Xóa chương) tại trang quản lý danh sách Chapter:
+
+### 1. Backend:
+- Tạo hàm controller `deleteChapter` tại [deleteChapter.js](file:///d:/thang/Project_CNPM/backend/src/controllers/chapter/deleteChapter.js) để xử lý việc hủy chương. Hàm này thực hiện:
+  - Kiểm tra điều kiện: Chỉ cho phép hủy chương ở trạng thái **Bản nháp (Draft)**.
+  - Tự động xóa dọn dẹp (cascade delete) tất cả các dữ liệu con liên đới gồm: Trang bản thảo (`Page`), phân vùng vẽ (`PageRegion`), góp ý biên tập (`Annotation`), và task công việc trợ lý (`Task`) để giữ cho MongoDB sạch sẽ.
+- Đăng ký route `DELETE /api/chapters/:chapter_id` yêu cầu quyền Mangaka/Admin tại [chapter.routes.js](file:///d:/thang/Project_CNPM/backend/src/routes/chapter.routes.js).
+
+### 2. Frontend:
+- Tạo service gọi API `deleteChapter` tại [deleteChapterService.js](file:///d:/thang/Project_CNPM/frontend/src/services/chapter/deleteChapterService.js).
+- Bổ sung callback hủy chương `handleDeleteChapter` tại [ChapterListPage.jsx](file:///d:/thang/Project_CNPM/frontend/src/pages/ChapterListPage/ChapterListPage.jsx) và truyền xuống cho bảng.
+- Hiển thị nút **`"Hủy chương 🗑️"`** màu đỏ Brutalism tại cột làm việc của từng hàng trong [ChapterTable.jsx](file:///d:/thang/Project_CNPM/frontend/src/components/chapter/ChapterTable/ChapterTable.jsx). Nút chỉ xuất hiện cho các chapter ở trạng thái Bản nháp.
+- Định nghĩa style đồng bộ cho nút tại [ChapterTable.css](file:///d:/thang/Project_CNPM/frontend/src/components/chapter/ChapterTable/ChapterTable.css).
+
+---
+
+## 10. Cập Nhật Giao Diện: Thêm Chức Năng Xóa Bản Thảo Trong Mục Giao Task
+
+Chúng tôi đã triển khai tính năng Xóa bản thảo (Xóa trang truyện ở trạng thái nháp) tại trang quản lý bản thảo (`/page-management/:chapterId`):
+
+### 1. Backend:
+- Tạo hàm controller `deletePage` tại [deletePage.js](file:///d:/thang/Project_CNPM/backend/src/controllers/page/deletePage.js) để xử lý việc xóa trang. Hàm này thực hiện:
+  - Kiểm tra điều kiện: Chỉ cho phép xóa trang truyện ở trạng thái **Bản nháp (Draft)**.
+  - Tự động xóa dọn dẹp (cascade delete) tất cả các dữ liệu liên quan của trang gồm: Phân vùng vẽ (`PageRegion`), góp ý biên tập (`Annotation`), và task công việc trợ lý (`Task`) để giữ cho DB sạch sẽ.
+- Đăng ký route `DELETE /api/pages/:page_id` tại [page.routes.js](file:///d:/thang/Project_CNPM/backend/src/routes/page.routes.js).
+
+### 2. Frontend:
+- Tạo service gọi API `deletePage` tại [deletePageService.js](file:///d:/thang/Project_CNPM/frontend/src/services/page/deletePageService.js).
+- Tích hợp hàm callback `handleDeletePage` tại [PageManagementPage.jsx](file:///d:/thang/Project_CNPM/frontend/src/pages/PageManagementPage/PageManagementPage.jsx) và truyền xuống qua `PageGallery`.
+- Nhận và truyền tiếp callback tại [PageGallery.jsx](file:///d:/thang/Project_CNPM/frontend/src/components/page/PageGallery/PageGallery.jsx).
+- Hiển thị nút **`"Xóa bản thảo 🗑️"`** màu đỏ Brutalism ngay bên dưới nút "Gửi Kiểm duyệt" trong [PageItemCard.jsx](file:///d:/thang/Project_CNPM/frontend/src/components/page/PageItemCard/PageItemCard.jsx). Nút chỉ xuất hiện cho các trang ở trạng thái Bản nháp.
+- Định nghĩa style cho nút tại [PageItemCard.css](file:///d:/thang/Project_CNPM/frontend/src/components/page/PageItemCard/PageItemCard.css).
+
+---
+
+## 11. Sửa Lỗi: Bị Load 2 Lần Khi Vừa Giao Nhiệm Vụ Xong Ở Workspace
+
+### Nguyên nhân xảy ra lỗi:
+1. **Thay đổi dependency trong `useEffect`**: Trước kia `useEffect` gọi `fetchAllData()` có dependency là `[fetchAllData]`. Khi giao nhiệm vụ xong, các hàm `setRegions` và `setTasks` thay đổi trạng thái component, làm thay đổi tham chiếu của hàm `fetchAllData`, kích hoạt `useEffect` chạy thêm một lần nữa (tổng cộng load 2 lần).
+2. **Thiếu đồng bộ thông tin đầy đủ**: Sau khi tạo Task thành công, client chỉ thực hiện đẩy thô thông tin `newTask` (chứa ObjectId) trực tiếp vào state:
+   ```javascript
+   setTasks((prev) => [...prev, taskRes.task]);
+   ```
+   Do thông tin trợ lý (`assigned_to`) trả về lúc này chỉ là một ID string chứ chưa được populate thành object `{ _id, name, email }`, UI hiển thị tên trợ lý là `"Chưa rõ"`. Muốn xem được tên đầy đủ bắt buộc phải fetch lại dữ liệu từ server.
+
+### Cách khắc phục:
+Chúng tôi đã chỉnh sửa logic tại file [PageWorkspacePage.jsx](file:///d:/thang/Project_CNPM/frontend/src/pages/PageWorkspacePage/PageWorkspacePage.jsx) như sau:
+1. **Khóa dependency của `useEffect`**: Đổi dependency của `useEffect` từ `[fetchAllData]` thành `[pageId]`. Điều này đảm bảo dữ liệu chỉ được tải từ API một lần duy nhất khi component mount hoặc khi chuyển đổi trang truyện, ngăn chặn hoàn toàn việc tự động kích hoạt tải lại do thay đổi hàm tham chiếu.
+2. **Đồng bộ thông tin bằng cách Fetch chủ động**: Thay thế lệnh push dữ liệu thủ công bằng cách gọi trực tiếp `await fetchAllData()` ngay sau khi tạo Task thành công trong hàm `handleCreateTaskAndRegion`. Thao tác này giúp tải lại thông tin đã được populate đầy đủ từ Backend (bao gồm tên trợ lý hiển thị đúng là `"System Assistant"`), kết hợp đồng bộ trong cùng một lần xoay vòng trạng thái `isLoading` (chỉ load duy nhất 1 lần).
+
+
+
+
+
+
 
