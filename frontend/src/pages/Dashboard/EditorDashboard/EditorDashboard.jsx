@@ -1,4 +1,3 @@
-import React from "react";
 import { Link } from "react-router-dom";
 import SeriesProgressTable from "../../../components/dashboard/SeriesProgressTable/SeriesProgressTable";
 import "./EditorDashboard.css";
@@ -7,8 +6,8 @@ const EditorDashboard = () => {
   return (
     <div className="dashboard-wrapper">
       <h1 className="dashboard-title">Không gian làm việc Biên tập viên</h1>
-      <div className="dashboard-grid">
-        <div className="main-column">
+      <div className="editor-dashboard-stack">
+        <section className="editor-dashboard-row">
           <div className="card">
             <h2 className="card-title">Theo dõi tiến độ Studio</h2>
             <p className="card-desc">
@@ -18,9 +17,9 @@ const EditorDashboard = () => {
               [Bảng Kanban tiến độ sản xuất]
             </div>
           </div>
+        </section>
 
-        </div>
-        <div className="editor-side-column">
+        <section className="editor-dashboard-row">
           <div className="widget-editor">
             <h2 className="widget-title-blue">Hiệu suất Series phụ trách</h2>
             <p className="widget-desc-blue">
@@ -34,9 +33,11 @@ const EditorDashboard = () => {
               Phân tích bảng xếp hạng
             </Link>
           </div>
+        </section>
 
+        <section className="editor-dashboard-row">
           <SeriesProgressTable />
-        </div>
+        </section>
       </div>
     </div>
   );
