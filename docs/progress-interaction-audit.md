@@ -36,3 +36,23 @@ latest frontend and backend merge.
 - Confirm the chapter list route receives the selected series id.
 - Confirm chapter action links render for page management and publish review.
 - Return to the series list through navigation without losing auth state.
+
+## Progress Page Checklist
+
+- Open `/editor/progress` from the Tantou Editor sidebar.
+- Confirm the series selector lists all editor-visible series.
+- Confirm the chapter selector updates when the selected series changes.
+- Confirm the default chapter selection shows annotation and task metrics.
+- Select `Tất cả các chương` and confirm aggregate metrics do not reset to zero.
+- Click `Tải lại dữ liệu` and confirm the selected filters remain stable.
+- Open a task `Workspace` link and confirm the workspace route keeps auth state.
+- Return to the progress board and confirm the board still renders.
+
+## Status Update Checklist
+
+- Locate a task card with a visible status selector.
+- Change a task from a done state to `Đang vẽ`.
+- Confirm the task moves to the in-progress column.
+- Confirm the dashboard completion percentage and counts update.
+- Change the same task back to its original status.
+- Confirm the dashboard and columns return to their prior values.
