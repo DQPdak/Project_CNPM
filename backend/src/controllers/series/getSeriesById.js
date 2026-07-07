@@ -1,5 +1,8 @@
 const Series = require("../../models/SeriesModel");
 const SeriesProposal = require("../../models/SeriesProposalModel");
+const {
+  ensureReviewDeadline,
+} = require("../../services/proposalReviewService");
 
 exports.getSeriesById = async (req, res) => {
   try {
@@ -13,6 +16,10 @@ exports.getSeriesById = async (req, res) => {
     const proposal = await SeriesProposal.findOne({ series_id: id }).sort({
       createdAt: -1,
     });
+
+    if (proposal) {
+      await ensureReviewDeadline(proposal);
+    }
 
     res.status(200).json({ series, proposal });
   } catch (err) {

@@ -6,6 +6,11 @@ const seriesRoutes = require("../src/routes/series.routes");
 const boardRoutes = require("../src/routes/board.routes");
 const Series = require("../src/models/SeriesModel");
 const SeriesProposal = require("../src/models/SeriesProposalModel");
+const BoardVote = require("../src/models/BoardVoteModel");
+const { REVIEW_DEADLINE_DAYS } = require("../src/constants/boardReview");
+const {
+  autoFinalizeExpiredProposals,
+} = require("../src/services/autoFinalizeExpiredProposals");
 
 const app = express();
 app.use(express.json());
@@ -68,6 +73,210 @@ describe("Board review flow Phase 2", () => {
 
     expect(proposal.status).toBe("Submitted");
     expect(proposal.submitted_at).toBeTruthy();
+    expect(proposal.review_deadline).toBeTruthy();
+
+    const expectedDeadline = new Date(proposal.submitted_at);
+    expectedDeadline.setDate(expectedDeadline.getDate() + REVIEW_DEADLINE_DAYS);
+    expect(proposal.review_deadline.getTime()).toBe(expectedDeadline.getTime());
+  });
+
+  it("backfills review_deadline for legacy pending proposals", async () => {
+    const seriesId = await createSubmittedSeries();
+    await SeriesProposal.updateOne(
+      { series_id: seriesId },
+      { $unset: { review_deadline: "" } },
+    );
+
+    const response = await withAuth(
+      request(app).get("/api/board/series/pending"),
+      boardToken,
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.body.pending[0].proposal.review_deadline).toBeTruthy();
+  });
+
+  it("clears old votes when resubmitting after need revision", async () => {
+    const seriesId = await createSubmittedSeries();
+
+    await withAuth(
+      request(app).post(`/api/board/series/${seriesId}/vote`),
+      boardToken,
+    ).send({ vote: "Approve" });
+
+    expect(
+      await BoardVote.countDocuments({
+        series_id: seriesId,
+        vote_context: "initial_review",
+      }),
+    ).toBe(1);
+
+    const proposal = await SeriesProposal.findOne({ series_id: seriesId });
+    proposal.status = "Need Revision";
+    await proposal.save();
+
+    const resubmitRes = await withAuth(
+      request(app).post(`/api/series/${seriesId}/proposal/submit`),
+      mangakaToken,
+    );
+    expect(resubmitRes.status).toBe(200);
+
+    expect(
+      await BoardVote.countDocuments({
+        series_id: seriesId,
+        vote_context: "initial_review",
+      }),
+    ).toBe(0);
+  });
+
+  it("auto-finalizes expired proposals with votes", async () => {
+    const seriesId = await createSubmittedSeries();
+
+    await withAuth(
+      request(app).post(`/api/board/series/${seriesId}/vote`),
+      boardToken,
+    ).send({ vote: "Approve" });
+
+    await SeriesProposal.updateOne(
+      { series_id: seriesId },
+      { review_deadline: new Date(Date.now() - 60_000) },
+    );
+
+    const results = await autoFinalizeExpiredProposals();
+    expect(results).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          series_id: expect.anything(),
+          action: "finalized",
+          decision: "Approve",
+        }),
+      ]),
+    );
+
+    const series = await Series.findById(seriesId);
+    const proposal = await SeriesProposal.findOne({ series_id: seriesId });
+    expect(series.status).toBe("Active");
+    expect(proposal.status).toBe("Approved");
+    expect(series.approved_schedule).toBe("weekly");
+  });
+
+  it("marks need revision when expired with no votes", async () => {
+    const seriesId = await createSubmittedSeries();
+
+    await SeriesProposal.updateOne(
+      { series_id: seriesId },
+      { review_deadline: new Date(Date.now() - 60_000) },
+    );
+
+    const results = await autoFinalizeExpiredProposals();
+    expect(results).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          action: "need_revision_no_votes",
+        }),
+      ]),
+    );
+
+    const proposal = await SeriesProposal.findOne({ series_id: seriesId });
+    expect(proposal.status).toBe("Need Revision");
+  });
+
+  it("does not auto-finalize before review deadline", async () => {
+    const seriesId = await createSubmittedSeries();
+
+    await withAuth(
+      request(app).post(`/api/board/series/${seriesId}/vote`),
+      boardToken,
+    ).send({ vote: "Approve" });
+
+    const results = await autoFinalizeExpiredProposals();
+    expect(results).toHaveLength(0);
+
+    const proposal = await SeriesProposal.findOne({ series_id: seriesId });
+    expect(proposal.status).toBe("Under Review");
+  });
+
+  it("rejects finalize when proposal already processed", async () => {
+    const seriesId = await createSubmittedSeries();
+
+    await withAuth(
+      request(app).post(`/api/board/series/${seriesId}/vote`),
+      boardToken,
+    ).send({ vote: "Approve" });
+
+    const firstFinalize = await withAuth(
+      request(app).post(`/api/board/series/${seriesId}/finalize`),
+      boardToken,
+    ).send({ approved_schedule: "weekly" });
+    expect(firstFinalize.status).toBe(200);
+
+    const secondFinalize = await withAuth(
+      request(app).post(`/api/board/series/${seriesId}/finalize`),
+      boardToken,
+    ).send({ approved_schedule: "weekly" });
+    expect(secondFinalize.status).toBe(400);
+  });
+
+  it("allows mangaka to cancel a draft series", async () => {
+    const createRes = await withAuth(
+      request(app).post("/api/series"),
+      mangakaToken,
+    ).send({
+      title: "Draft Series",
+      summary: "Draft summary",
+      characters: "Lead character",
+      art_style: "Sketch",
+    });
+
+    const seriesId = createRes.body.series._id;
+
+    const cancelRes = await withAuth(
+      request(app).patch(`/api/series/${seriesId}/cancel`),
+      mangakaToken,
+    );
+
+    expect(cancelRes.status).toBe(200);
+    expect(cancelRes.body.series.status).toBe("Cancelled");
+
+    const series = await Series.findById(seriesId);
+    expect(series.status).toBe("Cancelled");
+  });
+
+  it("rejects cancel when proposal already submitted", async () => {
+    const seriesId = await createSubmittedSeries();
+
+    const cancelRes = await withAuth(
+      request(app).patch(`/api/series/${seriesId}/cancel`),
+      mangakaToken,
+    );
+
+    expect(cancelRes.status).toBe(400);
+  });
+
+  it("rejects submitting proposal after series cancelled", async () => {
+    const createRes = await withAuth(
+      request(app).post("/api/series"),
+      mangakaToken,
+    ).send({
+      title: "Draft Series 2",
+      summary: "Draft summary",
+      characters: "Lead character",
+      art_style: "Sketch",
+    });
+
+    const seriesId = createRes.body.series._id;
+
+    const cancelRes = await withAuth(
+      request(app).patch(`/api/series/${seriesId}/cancel`),
+      mangakaToken,
+    );
+    expect(cancelRes.status).toBe(200);
+
+    const submitRes = await withAuth(
+      request(app).post(`/api/series/${seriesId}/proposal/submit`),
+      mangakaToken,
+    );
+    expect(submitRes.status).toBe(400);
   });
 
   it("lists pending series for editorial board", async () => {

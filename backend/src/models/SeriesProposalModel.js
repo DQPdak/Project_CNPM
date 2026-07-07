@@ -39,6 +39,10 @@ const seriesProposalSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    review_deadline: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true },
 ); // Tự động tạo created_at và updated_at

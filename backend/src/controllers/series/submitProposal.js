@@ -1,6 +1,8 @@
 const SeriesProposal = require("../../models/SeriesProposalModel");
+const BoardVote = require("../../models/BoardVoteModel");
 const User = require("../../models/UserModel");
 const NotificationService = require("../../services/notificationService");
+const { addReviewDeadline } = require("../../constants/boardReview");
 
 const SUBMITTABLE_STATUSES = ["Draft", "Need Revision"];
 
@@ -9,6 +11,9 @@ exports.submitProposal = async (req, res) => {
     const series = req.authz?.series;
     if (!series) {
       return res.status(404).json({ message: "Không tìm thấy series" });
+    }
+    if (series.status === "Cancelled") {
+      return res.status(400).json({ message: "Series đã bị hủy, không thể nộp proposal" });
     }
 
     const proposal = await SeriesProposal.findOne({ series_id: series._id }).sort({
@@ -25,8 +30,15 @@ exports.submitProposal = async (req, res) => {
       });
     }
 
+    await BoardVote.deleteMany({
+      series_id: series._id,
+      vote_context: "initial_review",
+    });
+
+    const now = new Date();
     proposal.status = "Submitted";
-    proposal.submitted_at = new Date();
+    proposal.submitted_at = now;
+    proposal.review_deadline = addReviewDeadline(now);
     await proposal.save();
 
     // Notify all Editorial Board members
