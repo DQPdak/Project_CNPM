@@ -5,18 +5,21 @@ import Loading from "../../common/Loading/Loading";
 import { useToast } from "../../contexts/ToastContext";
 import "./AllSeriesPage.css";
 
-const STATUS_FILTERS = [
-  "Tất cả",
-  "Draft",
-  "Submitted",
-  "Under Review",
-  "Approved",
+const APPROVED_SERIES_STATUSES = [
   "Active",
   "At Risk",
   "Hiatus",
   "Completed",
+  "Changed Schedule",
   "Cancelled",
 ];
+
+const STATUS_FILTERS = ["Tất cả", ...APPROVED_SERIES_STATUSES];
+
+const isApprovedCatalogItem = ({ series, proposal }) => {
+  if (proposal?.status === "Approved") return true;
+  return APPROVED_SERIES_STATUSES.includes(series?.status);
+};
 
 export default function AllSeriesPage() {
   const toast = useToast();
@@ -41,9 +44,14 @@ export default function AllSeriesPage() {
     fetchList();
   }, [fetchList]);
 
+  const approvedItems = useMemo(
+    () => items.filter(isApprovedCatalogItem),
+    [items],
+  );
+
   const filtered = useMemo(() => {
     const kw = keyword.trim().toLowerCase();
-    return items.filter(({ series }) => {
+    return approvedItems.filter(({ series }) => {
       const matchStatus =
         statusFilter === "Tất cả" || series?.status === statusFilter;
       const matchKeyword =
@@ -53,7 +61,7 @@ export default function AllSeriesPage() {
         series?.author_id?.email?.toLowerCase().includes(kw);
       return matchStatus && matchKeyword;
     });
-  }, [items, keyword, statusFilter]);
+  }, [approvedItems, keyword, statusFilter]);
 
   const getStatusClass = (status) => {
     const s = (status || "Draft").toLowerCase().replace(/\s+/g, "-");
@@ -63,9 +71,9 @@ export default function AllSeriesPage() {
   return (
     <div className="all-series-wrapper">
       <header className="page-header">
-        <h1 className="page-title">Toàn bộ Series</h1>
+        <h1 className="page-title">Danh sách Series đã duyệt</h1>
         <p className="page-desc">
-          Danh sách tất cả series trong hệ thống ({items.length})
+          Toàn bộ series đã qua xét duyệt trong hệ thống ({approvedItems.length})
         </p>
       </header>
 
@@ -92,10 +100,12 @@ export default function AllSeriesPage() {
         </div>
       </div>
 
-      {isLoading && <Loading text="Đang tải toàn bộ series..." />}
+      {isLoading && <Loading text="Đang tải series đã duyệt..." />}
 
       {!isLoading && filtered.length === 0 && (
-        <div className="empty-box">Không có series nào khớp bộ lọc.</div>
+        <div className="empty-box">
+          Chưa có series đã duyệt nào khớp bộ lọc.
+        </div>
       )}
 
       {!isLoading && filtered.length > 0 && (
@@ -128,7 +138,7 @@ export default function AllSeriesPage() {
                   to={`/board/series/${series._id}`}
                   className="btn-action-review"
                 >
-                  Xem xét duyệt
+                  Xem hồ sơ
                 </Link>
                 <Link
                   to={`/chapter-list/${series._id}`}

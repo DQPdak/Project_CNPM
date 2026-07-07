@@ -127,6 +127,10 @@ export default function AppRoutes() {
               </RequireRole>
             }
           />
+          <Route
+            path="/editor/feedbacks"
+            element={<Navigate to="/editor/progress" replace />}
+          />
 
           <Route
             path="/editor/series"

@@ -22,8 +22,8 @@ const ROLE_MENUS = {
     { name: "Bảng xếp hạng", path: "/editor/ranking" },
   ],
   "Editorial Board": [
-    { name: "Danh sách Series", path: "/board/all-series" },
     { name: "Duyệt Series Mới", path: "/board/reviews" },
+    { name: "Danh sách Series", path: "/board/all-series" },
     { name: "Series có nguy cơ", path: "/board/at-risk" },
     { name: "Quản lý Phát hành", path: "/board/releases" },
     { name: "Bảng xếp hạng", path: "/board/ranking" },
@@ -33,8 +33,8 @@ const ROLE_MENUS = {
     { name: "Quản lý Phát hành", path: "/admin/releases" },
     { name: "Bảng xếp hạng", path: "/admin/ranking" },
     { name: "Quản lý tiến độ", path: "/editor/progress" },
-    { name: "Danh sách Series", path: "/board/all-series" },
     { name: "Duyệt Series Mới", path: "/board/reviews" },
+    { name: "Danh sách Series", path: "/board/all-series" },
     { name: "Series có nguy cơ", path: "/admin/series" },
   ],
 };
