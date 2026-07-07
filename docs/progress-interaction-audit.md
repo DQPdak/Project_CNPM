@@ -56,3 +56,16 @@ latest frontend and backend merge.
 - Confirm the dashboard completion percentage and counts update.
 - Change the same task back to its original status.
 - Confirm the dashboard and columns return to their prior values.
+
+## Temporary Observation Notes
+
+- Observation draft 01: keep an eye on stale dashboard counts after status changes.
+- Observation draft 02: keep an eye on links that reload the application shell.
+- Observation draft 03: keep an eye on mobile horizontal overflow.
+- Observation draft 04: keep an eye on status controls inside draggable cards.
+- Observation draft 05: keep an eye on chapter aggregation for all-chapter mode.
+- Observation draft 06: keep an eye on authentication state after workspace navigation.
+- Observation draft 07: keep an eye on Vite rebuild behavior while the dev server is open.
+- Observation draft 08: keep an eye on backend seed consistency after nodemon restarts.
+- Observation draft 09: keep an eye on warning-only logs from Mongoose deprecations.
+- Observation draft 10: keep an eye on card spacing once status controls are visible.
