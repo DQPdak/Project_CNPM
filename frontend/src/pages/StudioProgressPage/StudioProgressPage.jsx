@@ -1,6 +1,6 @@
 ﻿import { useEffect, useState, useCallback } from "react";
 import { getTasksApi, updateTaskStatusApi } from "../../services/task/taskService";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import getMySeries from "../../services/series/getMySeriesService";
 import { getEditorSeries, getAllSeries, getAssistantSeries } from "../../services/series/getSeriesByRoleService";
 import getChaptersBySeries from "../../services/chapter/getChaptersBySeriesService";
@@ -35,7 +35,9 @@ const TASK_STATUS_OPTIONS = [
 export default function StudioProgressPage() {
   const toast = useToast();
   const user = useAuthStore((state) => state.user);
-  
+  const [searchParams] = useSearchParams();
+  const urlSeriesId = searchParams.get("seriesId");
+
   const [seriesList, setSeriesList] = useState([]);
   const [selectedSeriesId, setSelectedSeriesId] = useState("");
   
@@ -77,7 +79,11 @@ export default function StudioProgressPage() {
         const formatted = items.map(item => item.series ? item.series : item);
         setSeriesList(formatted);
         if (formatted.length > 0) {
-          setSelectedSeriesId(formatted[0]._id);
+          // Ưu tiên series được truyền qua URL (?seriesId=...) nếu hợp lệ.
+          const fromUrl = urlSeriesId
+            ? formatted.find((s) => String(s._id) === String(urlSeriesId))
+            : null;
+          setSelectedSeriesId(fromUrl ? fromUrl._id : formatted[0]._id);
         }
       } else {
         toast.error("Không thể tải danh sách series: " + res.message);
@@ -87,7 +93,7 @@ export default function StudioProgressPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [isMangaka, isEditor, isBoard, isAdmin, isAssistant, toast]);
+  }, [isMangaka, isEditor, isBoard, isAdmin, isAssistant, toast, urlSeriesId]);
 
   useEffect(() => {
     fetchSeries();

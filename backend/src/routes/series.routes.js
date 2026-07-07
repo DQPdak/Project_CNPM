@@ -11,6 +11,8 @@ const createSeries = require("../controllers/series/createSeries");
 const getMySeries = require("../controllers/series/getMySeries");
 const getSeriesByRole = require("../controllers/series/getSeriesByRole");
 const getSeriesById = require("../controllers/series/getSeriesById");
+const updateSeries = require("../controllers/series/updateSeries");
+const listEditors = require("../controllers/series/listEditors");
 const upsertProposal = require("../controllers/series/upsertProposal");
 const submitProposal = require("../controllers/series/submitProposal");
 const uploadCover = require("../controllers/series/uploadCover");
@@ -41,6 +43,16 @@ router.get(
   "/assistant",
   requireRole(ROLES.ASSISTANT),
   getSeriesByRole.getAssistantSeries,
+);
+router.get(
+  "/editors",
+  requireRole(
+    ROLES.MANGAKA,
+    ROLES.TANTOU_EDITOR,
+    ROLES.EDITORIAL_BOARD,
+    ROLES.ADMIN,
+  ),
+  listEditors.listEditors,
 );
 router.get(
   "/at-risk",
@@ -78,6 +90,12 @@ router.get(
   requireRole(ROLES.MANGAKA, ROLES.TANTOU_EDITOR, ROLES.EDITORIAL_BOARD),
   requireSeriesScope("id", "read"),
   getSeriesById.getSeriesById,
+);
+router.put(
+  "/:id",
+  requireRole(ROLES.MANGAKA),
+  requireSeriesScope("id", "write"),
+  updateSeries.updateSeries,
 );
 router.put(
   "/:id/proposal",

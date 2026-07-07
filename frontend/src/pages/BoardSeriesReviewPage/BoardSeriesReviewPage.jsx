@@ -1,10 +1,11 @@
-import React, { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import getBoardSeriesDetail from "../../services/board/getBoardSeriesDetailService";
 import castVote from "../../services/board/castVoteService";
 import finalizeSeries from "../../services/board/finalizeSeriesService";
 import Loading from "../../common/Loading/Loading";
 import { useToast } from "../../contexts/ToastContext";
+import { useAuthStore } from "../../stores/authStore";
 import "./BoardSeriesReviewPage.css"; // Import file CSS mới
 
 const SCHEDULE_OPTIONS = [
@@ -17,12 +18,14 @@ const SCHEDULE_OPTIONS = [
 export default function BoardSeriesReviewPage() {
   const { seriesId } = useParams();
   const toast = useToast();
+  const currentUser = useAuthStore((s) => s.user);
 
   const [isLoading, setIsLoading] = useState(true);
   const [data, setData] = useState(null);
   const [comment, setComment] = useState("");
   const [approvedSchedule, setApprovedSchedule] = useState("weekly");
   const [isVoting, setIsVoting] = useState(false);
+  const [changingVote, setChangingVote] = useState(false);
 
   const loadDetail = useCallback(async () => {
     setIsLoading(true);
@@ -41,18 +44,29 @@ export default function BoardSeriesReviewPage() {
   }, [loadDetail]);
 
   const handleVote = async (vote) => {
+    if (!window.confirm(`Xác nhận bỏ phiếu "${vote}" cho series này?`)) {
+      return;
+    }
     setIsVoting(true);
     const result = await castVote(seriesId, { vote, comment });
     if (result.success === false) {
       toast.error(result.message);
     } else {
       toast.success(result.message || "Bỏ phiếu thành công!");
+      setChangingVote(false);
       await loadDetail();
     }
     setIsVoting(false);
   };
 
   const handleFinalize = async () => {
+    if (
+      !window.confirm(
+        "Tổng hợp kết quả sẽ chốt quyết định cho series và không thể hoàn tác. Tiếp tục?",
+      )
+    ) {
+      return;
+    }
     setIsVoting(true);
     const result = await finalizeSeries(seriesId, {
       approved_schedule: approvedSchedule,
@@ -76,6 +90,10 @@ export default function BoardSeriesReviewPage() {
 
   const { series, proposal, votes } = data;
   const canVote = ["Submitted", "Under Review"].includes(proposal?.status);
+  const myVote = votes?.find(
+    (v) => String(v.board_member_id?._id) === String(currentUser?.id),
+  );
+  const showVoteButtons = !myVote || changingVote;
 
   return (
     <div className="board-review-wrapper">
@@ -138,39 +156,74 @@ export default function BoardSeriesReviewPage() {
       {canVote && (
         <section className="neo-section">
           <h2 className="section-title">Bỏ phiếu</h2>
-          <textarea
-            className="neo-textarea"
-            value={comment}
-            onChange={(e) => setComment(e.target.value)}
-            placeholder="Góp ý (tuỳ chọn)"
-          />
 
-          <div className="vote-actions">
-            <button
-              type="button"
-              disabled={isVoting}
-              onClick={() => handleVote("Approve")}
-              className="btn-approve"
-            >
-              Approve
-            </button>
-            <button
-              type="button"
-              disabled={isVoting}
-              onClick={() => handleVote("Reject")}
-              className="btn-reject"
-            >
-              Reject
-            </button>
-            <button
-              type="button"
-              disabled={isVoting}
-              onClick={() => handleVote("Need Revision")}
-              className="btn-revise"
-            >
-              Need Revision
-            </button>
-          </div>
+          {myVote && !changingVote && (
+            <div className="my-vote-box">
+              <p className="my-vote-text">
+                Bạn đã bỏ phiếu: <strong>{myVote.vote}</strong>
+                {myVote.comment ? ` — ${myVote.comment}` : ""}
+              </p>
+              <button
+                type="button"
+                className="btn-revise"
+                disabled={isVoting}
+                onClick={() => {
+                  setComment(myVote.comment || "");
+                  setChangingVote(true);
+                }}
+              >
+                Đổi phiếu
+              </button>
+            </div>
+          )}
+
+          {showVoteButtons && (
+            <>
+              <textarea
+                className="neo-textarea"
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                placeholder="Góp ý (tuỳ chọn)"
+              />
+
+              <div className="vote-actions">
+                <button
+                  type="button"
+                  disabled={isVoting}
+                  onClick={() => handleVote("Approve")}
+                  className="btn-approve"
+                >
+                  Approve
+                </button>
+                <button
+                  type="button"
+                  disabled={isVoting}
+                  onClick={() => handleVote("Reject")}
+                  className="btn-reject"
+                >
+                  Reject
+                </button>
+                <button
+                  type="button"
+                  disabled={isVoting}
+                  onClick={() => handleVote("Need Revision")}
+                  className="btn-revise"
+                >
+                  Need Revision
+                </button>
+                {changingVote && (
+                  <button
+                    type="button"
+                    disabled={isVoting}
+                    onClick={() => setChangingVote(false)}
+                    className="btn-cancel-vote"
+                  >
+                    Huỷ
+                  </button>
+                )}
+              </div>
+            </>
+          )}
 
           <div className="finalize-section">
             <label className="finalize-label">
