@@ -23,6 +23,15 @@ exports.updatePageVersion = async (req, res) => {
       return res.status(404).json({ message: "Không tìm thấy trang truyện!" });
     }
 
+    if (existingPage.is_deleted) {
+      return res
+        .status(400)
+        .json({
+          message:
+            "Trang này đang nằm trong thùng rác, không thể cập nhật phiên bản mới!",
+        });
+    }
+
     // 3. Kiểm tra xem có nhận được file bản thảo mới không
     if (!req.files || !req.files.source_file) {
       return res

@@ -17,14 +17,17 @@ exports.approvePage = async (req, res) => {
       return res.status(400).json({ message: "Trạng thái trang không hợp lệ" });
     }
 
-    const updatedPage = await Page.findByIdAndUpdate(
-      page_id,
+    // Trong file approvePage.js
+    const updatedPage = await Page.findOneAndUpdate(
+      { _id: page_id, is_deleted: { $ne: true } }, // <-- BỔ SUNG ĐIỀU KIỆN NÀY
       { status: status },
-      { new: true }, // Trả về data mới nhất sau khi cập nhật
+      { new: true },
     );
 
     if (!updatedPage) {
-      return res.status(404).json({ message: "Không tìm thấy trang truyện" });
+      return res
+        .status(404)
+        .json({ message: "Không tìm thấy trang truyện hoặc trang đã bị xóa" });
     }
 
     res.status(200).json({
