@@ -16,6 +16,9 @@ const taskSubmissionSchema = new mongoose.Schema(
       type: String,
       required: true,
     }, // URL file kết quả upload lên (ví dụ: Cloudinary)
+    primary_preview_url: {
+      type: String,
+    }, // URL ảnh preview chính (ví dụ: Cloudinary)
     note: {
       type: String,
     }, // Ghi chú của Assistant gửi kèm lúc nộp bài

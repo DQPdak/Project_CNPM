@@ -29,15 +29,16 @@ exports.getTasks = async (req, res) => {
     const tasks = await Task.find(filter)
       .populate({
         path: "page_id",
-        select: "page_number current_preview_url current_source_file_url attached_resource_url chapter_id",
+        select:
+          "page_number current_preview_url current_source_file_url attached_resource_url chapter_id",
         populate: {
           path: "chapter_id",
           select: "title series_id",
           populate: {
             path: "series_id",
-            select: "title"
-          }
-        }
+            select: "title",
+          },
+        },
       })
       .populate("region_id", "coordinates region_type")
       .populate("assigned_to", "name email")
@@ -46,7 +47,9 @@ exports.getTasks = async (req, res) => {
 
     return res.status(200).json({ success: true, tasks });
   } catch (error) {
-    return res.status(500).json({ success: false, message: "Lỗi server", error: error.message });
+    return res
+      .status(500)
+      .json({ success: false, message: "Lỗi server", error: error.message });
   }
 };
 
@@ -56,30 +59,43 @@ exports.getTaskById = async (req, res) => {
     const task = await Task.findById(req.params.id)
       .populate({
         path: "page_id",
-        select: "page_number current_preview_url current_source_file_url attached_resource_url chapter_id",
+        select:
+          "page_number current_preview_url current_source_file_url attached_resource_url chapter_id",
         populate: {
           path: "chapter_id",
           select: "title series_id",
           populate: {
             path: "series_id",
-            select: "title"
-          }
-        }
+            select: "title",
+          },
+        },
       })
       .populate("region_id", "coordinates region_type")
       .populate("assigned_to", "name email")
       .populate("assigned_by", "name email");
 
     if (!task) {
-      return res.status(404).json({ success: false, message: "Không tìm thấy task" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Không tìm thấy task" });
     }
 
     // Security check
-    if (req.user.role === "Assistant" && String(task.assigned_to._id) !== req.user.id) {
-      return res.status(403).json({ success: false, message: "Bạn không có quyền xem task này" });
+    if (
+      req.user.role === "Assistant" &&
+      String(task.assigned_to._id) !== req.user.id
+    ) {
+      return res
+        .status(403)
+        .json({ success: false, message: "Bạn không có quyền xem task này" });
     }
-    if (req.user.role === "Mangaka" && String(task.assigned_by._id) !== req.user.id) {
-      return res.status(403).json({ success: false, message: "Bạn không có quyền xem task này" });
+    if (
+      req.user.role === "Mangaka" &&
+      String(task.assigned_by._id) !== req.user.id
+    ) {
+      return res
+        .status(403)
+        .json({ success: false, message: "Bạn không có quyền xem task này" });
     }
 
     // Get submissions
@@ -89,23 +105,38 @@ exports.getTaskById = async (req, res) => {
 
     return res.status(200).json({ success: true, task, submissions });
   } catch (error) {
-    return res.status(500).json({ success: false, message: "Lỗi server", error: error.message });
+    return res
+      .status(500)
+      .json({ success: false, message: "Lỗi server", error: error.message });
   }
 };
 
 // Create task (Mangaka only)
 exports.createTask = async (req, res) => {
   try {
-    const { page_id, region_id, assigned_to, task_type, description, deadline, price } = req.body;
+    const {
+      page_id,
+      region_id,
+      assigned_to,
+      task_type,
+      description,
+      deadline,
+      price,
+    } = req.body;
 
     if (!page_id || !assigned_to || !task_type || !deadline) {
-      return res.status(400).json({ success: false, message: "Vui lòng điền đầy đủ các thông tin bắt buộc" });
+      return res.status(400).json({
+        success: false,
+        message: "Vui lòng điền đầy đủ các thông tin bắt buộc",
+      });
     }
 
     // Check if page exists
     const page = await Page.findById(page_id);
     if (!page) {
-      return res.status(404).json({ success: false, message: "Không tìm thấy trang truyện" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Không tìm thấy trang truyện" });
     }
 
     // If region_id is provided, check if region exists; else create a default region
@@ -113,7 +144,9 @@ exports.createTask = async (req, res) => {
     if (region_id) {
       const region = await PageRegion.findById(region_id);
       if (!region) {
-        return res.status(404).json({ success: false, message: "Không tìm thấy vùng phân công" });
+        return res
+          .status(404)
+          .json({ success: false, message: "Không tìm thấy vùng phân công" });
       }
     } else {
       // Auto-create default region for page
@@ -121,7 +154,7 @@ exports.createTask = async (req, res) => {
         page_id,
         coordinates: JSON.stringify({ x: 0, y: 0, width: 600, height: 800 }),
         region_type: "panel",
-        created_by: req.user.id
+        created_by: req.user.id,
       });
       await defaultRegion.save();
       finalRegionId = defaultRegion._id;
@@ -136,7 +169,7 @@ exports.createTask = async (req, res) => {
       description: description || "",
       deadline: new Date(deadline),
       price: price || 0,
-      status: "Assigned"
+      status: "Assigned",
     });
 
     await newTask.save();
@@ -151,9 +184,15 @@ exports.createTask = async (req, res) => {
       target_id: newTask._id,
     });
 
-    return res.status(201).json({ success: true, message: "Phân công công việc thành công", task: newTask });
+    return res.status(201).json({
+      success: true,
+      message: "Phân công công việc thành công",
+      task: newTask,
+    });
   } catch (error) {
-    return res.status(500).json({ success: false, message: "Lỗi server", error: error.message });
+    return res
+      .status(500)
+      .json({ success: false, message: "Lỗi server", error: error.message });
   }
 };
 
@@ -165,36 +204,58 @@ exports.submitTask = async (req, res) => {
 
     const task = await Task.findById(id);
     if (!task) {
-      return res.status(404).json({ success: false, message: "Không tìm thấy task" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Không tìm thấy task" });
     }
 
     // Security check
     if (String(task.assigned_to) !== req.user.id) {
-      return res.status(403).json({ success: false, message: "Bạn không được giao task này" });
+      return res
+        .status(403)
+        .json({ success: false, message: "Bạn không được giao task này" });
+    }
+
+    const allowedStatuses = [
+      "Assigned",
+      "In Progress",
+      "Revision Requested",
+      "Rejected",
+    ];
+
+    if (!allowedStatuses.includes(task.status)) {
+      return res.status(400).json({
+        success: false,
+        message: "Task hiện không thể nộp bài.",
+      });
     }
 
     if (!req.file) {
-      return res.status(400).json({ success: false, message: "Vui lòng tải lên file thành phẩm" });
+      return res.status(400).json({
+        success: false,
+        message: "Vui lòng tải lên file thành phẩm",
+      });
     }
 
-    const fileUrl = req.file.path || req.file.url;
+    const fileUrl = req.file.path;
 
-    // Create TaskSubmission
+    // Mặc định preview chính là file gốc
+    let primaryPreviewUrl = fileUrl.replace(/\.[^/.]+$/, ".png");
+
     const submission = new TaskSubmission({
       task_id: task._id,
       submitted_by: req.user.id,
       file_url: fileUrl,
+      primary_preview_url: primaryPreviewUrl,
       note: note || "",
-      status: "Submitted"
+      status: "Submitted",
     });
 
     await submission.save();
 
-    // Update Task status
     task.status = "Submitted";
     await task.save();
 
-    // Notify the mangaka who created the task
     await NotificationService.createNotification({
       user_id: task.assigned_by,
       type: "Task_Update",
@@ -207,31 +268,42 @@ exports.submitTask = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "Nộp file thành phẩm thành công!",
-      submission
+      submission,
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: "Lỗi server", error: error.message });
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi server",
+      error: error.message,
+    });
   }
 };
 
 // Review task (Mangaka only)
+// Review task (Mangaka only)
 exports.reviewTask = async (req, res) => {
   try {
     const { id } = req.params;
-    const { status, note } = req.body; // status should be: Approved, Revision Requested, Rejected
+    const { status, note } = req.body; // status: Approved, Revision Requested, Rejected
 
     if (!["Approved", "Revision Requested", "Rejected"].includes(status)) {
-      return res.status(400).json({ success: false, message: "Trạng thái đánh giá không hợp lệ" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Trạng thái đánh giá không hợp lệ" });
     }
 
     const task = await Task.findById(id);
     if (!task) {
-      return res.status(404).json({ success: false, message: "Không tìm thấy task" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Không tìm thấy task" });
     }
 
     // Security check
     if (String(task.assigned_by) !== req.user.id && req.user.role !== "Admin") {
-      return res.status(403).json({ success: false, message: "Bạn không có quyền duyệt task này" });
+      return res
+        .status(403)
+        .json({ success: false, message: "Bạn không có quyền duyệt task này" });
     }
 
     // Update Task status
@@ -239,35 +311,47 @@ exports.reviewTask = async (req, res) => {
     await task.save();
 
     // Update latest submission status
-    const latestSubmission = await TaskSubmission.findOne({ task_id: task._id }).sort({ createdAt: -1 });
+    const latestSubmission = await TaskSubmission.findOne({
+      task_id: task._id,
+    }).sort({ createdAt: -1 });
     if (latestSubmission) {
       latestSubmission.status = status;
       await latestSubmission.save();
     }
 
-    // If approved, trigger page version updates and income logic
+    // Nếu ĐƯỢC DUYỆT -> Cập nhật Page và tạo thu nhập
     if (status === "Approved") {
-      // 1. Update Page Version if submission exists
       if (latestSubmission && latestSubmission.file_url) {
         const page = await Page.findById(task.page_id);
         if (page) {
           const newVersion = page.current_version + 1;
           const originalUrl = latestSubmission.file_url;
-          
-          // Detect file type to update fields
-          const isZip = originalUrl.toLowerCase().endsWith(".zip");
-          if (isZip) {
+          const lowerUrl = originalUrl.toLowerCase().split("?")[0];
+
+          // PHÂN LOẠI FILE ĐỂ BẢO VỆ DỮ LIỆU GỐC
+          if (lowerUrl.endsWith(".zip") || lowerUrl.endsWith(".rar")) {
             page.attached_resource_url = originalUrl;
+          } else if (lowerUrl.endsWith(".psd") || lowerUrl.endsWith(".clip")) {
+            page.current_source_file_url = latestSubmission.file_url;
+
+            page.current_preview_url = latestSubmission.primary_preview_url;
           } else {
             page.current_preview_url = originalUrl;
-            page.current_source_file_url = originalUrl; // update manuscript
           }
-          
+
           page.current_version = newVersion;
-          page.status = "Ready For Review"; // Set page status to ready for review by editor
+
+          // KIỂM TRA TOÀN BỘ CÁC TASK CỦA TRANG ĐÓ
+          const pendingTasksCount = await Task.countDocuments({
+            page_id: task.page_id,
+            status: { $nin: ["Approved", "Paid"] },
+          });
+
+          page.status =
+            pendingTasksCount === 0 ? "Ready For Review" : "In Progress";
           await page.save();
 
-          // Save page version history
+          // Lưu lịch sử version
           const versionHistory = new PageVersionHistory({
             page_id: page._id,
             version_number: newVersion,
@@ -275,27 +359,27 @@ exports.reviewTask = async (req, res) => {
             source_file_url: page.current_source_file_url,
             attached_resource_url: page.attached_resource_url,
             submitted_by: task.assigned_to,
-            commit_note: note || `Approved Assistant Task: ${task.task_type}`
+            commit_note: note || `Approved Assistant Task: ${task.task_type}`,
           });
           await versionHistory.save();
         }
       }
 
-      // 2. Automated Income Generation logic
+      // Tạo/Cập nhật thu nhập
       const date = new Date();
-      const monthStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`; // e.g. 2026-06
+      const monthStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+      const existingIncome = await AssistantIncome.findOne({
+        task_id: task._id,
+      });
 
-      // Check if income entry already exists for this task (to avoid duplicates)
-      const existingIncome = await AssistantIncome.findOne({ task_id: task._id });
       if (!existingIncome) {
-        const income = new AssistantIncome({
+        await new AssistantIncome({
           assistant_id: task.assigned_to,
           task_id: task._id,
           amount: task.price,
           month: monthStr,
-          status: "Approved" // Status is Approved, waiting for Admin to pay
-        });
-        await income.save();
+          status: "Approved",
+        }).save();
       } else {
         existingIncome.status = "Approved";
         existingIncome.amount = task.price;
@@ -303,40 +387,31 @@ exports.reviewTask = async (req, res) => {
       }
     }
 
-    // Notify the assistant about the review result
+    // Thông báo cho Assistant và Mangaka
     const reviewMessages = {
-      "Approved": `Task "${task.task_type}" của bạn đã được duyệt.${note ? ` Nhận xét: ${note}` : ""}`,
+      Approved: `Task "${task.task_type}" của bạn đã được duyệt.${note ? ` Nhận xét: ${note}` : ""}`,
       "Revision Requested": `Task "${task.task_type}" cần chỉnh sửa lại.${note ? ` Lý do: ${note}` : ""}`,
-      "Rejected": `Task "${task.task_type}" đã bị từ chối.${note ? ` Lý do: ${note}` : ""}`,
+      Rejected: `Task "${task.task_type}" đã bị từ chối.${note ? ` Lý do: ${note}` : ""}`,
     };
+
     await NotificationService.createNotification({
       user_id: task.assigned_to,
       type: "Task_Update",
-      title: `Task ${status === "Approved" ? "đã duyệt" : status === "Revision Requested" ? "cần sửa" : "bị từ chối"}`,
-      message: reviewMessages[status] || `Task "${task.task_type}" đã được đánh giá: ${status}.`,
+      title: `Kết quả duyệt Task: ${status}`,
+      message: reviewMessages[status],
       target_type: "Task",
       target_id: task._id,
     });
 
-    // Also notify the mangaka if someone else (e.g. Admin) reviews their task
-    if (String(task.assigned_by) !== req.user.id) {
-      await NotificationService.createNotification({
-        user_id: task.assigned_by,
-        type: "Task_Update",
-        title: `Task "${task.task_type}" đã được duyệt`,
-        message: `Task "${task.task_type}" của bạn đã được đánh giá: "${reviewMessages[status]}" bởi ${req.user.name}.`,
-        target_type: "Task",
-        target_id: task._id,
-      });
-    }
-
     return res.status(200).json({
       success: true,
       message: `Đã đánh giá task thành công: ${status}`,
-      task
+      task,
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: "Lỗi server", error: error.message });
+    return res
+      .status(500)
+      .json({ success: false, message: "Lỗi server", error: error.message });
   }
 };
 
@@ -344,10 +419,15 @@ exports.reviewTask = async (req, res) => {
 exports.getAssistants = async (req, res) => {
   try {
     const User = require("../../models/UserModel");
-    const assistants = await User.find({ role: "Assistant", status: "Active" }).select("name email");
+    const assistants = await User.find({
+      role: "Assistant",
+      status: "Active",
+    }).select("name email");
     return res.status(200).json({ success: true, assistants });
   } catch (error) {
-    return res.status(500).json({ success: false, message: "Lỗi server", error: error.message });
+    return res
+      .status(500)
+      .json({ success: false, message: "Lỗi server", error: error.message });
   }
 };
 
@@ -364,16 +444,20 @@ exports.updateTaskStatus = async (req, res) => {
       "Approved",
       "Revision Requested",
       "Rejected",
-      "Paid"
+      "Paid",
     ];
 
     if (!validStatuses.includes(status)) {
-      return res.status(400).json({ success: false, message: "Trạng thái không hợp lệ" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Trạng thái không hợp lệ" });
     }
 
     const task = await Task.findById(id);
     if (!task) {
-      return res.status(404).json({ success: false, message: "Không tìm thấy task" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Không tìm thấy task" });
     }
 
     // Kiểm tra phân quyền: Chỉ Mangaka hoặc Admin hoặc chính Assistant đó (nếu chuyển sang In Progress) được phép
@@ -382,8 +466,16 @@ exports.updateTaskStatus = async (req, res) => {
     const isAdmin = req.user.role === "Admin";
     const isEditor = req.user.role === "Tantou Editor";
 
-    if (!isCreator && !isAdmin && !isEditor && !(isOwner && status === "In Progress")) {
-      return res.status(403).json({ success: false, message: "Bạn không có quyền chuyển trạng thái nhiệm vụ này" });
+    if (
+      !isCreator &&
+      !isAdmin &&
+      !isEditor &&
+      !(isOwner && status === "In Progress")
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "Bạn không có quyền chuyển trạng thái nhiệm vụ này",
+      });
     }
 
     task.status = status;
@@ -393,10 +485,10 @@ exports.updateTaskStatus = async (req, res) => {
     if (!isCreator && task.assigned_by) {
       const statusLabels = {
         "In Progress": "đang thực hiện",
-        "Approved": "đã duyệt",
+        Approved: "đã duyệt",
         "Revision Requested": "cần chỉnh sửa",
-        "Rejected": "bị từ chối",
-        "Paid": "đã thanh toán",
+        Rejected: "bị từ chối",
+        Paid: "đã thanh toán",
       };
       await NotificationService.createNotification({
         user_id: task.assigned_by,
@@ -408,9 +500,15 @@ exports.updateTaskStatus = async (req, res) => {
       });
     }
 
-    return res.status(200).json({ success: true, message: `Đã cập nhật trạng thái nhiệm vụ thành ${status}`, task });
+    return res.status(200).json({
+      success: true,
+      message: `Đã cập nhật trạng thái nhiệm vụ thành ${status}`,
+      task,
+    });
   } catch (error) {
-    return res.status(500).json({ success: false, message: "Lỗi server", error: error.message });
+    return res
+      .status(500)
+      .json({ success: false, message: "Lỗi server", error: error.message });
   }
 };
 
@@ -420,16 +518,24 @@ exports.deleteTask = async (req, res) => {
     const { id } = req.params;
     const task = await Task.findById(id);
     if (!task) {
-      return res.status(404).json({ success: false, message: "Không tìm thấy nhiệm vụ" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Không tìm thấy nhiệm vụ" });
     }
 
     // Chỉ người giao (Mangaka) hoặc Admin mới được xóa
     if (String(task.assigned_by) !== req.user.id && req.user.role !== "Admin") {
-      return res.status(403).json({ success: false, message: "Bạn không có quyền hủy nhiệm vụ này" });
+      return res.status(403).json({
+        success: false,
+        message: "Bạn không có quyền hủy nhiệm vụ này",
+      });
     }
 
     if (task.status === "Approved" || task.status === "Paid") {
-      return res.status(400).json({ success: false, message: "Không thể hủy nhiệm vụ đã duyệt hoặc thanh toán" });
+      return res.status(400).json({
+        success: false,
+        message: "Không thể hủy nhiệm vụ đã duyệt hoặc thanh toán",
+      });
     }
 
     // Xóa phân vùng của task nếu có
@@ -439,8 +545,14 @@ exports.deleteTask = async (req, res) => {
 
     await Task.findByIdAndDelete(id);
 
-    return res.status(200).json({ success: true, message: "Đã hủy nhiệm vụ thành công" });
+    return res
+      .status(200)
+      .json({ success: true, message: "Đã hủy nhiệm vụ thành công" });
   } catch (error) {
-    return res.status(500).json({ success: false, message: "Lỗi server khi hủy nhiệm vụ", error: error.message });
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi server khi hủy nhiệm vụ",
+      error: error.message,
+    });
   }
 };
