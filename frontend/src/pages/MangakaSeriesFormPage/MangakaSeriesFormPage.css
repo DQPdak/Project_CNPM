@@ -20,6 +20,18 @@
   @apply bg-[#FFD000] border-2 border-black px-3 py-1 text-black font-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)];
 }
 
+.deadline-badge.deadline-active {
+  @apply bg-[#C8F7DC];
+}
+
+.deadline-badge.deadline-soon {
+  @apply bg-[#FFD000];
+}
+
+.deadline-badge.deadline-overdue {
+  @apply bg-[#FF90E8] text-red-800;
+}
+
 .series-quick-nav {
   @apply flex flex-wrap gap-3;
 }
@@ -98,4 +110,8 @@
 
 .btn-success {
   @apply flex-1 md:flex-none bg-[#00E599] text-black border-4 border-black px-8 py-4 font-black text-sm uppercase tracking-widest shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:bg-[#23A094] hover:text-white active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all disabled:bg-[#D1D5DB] disabled:text-gray-600 disabled:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] disabled:cursor-not-allowed disabled:transform-none;
+}
+
+.btn-danger {
+  @apply flex-1 md:flex-none bg-[#FF5A5F] text-white border-4 border-black px-8 py-4 font-black text-sm uppercase tracking-widest shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:bg-[#d63b40] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all disabled:bg-[#D1D5DB] disabled:text-gray-600 disabled:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] disabled:cursor-not-allowed disabled:transform-none;
 }

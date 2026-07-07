@@ -6,6 +6,10 @@ import finalizeSeries from "../../services/board/finalizeSeriesService";
 import Loading from "../../common/Loading/Loading";
 import { useToast } from "../../contexts/ToastContext";
 import { useAuthStore } from "../../stores/authStore";
+import {
+  formatDeadlineStatus,
+  getProposalReviewDeadline,
+} from "../../utils/reviewDeadline";
 import "./BoardSeriesReviewPage.css"; // Import file CSS mới
 
 const SCHEDULE_OPTIONS = [
@@ -98,6 +102,8 @@ export default function BoardSeriesReviewPage() {
     (v) => String(v.board_member_id?._id) === String(currentUser?.id),
   );
   const showVoteButtons = !myVote || changingVote;
+  const reviewDeadline = getProposalReviewDeadline(proposal);
+  const deadlineStatus = formatDeadlineStatus(reviewDeadline);
 
   return (
     <div className="board-review-wrapper">
@@ -114,8 +120,29 @@ export default function BoardSeriesReviewPage() {
           <span className="meta-status">
             Proposal: <strong>{proposal?.status}</strong>
           </span>
+          {reviewDeadline && (
+            <span className={`meta-deadline ${deadlineStatus?.className || ""}`}>
+              Hạn duyệt:{" "}
+              <strong>
+                {reviewDeadline.toLocaleDateString("vi-VN")}
+              </strong>
+              {deadlineStatus ? ` · ${deadlineStatus.label}` : ""}
+            </span>
+          )}
         </div>
       </header>
+
+      {canVote && reviewDeadline && (
+        <div className={`deadline-banner ${deadlineStatus?.className || ""}`}>
+          <strong>Hạn duyệt:</strong>{" "}
+          {reviewDeadline.toLocaleDateString("vi-VN")}
+          {deadlineStatus ? ` — ${deadlineStatus.label}` : ""}
+          <span className="deadline-hint">
+            {" "}
+            (Hết hạn hệ thống tự chốt kết quả phiếu)
+          </span>
+        </div>
+      )}
 
       <section className="neo-section">
         <h2 className="section-title">Hồ sơ đề xuất</h2>

@@ -1,10 +1,18 @@
 const Series = require("../../models/SeriesModel");
 const SeriesProposal = require("../../models/SeriesProposalModel");
 const BoardVote = require("../../models/BoardVoteModel");
+const {
+  autoFinalizeExpiredProposals,
+} = require("../../services/autoFinalizeExpiredProposals");
+const {
+  ensureReviewDeadline,
+} = require("../../services/proposalReviewService");
 
 exports.getBoardSeriesDetail = async (req, res) => {
   try {
     const { id } = req.params;
+
+    await autoFinalizeExpiredProposals();
 
     const series = await Series.findById(id).populate("author_id", "name email role");
     if (!series) {
@@ -14,6 +22,10 @@ exports.getBoardSeriesDetail = async (req, res) => {
     const proposal = await SeriesProposal.findOne({ series_id: id }).sort({
       createdAt: -1,
     });
+
+    if (proposal) {
+      await ensureReviewDeadline(proposal);
+    }
 
     const votes = await BoardVote.find({
       series_id: id,

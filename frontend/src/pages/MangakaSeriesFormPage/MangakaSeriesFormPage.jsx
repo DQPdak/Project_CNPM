@@ -3,12 +3,17 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import createSeries from "../../services/series/createSeriesService";
 import getSeriesById from "../../services/series/getSeriesByIdService";
 import updateSeries from "../../services/series/updateSeriesService";
+import cancelSeries from "../../services/series/cancelSeriesService";
 import getEditors from "../../services/series/getEditorsService";
 import upsertProposal from "../../services/series/upsertProposalService";
 import submitProposal from "../../services/series/submitProposalService";
 import uploadCover from "../../services/series/uploadCoverService";
 import Loading from "../../common/Loading/Loading";
 import { useToast } from "../../contexts/ToastContext";
+import {
+  formatDeadlineStatus,
+  getProposalReviewDeadline,
+} from "../../utils/reviewDeadline";
 import "./MangakaSeriesFormPage.css";
 
 const editableStatuses = ["Draft", "Need Revision"];
@@ -23,6 +28,8 @@ export default function MangakaSeriesFormPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [proposalStatus, setProposalStatus] = useState("Draft");
+  const [proposalInfo, setProposalInfo] = useState(null);
+  const [seriesStatus, setSeriesStatus] = useState("Draft");
   const [coverImage, setCoverImage] = useState("");
   // Preview cục bộ để hiển thị ảnh ngay khi chọn file (tránh giật/lag do tải 2 lần).
   const [previewUrl, setPreviewUrl] = useState("");
@@ -51,6 +58,7 @@ export default function MangakaSeriesFormPage() {
       return;
     }
     const { series, proposal } = result;
+    setSeriesStatus(series.status || "Draft");
     setForm({
       title: series.title || "",
       description: series.description || "",
@@ -62,6 +70,7 @@ export default function MangakaSeriesFormPage() {
       art_style: proposal?.art_style || "",
     });
     setProposalStatus(proposal?.status || "Draft");
+    setProposalInfo(proposal || null);
     setCoverImage(proposal?.cover_image || "");
     setIsLoading(false);
   }, [isEdit, seriesId, toast]);
@@ -96,8 +105,36 @@ export default function MangakaSeriesFormPage() {
     setForm((prev) => ({ ...prev, [field]: event.target.value }));
   };
 
-  const canEdit = !isEdit || editableStatuses.includes(proposalStatus);
+  const canEdit =
+    !isEdit ||
+    (seriesStatus !== "Cancelled" && editableStatuses.includes(proposalStatus));
   const displayCover = previewUrl || coverImage;
+  const isCancelled = isEdit && seriesStatus === "Cancelled";
+  const reviewDeadline = getProposalReviewDeadline(proposalInfo);
+  const deadlineStatus = formatDeadlineStatus(reviewDeadline);
+
+  const handleCancelSeries = async () => {
+    if (
+      !window.confirm(
+        "Hủy series sẽ đóng series này và không thể chỉnh sửa tiếp. Tiếp tục?",
+      )
+    ) {
+      return;
+    }
+
+    setIsSaving(true);
+    const result = await cancelSeries(seriesId);
+    if (result.success === false) {
+      toast.error(result.message);
+      setIsSaving(false);
+      return;
+    }
+
+    setSeriesStatus(result.series?.status || "Cancelled");
+    setProposalStatus("Rejected");
+    toast.success(result.message || "Đã hủy series.");
+    setIsSaving(false);
+  };
 
   const handleSave = async (event) => {
     event.preventDefault();
@@ -197,6 +234,7 @@ export default function MangakaSeriesFormPage() {
       return;
     }
     setProposalStatus(result.proposal?.status || "Submitted");
+    setProposalInfo(result.proposal || null);
     toast.success("Đã nộp thành công!");
   };
 
@@ -218,22 +256,39 @@ export default function MangakaSeriesFormPage() {
 
       {isEdit && (
         <p className="status-text">
-          Trạng thái proposal:{" "}
+          Trạng thái series: {" "}
+          <span className="status-badge">{seriesStatus}</span>
+          {" "}| Trạng thái proposal: {" "}
           <span className="status-badge">{proposalStatus}</span>
+          {reviewDeadline && (
+            <>
+              {" "}| Hạn duyệt:{" "}
+              <span className={`status-badge deadline-badge ${deadlineStatus?.className || ""}`}>
+                {reviewDeadline.toLocaleDateString("vi-VN")}
+                {deadlineStatus ? ` (${deadlineStatus.label})` : ""}
+              </span>
+            </>
+          )}
         </p>
       )}
 
       {isEdit && (
         <div className="series-quick-nav">
-          <Link to={`/chapter-list/${seriesId}`} className="btn-nav-chapter">
-            Quản lý Chapter
-          </Link>
-          <Link
-            to={`/editor/progress?seriesId=${seriesId}`}
-            className="btn-nav-progress"
-          >
-            Tiến độ Studio
-          </Link>
+          {!isCancelled ? (
+            <>
+              <Link to={`/chapter-list/${seriesId}`} className="btn-nav-chapter">
+                Quản lý Chapter
+              </Link>
+              <Link
+                to={`/editor/progress?seriesId=${seriesId}`}
+                className="btn-nav-progress"
+              >
+                Tiến độ Studio
+              </Link>
+            </>
+          ) : (
+            <span className="upload-hint">Series đã hủy: các thao tác bị khóa.</span>
+          )}
         </div>
       )}
 
@@ -373,11 +428,22 @@ export default function MangakaSeriesFormPage() {
             {isSaving ? "Đang lưu..." : isEdit ? "Lưu thay đổi" : "Tạo series"}
           </button>
 
-          {isEdit && canEdit && (
-            <button type="button" onClick={handleSubmit} className="btn-success">
+            {isEdit && canEdit && (
+              <button type="button" onClick={handleSubmit} className="btn-success">
               Nộp xin duyệt
             </button>
           )}
+
+            {isEdit && canEdit && (
+              <button
+                type="button"
+                onClick={handleCancelSeries}
+                className="btn-danger"
+                disabled={isSaving}
+              >
+                Hủy series
+              </button>
+            )}
         </div>
       </form>
     </div>
