@@ -23,3 +23,16 @@ latest frontend and backend merge.
 - Progress board loads series, chapters, annotations, and task counts.
 - Workspace links stay inside the authenticated app session.
 - Task status changes update both the Kanban columns and dashboard metrics.
+
+## Series Page Checklist
+
+- Open `/editor/series` from the Tantou Editor sidebar.
+- Confirm the summary counters render after backend data loads.
+- Confirm the list contains the seeded editor series.
+- Search by a Vietnamese title fragment such as `Rồng`.
+- Clear the search field and confirm the full list returns.
+- Apply the `ACTIVE` filter and confirm active series remain visible.
+- Open a chapter list from a series card.
+- Confirm the chapter list route receives the selected series id.
+- Confirm chapter action links render for page management and publish review.
+- Return to the series list through navigation without losing auth state.
