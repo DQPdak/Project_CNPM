@@ -5,6 +5,8 @@ import Loading from "../../common/Loading/Loading";
 import { useToast } from "../../contexts/ToastContext";
 import "./BoardPendingSeriesPage.css"; // Import file CSS mới
 
+const PENDING_PROPOSAL_STATUSES = ["Submitted", "Under Review"];
+
 export default function BoardPendingSeriesPage() {
   const toast = useToast();
   const [items, setItems] = useState([]);
@@ -17,7 +19,10 @@ export default function BoardPendingSeriesPage() {
       toast.error(result.message);
       setItems([]);
     } else {
-      setItems(result.pending || []);
+      const pendingOnly = (result.pending || []).filter(({ proposal }) =>
+        PENDING_PROPOSAL_STATUSES.includes(proposal?.status),
+      );
+      setItems(pendingOnly);
     }
     setIsLoading(false);
   }, [toast]);
@@ -29,16 +34,18 @@ export default function BoardPendingSeriesPage() {
   return (
     <div className="board-pending-wrapper">
       <header className="page-header">
-        <h1 className="page-title">Series chờ duyệt</h1>
+        <h1 className="page-title">Duyệt Series Mới</h1>
         <p className="page-desc">
-          Hội đồng biên tập xem và bỏ phiếu quyết định series mới
+          Các series chưa được duyệt — chờ Hội đồng biên tập xem và bỏ phiếu
         </p>
       </header>
 
       {isLoading && <Loading text="Đang tải danh sách chờ duyệt..." />}
 
       {!isLoading && items.length === 0 && (
-        <div className="empty-box">Không có series nào đang chờ duyệt.</div>
+        <div className="empty-box">
+          Không có series nào đang chờ duyệt. Series đã duyệt xem ở mục &quot;Danh sách Series&quot;.
+        </div>
       )}
 
       {!isLoading && items.length > 0 && (
