@@ -102,9 +102,6 @@ export default function EditorSeriesPage() {
         <div>
           <p className="editor-series-eyebrow">Tantou Editor</p>
           <h1 className="editor-series-title">Series phụ trách</h1>
-          <p className="editor-series-desc">
-            Theo dõi các series được gán cho bạn qua trường editor_id.
-          </p>
         </div>
 
         <Link to="/editor/progress" className="editor-series-progress-link">

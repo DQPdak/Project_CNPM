@@ -1,5 +1,6 @@
-﻿import React, { useEffect, useState, useCallback } from "react";
+﻿import { useEffect, useState, useCallback } from "react";
 import { getTasksApi, updateTaskStatusApi } from "../../services/task/taskService";
+import { Link } from "react-router-dom";
 import getMySeries from "../../services/series/getMySeriesService";
 import { getEditorSeries, getAllSeries, getAssistantSeries } from "../../services/series/getSeriesByRoleService";
 import getChaptersBySeries from "../../services/chapter/getChaptersBySeriesService";
@@ -7,13 +8,28 @@ import getChapterProgressStats from "../../services/chapter/getChapterProgressSt
 import { useAuthStore } from "../../stores/authStore";
 import { useToast } from "../../contexts/ToastContext";
 import Loading from "../../common/Loading/Loading";
-import { Calendar, DollarSign, User, AlertTriangle, RefreshCw, Layers, CheckCircle, ListTodo } from "lucide-react";
+import { Calendar, DollarSign, User, AlertTriangle, RefreshCw, Layers } from "lucide-react";
 import "./StudioProgressPage.css";
 
 const THREE_COLUMNS = [
   { id: "todo", title: "Việc cần làm", color: "border-t-[#FFD000]" },
   { id: "inprogress", title: "Đang thực hiện", color: "border-t-[#23A094]" },
   { id: "done", title: "Hoàn thành", color: "border-t-[#28a745]" }
+];
+
+const COLUMN_STATUS = {
+  todo: "Assigned",
+  inprogress: "In Progress",
+  done: "Approved",
+};
+
+const TASK_STATUS_OPTIONS = [
+  { value: "Assigned", label: "Mới giao" },
+  { value: "In Progress", label: "Đang vẽ" },
+  { value: "Revision Requested", label: "Cần sửa" },
+  { value: "Submitted", label: "Chờ duyệt" },
+  { value: "Approved", label: "Đã duyệt" },
+  { value: "Paid", label: "Đã trả lương" },
 ];
 
 export default function StudioProgressPage() {
@@ -115,13 +131,50 @@ export default function StudioProgressPage() {
         toast.error(tasksRes.message);
       }
 
-      if (selectedChapterId) {
-        const statsRes = await getChapterProgressStats(selectedChapterId);
-        if (statsRes.success) {
-          setProgressStats(statsRes);
-        } else {
+      const chapterIds = selectedChapterId
+        ? [selectedChapterId]
+        : chapters.map((chapter) => chapter._id).filter(Boolean);
+
+      if (chapterIds.length > 0) {
+        const statsResults = await Promise.all(chapterIds.map((chapterId) => getChapterProgressStats(chapterId)));
+        const failedStats = statsResults.find((stats) => stats.success === false);
+
+        if (failedStats) {
           setProgressStats(null);
-          toast.error(statsRes.message);
+          toast.error(failedStats.message);
+        } else if (selectedChapterId) {
+          setProgressStats(statsResults[0]);
+        } else {
+          const aggregateStats = statsResults.reduce(
+            (acc, stats) => {
+              const taskStatusCounts = stats.taskStatusCounts || {};
+
+              acc.annotations.total += stats.annotations?.total || 0;
+              acc.annotations.resolved += stats.annotations?.resolved || 0;
+              acc.annotations.unresolved += stats.annotations?.unresolved || 0;
+
+              Object.entries(taskStatusCounts).forEach(([status, count]) => {
+                acc.taskStatusCounts[status] = (acc.taskStatusCounts[status] || 0) + count;
+              });
+
+              return acc;
+            },
+            {
+              success: true,
+              annotations: { total: 0, resolved: 0, unresolved: 0 },
+              taskStatusCounts: {},
+              completionPercent: 0,
+            },
+          );
+
+          const totalTasks = Object.values(aggregateStats.taskStatusCounts).reduce((sum, count) => sum + count, 0);
+          const doneTasks =
+            (aggregateStats.taskStatusCounts.Submitted || 0) +
+            (aggregateStats.taskStatusCounts.Approved || 0) +
+            (aggregateStats.taskStatusCounts.Paid || 0);
+
+          aggregateStats.completionPercent = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0;
+          setProgressStats(aggregateStats);
         }
       } else {
         setProgressStats(null);
@@ -131,7 +184,7 @@ export default function StudioProgressPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [selectedChapterId, toast]);
+  }, [chapters, selectedChapterId, toast]);
 
   useEffect(() => {
     fetchTasksAndProgress();
@@ -163,44 +216,37 @@ export default function StudioProgressPage() {
 
   // 4. HTML5 Drag & Drop handlers
   const handleDragStart = (e, taskId) => {
+    e.dataTransfer.effectAllowed = "move";
     e.dataTransfer.setData("taskId", taskId);
+    e.dataTransfer.setData("text/plain", taskId);
   };
 
   const handleDragOver = (e) => {
     e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
   };
 
-  const handleDrop = async (e, columnId) => {
+  const handleDragEnter = (e) => {
     e.preventDefault();
-    const taskId = e.dataTransfer.getData("taskId");
+  };
+
+  const updateTaskStatus = async (taskId, newStatus) => {
     const task = allTasks.find(t => t._id === taskId);
     if (!task) return;
 
-    // Check permissions
     if (!isAllowedToEdit) {
       toast.error("Bạn không có quyền cập nhật trạng thái tiến độ!");
       return;
     }
 
-    // Determine new status based on target column
-    let newStatus = "";
-    if (columnId === "todo") {
-      newStatus = "Assigned";
-    } else if (columnId === "inprogress") {
-      newStatus = "In Progress";
-    } else if (columnId === "done") {
-      newStatus = "Approved"; // Mangaka approves the work
-    }
-
-    if (task.status === newStatus || getColumnForTask(task) === columnId) return;
+    if (!newStatus || task.status === newStatus) return;
 
     setIsActionLoading(true);
     try {
       const res = await updateTaskStatusApi(taskId, newStatus);
       if (res.success) {
-        toast.success(`Đã chuyển công việc sang cột: ${columnId === "todo" ? "Việc cần làm" : columnId === "inprogress" ? "Đang thực hiện" : "Hoàn thành"}`);
-        // Refresh local list
-        setAllTasks(allTasks.map(t => t._id === taskId ? { ...t, status: newStatus } : t));
+        await fetchTasksAndProgress();
+        toast.success(`Đã cập nhật trạng thái: ${translateTaskStatus(newStatus)}`);
       } else {
         toast.error("Lỗi cập nhật trạng thái: " + res.message);
       }
@@ -209,6 +255,13 @@ export default function StudioProgressPage() {
     } finally {
       setIsActionLoading(false);
     }
+  };
+
+  const handleDrop = async (e, columnId) => {
+    e.preventDefault();
+    const taskId = e.dataTransfer.getData("taskId") || e.dataTransfer.getData("text/plain");
+    const newStatus = COLUMN_STATUS[columnId];
+    await updateTaskStatus(taskId, newStatus);
   };
 
   // 5. In-Memory Filtered Tasks
@@ -243,7 +296,7 @@ export default function StudioProgressPage() {
 
   // Deadline notifications lists
   const upcomingTasks = filteredTasks.filter(task => isNearDeadline(task));
-  const overdueTasks = progressStats?.overdueTasks || filteredTasks.filter(task => isOverdue(task));
+  const overdueTasks = filteredTasks.filter(task => isOverdue(task));
 
   const translateTaskStatus = (status) => {
     const s = (status || "").toLowerCase().trim();
@@ -436,6 +489,7 @@ export default function StudioProgressPage() {
                 key={column.id}
                 className="kp-column shadow-brutal bg-white border-4 border-black"
                 onDragOver={handleDragOver}
+                onDragEnter={handleDragEnter}
                 onDrop={(e) => handleDrop(e, column.id)}
               >
                 {/* Column Header */}
@@ -491,16 +545,38 @@ export default function StudioProgressPage() {
                             </div>
                           </div>
 
+                          <div className="kp-status-control border-t border-gray-100 mt-2.5 pt-2">
+                            <label htmlFor={`task-status-${task._id}`} className="kp-status-label">
+                              Trạng thái
+                            </label>
+                            <select
+                              id={`task-status-${task._id}`}
+                              className="kp-status-select"
+                              value={task.status}
+                              disabled={!isAllowedToEdit || isActionLoading}
+                              draggable={false}
+                              onDragStart={(e) => e.stopPropagation()}
+                              onMouseDown={(e) => e.stopPropagation()}
+                              onChange={(e) => updateTaskStatus(task._id, e.target.value)}
+                            >
+                              {TASK_STATUS_OPTIONS.map((option) => (
+                                <option key={option.value} value={option.value}>
+                                  {option.label}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+
                           <div className="kp-card-actions flex justify-between border-t border-gray-100 mt-2.5 pt-2">
                             <span className="text-[10px] uppercase font-bold text-gray-400">
                               {translateTaskStatus(task.status)}
                             </span>
-                            <a 
-                              href={`/workspace/${pageId}`} 
+                            <Link
+                              to={`/workspace/${pageId}`}
                               className="kp-card-btn font-bold text-[10px] text-teal-600 hover:underline flex items-center gap-0.5"
                             >
                               <Layers size={10} /> Workspace
-                            </a>
+                            </Link>
                           </div>
                         </div>
                       );
