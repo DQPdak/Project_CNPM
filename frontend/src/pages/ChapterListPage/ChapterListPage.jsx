@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import getChaptersBySeries from "../../services/chapter/getChaptersBySeriesService";
 import getMySeries from "../../services/series/getMySeriesService";
+import getSeriesById from "../../services/series/getSeriesByIdService";
 import RequirePermission from "../../components/security/RequirePermission";
 import CreateChapterAction from "../../components/chapter/CreateChapterAction/CreateChapterAction";
 import ChapterTable from "../../components/chapter/ChapterTable/ChapterTable";
@@ -15,48 +16,85 @@ export default function ChapterListPage() {
   const navigate = useNavigate();
   const toast = useToast();
   const user = useAuthStore((state) => state.user);
+
   const [resolvedSeriesId, setResolvedSeriesId] = useState(seriesId || null);
+  const [resolvedSeriesName, setResolvedSeriesName] = useState(null);
   const [chapters, setChapters] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const resolveSeriesId = useCallback(async () => {
+  // Hàm xử lý URL quay lại dựa trên Role của user
+  const handleGoBack = () => {
+    if (!user) {
+      navigate("/");
+      return;
+    }
+    switch (user.role) {
+      case "Mangaka":
+        navigate("/mangaka/series");
+        break;
+      case "Tantou Editor":
+        navigate("/editor/series");
+        break;
+      case "Editorial Board":
+      case "Admin":
+        navigate("/board/all-series");
+        break;
+      default:
+        navigate("/");
+    }
+  };
+
+  const resolveSeriesInfo = useCallback(async () => {
     if (seriesId) {
       setResolvedSeriesId(seriesId);
+      const seriesResult = await getSeriesById(seriesId);
+      if (seriesResult.success !== false && seriesResult.series) {
+        setResolvedSeriesName(seriesResult.series.title || seriesId);
+      } else {
+        setResolvedSeriesName(seriesId);
+      }
       return seriesId;
     }
+
     const result = await getMySeries();
     if (result.success === false) {
-      toast.error("Khong the tai danh sach series: " + result.message);
+      toast.error("Không thể tải danh sách series: " + result.message);
       setResolvedSeriesId(null);
       return null;
     }
+
     const firstSeries = result.series?.[0]?.series;
     if (!firstSeries?._id) {
       setResolvedSeriesId(null);
       return null;
     }
+
     setResolvedSeriesId(firstSeries._id);
+    setResolvedSeriesName(firstSeries.title || firstSeries._id);
     navigate(`/chapter-list/${firstSeries._id}`, { replace: true });
     return firstSeries._id;
-  }, [navigate, seriesId, user?.id]);
+  }, [navigate, seriesId, toast]);
 
   const fetchChaptersList = useCallback(async () => {
     setIsLoading(true);
-    const nextSeriesId = await resolveSeriesId();
+    const nextSeriesId = await resolveSeriesInfo();
+
     if (!nextSeriesId) {
       setChapters([]);
       setIsLoading(false);
       return;
     }
+
     const result = await getChaptersBySeries(nextSeriesId);
     if (result.success === false) {
-      toast.error("Khong the tai danh sach chapter: " + result.message);
+      toast.error("Không thể tải danh sách chapter: " + result.message);
       setChapters([]);
     } else {
       setChapters(result.chapters || []);
     }
+
     setIsLoading(false);
-  }, [resolveSeriesId]);
+  }, [resolveSeriesInfo, toast]);
 
   useEffect(() => {
     fetchChaptersList();
@@ -64,15 +102,22 @@ export default function ChapterListPage() {
 
   return (
     <div className="clp-wrapper">
-      {isLoading && <Loading text="Dang tai danh sach chapter..." />}
+      {isLoading && <Loading text="Đang tải danh sách chapter..." />}
+
+      {/* SỬ DỤNG HÀM ĐIỀU HƯỚNG MỚI */}
+      <div>
+        <button onClick={handleGoBack} className="clp-back-btn">
+          ← Quay lại danh sách
+        </button>
+      </div>
 
       <header className="clp-header">
         <div>
-          <h1 className="clp-title">Quan ly chapter</h1>
+          <h1 className="clp-title">Quản lý chapter</h1>
           <p className="clp-subtitle">
-            Series ID:{" "}
+            Series:{" "}
             <span className="clp-highlight">
-              {resolvedSeriesId || "Chua co series"}
+              {resolvedSeriesName || "Chưa có series"}
             </span>
           </p>
         </div>
@@ -90,7 +135,7 @@ export default function ChapterListPage() {
 
       {!isLoading && !resolvedSeriesId ? (
         <div className="clp-empty-box">
-          Tai khoan nay chua co series nao de quan ly.
+          Tài khoản này chưa có series nào để quản lý.
         </div>
       ) : null}
 

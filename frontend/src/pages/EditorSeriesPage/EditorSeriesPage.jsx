@@ -193,7 +193,12 @@ export default function EditorSeriesPage() {
               <article key={series._id} className="editor-series-card">
                 <div className="editor-series-card-top">
                   <h2>{series.title}</h2>
-                  <span className={badgeClass("editor-series-status", series.status)}>
+                  <span
+                    className={badgeClass(
+                      "editor-series-status",
+                      series.status,
+                    )}
+                  >
                     {series.status || "Draft"}
                   </span>
                 </div>
@@ -222,12 +227,22 @@ export default function EditorSeriesPage() {
                 </div>
 
                 <div className="editor-series-card-footer">
-                  <span className={badgeClass("editor-series-risk", series.risk_status)}>
-                    {series.risk_status || "Safe"}
-                  </span>
-                  <span className="editor-series-proposal">
-                    Proposal: {proposal?.status || "Chưa có"}
-                  </span>
+                  <div>
+                    <span
+                      className={badgeClass(
+                        "editor-series-risk",
+                        series.risk_status,
+                      )}
+                    >
+                      {series.risk_status || "Safe"}
+                    </span>
+                    <span className="editor-series-proposal">
+                      Proposal: {proposal?.status || "Chưa có"}
+                    </span>
+                  </div>
+
+                  {/* Nút điều hướng nhanh qua danh sách chương dành cho Editor */}
+                  <Link to={`/chapter-list/${series._id}`}>Xem Chapters</Link>
                 </div>
               </article>
             );

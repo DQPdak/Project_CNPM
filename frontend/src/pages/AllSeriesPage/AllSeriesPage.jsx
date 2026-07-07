@@ -101,11 +101,8 @@ export default function AllSeriesPage() {
       {!isLoading && filtered.length > 0 && (
         <div className="all-series-grid">
           {filtered.map(({ series, proposal }) => (
-            <Link
-              key={series._id}
-              to={`/board/series/${series._id}`}
-              className="neo-card"
-            >
+            // Đổi từ Link sang div
+            <div key={series._id} className="neo-card">
               <div className="card-top">
                 <h2 className="card-title">{series.title}</h2>
                 <span className={getStatusClass(series.status)}>
@@ -124,7 +121,23 @@ export default function AllSeriesPage() {
                   <p className="card-meta">Proposal: {proposal.status}</p>
                 )}
               </div>
-            </Link>
+
+              {/* Bổ sung thanh điều hướng ở cuối card */}
+              <div className="card-actions">
+                <Link
+                  to={`/board/series/${series._id}`}
+                  className="btn-action-review"
+                >
+                  Xem xét duyệt
+                </Link>
+                <Link
+                  to={`/chapter-list/${series._id}`}
+                  className="btn-action-chapters"
+                >
+                  Chapter
+                </Link>
+              </div>
+            </div>
           ))}
         </div>
       )}

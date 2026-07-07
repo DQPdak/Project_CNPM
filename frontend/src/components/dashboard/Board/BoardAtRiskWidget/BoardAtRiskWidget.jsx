@@ -12,8 +12,10 @@ const BoardAtRiskWidget = () => {
       try {
         setIsLoading(true);
         const res = await getAtRiskSeriesService();
-        // FIX: Xử lý mảng an toàn
-        const dataList = Array.isArray(res) ? res : res?.data || [];
+
+        // Logic bóc tách mảng an toàn
+        let dataList = res?.series || [];
+
         setAtRiskSeries(dataList.slice(0, 3));
       } catch (error) {
         console.error("Lỗi lấy danh sách at-risk:", error);

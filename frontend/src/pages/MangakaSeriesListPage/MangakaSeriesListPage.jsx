@@ -57,26 +57,44 @@ export default function MangakaSeriesListPage() {
       {!isLoading && items.length > 0 && (
         <div className="mangaka-series-grid">
           {items.map(({ series, proposal }) => (
-            <Link
-              key={series._id}
-              to={`/mangaka/series/${series._id}`}
-              className="series-card"
-            >
-              <div className="series-card-header">
-                <div>
-                  <h2 className="series-card-title">{series.title}</h2>
-                  <p className="series-card-meta">
-                    {series.genre || "Chưa có thể loại"} · Trạng thái series:{" "}
+            // Thẻ div bao bọc có style neo-card
+            <div key={series._id} className="neo-card">
+              <div>
+                {/* Phần Top chứa Title và Badge Trạng thái Series */}
+                <div className="card-top">
+                  <h2 className="card-title">{series.title}</h2>
+                  <span className={getStatusClass(series.status)}>
                     {series.status}
-                  </p>
-                </div>
-                {proposal && (
-                  <span className={getStatusClass(proposal.status)}>
-                    {proposal.status}
                   </span>
-                )}
+                </div>
+
+                {/* Nhóm Thông tin (Thể loại và Proposal) */}
+                <div className="card-info-group">
+                  <p className="card-genre">
+                    Thể loại: {series.genre || "Chưa có thể loại"}
+                  </p>
+                  {proposal && (
+                    <p className="card-meta">Proposal: {proposal.status}</p>
+                  )}
+                </div>
               </div>
-            </Link>
+
+              {/* Nhóm Action/Nút bấm nằm ở cuối Card */}
+              <div className="card-actions">
+                <Link
+                  to={`/mangaka/series/${series._id}`}
+                  className="btn-action-secondary"
+                >
+                  Thông tin chi tiết
+                </Link>
+                <Link
+                  to={`/chapter-list/${series._id}`}
+                  className="btn-action-primary"
+                >
+                  Quản lý Chapter
+                </Link>
+              </div>
+            </div>
           ))}
         </div>
       )}

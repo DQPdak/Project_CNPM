@@ -2,6 +2,8 @@ const Chapter = require("../../models/ChapterModel");
 const Page = require("../../models/PageModel");
 const Task = require("../../models/TaskModel");
 const Annotation = require("../../models/AnnotationModel");
+const Series = require("../../models/SeriesModel");
+const NotificationService = require("../../services/notificationService");
 
 exports.publishChapter = async (req, res) => {
   try {
@@ -68,6 +70,25 @@ exports.publishChapter = async (req, res) => {
       chapter.release_issue_id = release_issue_id;
     }
     await chapter.save();
+
+    // Find series to get author/editor info
+    const series = await Series.findById(chapter.series_id);
+
+    // Notify author and editor about publication
+    if (series) {
+      const notifyUsers = [series.author_id];
+      if (series.editor_id) notifyUsers.push(series.editor_id);
+      for (const userId of notifyUsers) {
+        await NotificationService.createNotification({
+          user_id: userId,
+          type: "Task_Update",
+          title: "Chapter đã được xuất bản",
+          message: `Chapter "${chapter.title}" của series "${series.title}" đã được xuất bản thành công.`,
+          target_type: "Chapter",
+          target_id: chapter._id,
+        });
+      }
+    }
 
     res.status(200).json({ message: "Xuất bản chapter thành công", chapter });
   } catch (error) {

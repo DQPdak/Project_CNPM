@@ -7,6 +7,7 @@ const Task = require("../models/TaskModel");
 const TaskSubmission = require("../models/TaskSubmissionModel");
 const AssistantIncome = require("../models/AssistantIncomeModel");
 const Annotation = require("../models/AnnotationModel");
+const Notification = require("../models/NotificationModel");
 const { hashPassword } = require("../modules/auth/utils/password");
 
 const daysFromNow = (days) => new Date(Date.now() + days * 24 * 60 * 60 * 1000);
@@ -84,6 +85,18 @@ const runSeed = async () => {
       { upsert: true, new: true, setDefaultsOnInsert: true }
     );
 
+    const board = await User.findOneAndUpdate(
+      { email: "board@example.com" },
+      {
+        name: "Lê Hội Đồng",
+        email: "board@example.com",
+        password: hashedPass,
+        role: "Editorial Board",
+        status: "Active"
+      },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
+
     const extraMangakas = await Promise.all([
       User.findOneAndUpdate(
         { email: "aoi.hikari@example.com" },
@@ -124,6 +137,7 @@ const runSeed = async () => {
     console.log(`- Seeded Assistant: ${assistant.email}`);
     console.log(`- Seeded Admin: ${admin.email}`);
     console.log(`- Seeded Editor: ${editor.email}`);
+    console.log(`- Seeded Board: ${board.email}`);
     console.log(`- Seeded Extra Mangakas: ${extraMangakas.map((user) => user.email).join(", ")}`);
 
     // 2. Seed Series, Chapter, Page
@@ -482,6 +496,21 @@ const runSeed = async () => {
     ]);
 
     console.log(`- Seeded Extra Progress Series: ${extraSeries.map((item) => item.title).join(", ")}`);
+
+    // 7. Seeded a few sample notifications for demo
+    await Notification.deleteMany({});
+    const allUsers = [mangaka, assistant, admin, editor, board, ...extraMangakas];
+    for (const user of allUsers) {
+      await Notification.create({
+        user_id: user._id,
+        type: "System",
+        title: "Chào mừng bạn đến với Hệ thống",
+        message: "Hệ thống quản lý Manga đã sẵn sàng. Thông báo sẽ được tạo tự động khi bạn thao tác trên hệ thống.",
+        is_read: false,
+      });
+    }
+    const notifCount = allUsers.length;
+
     console.log("✅ Auto-seeding completed successfully!");
   } catch (err) {
     console.error("❌ Auto-seeding error:", err);

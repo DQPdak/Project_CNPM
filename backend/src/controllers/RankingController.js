@@ -25,14 +25,36 @@ const getLeaderboard = async (req, res) => {
       );
     }
 
-    let targetIssueId = issueId;
-    if (!targetIssueId && records.length > 0) {
+    let allAvailableIssues = [];
+    if (records.length > 0) {
       const allIssueIds = records.map((record) => record.issueId);
+      const uniqueIssueIds = [...new Set(allIssueIds)];
 
-      const uniqueSortedIssues = [...new Set(allIssueIds)].sort((a, b) =>
-        b.localeCompare(a),
-      );
-      targetIssueId = uniqueSortedIssues[0];
+      // Lấy thông tin createdAt từ DB để sắp xếp đúng thứ tự thời gian
+      const ReleaseIssue = require("../models/ReleaseIssueModel");
+      const issueDocuments = await ReleaseIssue.find({
+        custom_id: { $in: uniqueIssueIds }
+      }).select("custom_id title createdAt").lean();
+
+      // Tạo map để tra cứu nhanh
+      const issueMap = new Map(issueDocuments.map(doc => [doc.custom_id, doc]));
+
+      // Sắp xếp theo createdAt giảm dần (mới nhất lên đầu)
+      allAvailableIssues = uniqueIssueIds
+        .map(id => {
+          const doc = issueMap.get(id);
+          return {
+            id,
+            label: doc?.title ? `${id} – ${doc.title}` : id,
+            createdAt: doc?.createdAt || new Date(0)
+          };
+        })
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    }
+
+    let targetIssueId = issueId;
+    if (!targetIssueId && allAvailableIssues.length > 0) {
+      targetIssueId = allAvailableIssues[0].id;
     }
 
     if (targetIssueId) {
@@ -61,7 +83,10 @@ const getLeaderboard = async (req, res) => {
       };
     });
 
-    res.json(detailedRecords);
+    res.json({
+      data: detailedRecords,
+      availableIssues: allAvailableIssues
+    });
   } catch (error) {
     res
       .status(500)

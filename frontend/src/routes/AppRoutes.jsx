@@ -26,6 +26,7 @@ import AssistantIncomePage from "../pages/AssistantIncomePage/AssistantIncomePag
 import MangakaTasksPage from "../pages/MangakaTasksPage/MangakaTasksPage";
 import PageWorkspacePage from "../pages/PageWorkspacePage/PageWorkspacePage";
 import StudioProgressPage from "../pages/StudioProgressPage/StudioProgressPage";
+import NotificationPage from "../pages/NotificationPage/NotificationPage";
 
 export default function AppRoutes() {
   return (
@@ -40,6 +41,7 @@ export default function AppRoutes() {
           }
         >
           <Route path="/" element={<DashboardIndex />} />
+          <Route path="/notifications" element={<NotificationPage />} />
           <Route path="/chapter-list" element={<ChapterListPage />} />
           <Route path="/chapter-list/:seriesId" element={<ChapterListPage />} />
           <Route
