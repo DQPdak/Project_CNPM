@@ -12,12 +12,12 @@
 
 /* Tiêu đề được thiết kế như Sticker */
 .widget-title {
-  @apply text-xl lg:text-2xl font-black text-black uppercase tracking-tight m-0 bg-white px-3 py-1.5 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transform rotate-1;
+  @apply text-xl lg:text-2xl font-black text-black uppercase tracking-tight m-0 bg-white px-3 py-1.5 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)];
 }
 
 /* Badge Cần Xử Lý */
 .badge-info {
-  @apply text-black bg-[#FFD000] px-3 py-1.5 border-4 border-black font-black text-xs uppercase tracking-widest shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transform -rotate-1;
+  @apply text-black bg-[#FFD000] px-3 py-1.5 border-4 border-black font-black text-xs uppercase tracking-widest shadow-[4px_4px_0px_0px_rgba(0,0,0,1)];
 }
 
 /* Từng dòng Item chờ duyệt */

@@ -6,12 +6,15 @@
 .dashboard-title {
   @apply text-3xl lg:text-4xl font-black text-black uppercase tracking-tight border-b-4 border-black inline-block pb-2 mb-8;
 }
-.dashboard-grid {
-  @apply grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch;
+.board-dashboard-stack {
+  @apply grid grid-cols-1 gap-8;
 }
-.col-span-2 {
-  @apply lg:col-span-2;
+.board-dashboard-row {
+  @apply w-full min-w-0;
 }
-.col-span-full {
-  @apply lg:col-span-3;
+.board-dashboard-row .series-progress-card {
+  @apply w-full;
+}
+.board-dashboard-row .series-progress-header {
+  @apply flex-col items-start gap-4 lg:flex-row lg:items-start lg:justify-between;
 }
