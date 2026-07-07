@@ -3,6 +3,7 @@ import { CalendarPlus, ChevronDown } from "lucide-react";
 import { useToast } from "../../../contexts/ToastContext";
 import { getAllSeries } from "../../../services/series/getSeriesByRoleService";
 import createReleaseIssue from "../../../services/issue/createReleaseIssueService";
+import "./CreateIssuePanel.css";
 
 const ISSUE_TYPES = ["Weekly", "Monthly", "One-shot", "Online only"];
 
@@ -32,10 +33,8 @@ export default function CreateIssuePanel() {
           name: s.series.title || "Chưa có tên",
         }));
         setSeriesOptions(formatted);
-        setForm((curr) => ({
-          ...curr,
-          seriesList: formatted.map((s) => s.id),
-        }));
+        // Mặc định không chọn truyện nào, người dùng tự chọn
+        setForm((curr) => ({ ...curr, seriesList: [] }));
       }
       setIsFetching(false);
     };
@@ -75,13 +74,20 @@ export default function CreateIssuePanel() {
     }));
   };
 
+  const isAllSelected = seriesOptions.length > 0 && form.seriesList.length === seriesOptions.length;
+
+  const toggleSelectAll = () => {
+    setForm((curr) => ({
+      ...curr,
+      seriesList: isAllSelected ? [] : seriesOptions.map((s) => s.id),
+    }));
+  };
+
   // Hàm render giao diện các Thẻ (Tag) truyện đã chọn
   const renderSelectedPreview = () => {
     if (form.seriesList.length === 0) {
       return (
-        <span className="text-gray-500 font-semibold">
-          Chưa chọn truyện nào...
-        </span>
+        <span className="cip-tag-empty">Chưa chọn truyện nào...</span>
       );
     }
 
@@ -94,57 +100,54 @@ export default function CreateIssuePanel() {
     const hiddenCount = selectedNames.length - DISPLAY_LIMIT;
 
     return (
-      <div className="flex flex-wrap gap-2 items-center">
+      <div className="cip-tags-wrap">
         {displayed.map((name, idx) => (
-          <span
-            key={idx}
-            className="bg-yellow-200 border-2 border-black px-2 py-0.5 rounded text-xs font-bold truncate max-w-[120px]"
-            title={name}
-          >
+          <span key={idx} className="cip-tag" title={name}>
             {name}
           </span>
         ))}
         {hiddenCount > 0 && (
-          <span className="bg-blue-200 border-2 border-black px-2 py-0.5 rounded text-xs font-black">
-            +{hiddenCount} truyện khác
-          </span>
+          <span className="cip-tag-more">+{hiddenCount} truyện khác</span>
         )}
       </div>
     );
   };
 
   return (
-    <section className="neo-panel">
-      <div className="panel-title">
+    <section className="cip-panel">
+      <div className="cip-title">
         <CalendarPlus size={24} />
         <h2>Tạo kỳ phát hành mới</h2>
       </div>
-      <form className="neo-form" onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label className="neo-label">Mã kỳ phát hành</label>
+
+      <form className="cip-form" onSubmit={handleSubmit}>
+        <div className="cip-form-group">
+          <label className="cip-label">Mã kỳ phát hành</label>
           <input
-            className="neo-input"
+            className="cip-input"
             value={form.id}
             onChange={(e) => setForm({ ...form, id: e.target.value })}
-            placeholder="VD: ISSUE-2026-01"
+            placeholder="VD: MGS-YYMM-XXX"
             required
           />
         </div>
-        <div className="form-group">
-          <label className="neo-label">Tên kỳ phát hành</label>
+
+        <div className="cip-form-group">
+          <label className="cip-label">Tên kỳ phát hành</label>
           <input
-            className="neo-input"
+            className="cip-input"
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
             placeholder="VD: Weekly Jump 01"
             required
           />
         </div>
-        <div className="grid-2-cols">
-          <div className="form-group">
-            <label className="neo-label">Ngày phát hành</label>
+
+        <div className="cip-grid-2">
+          <div className="cip-form-group">
+            <label className="cip-label">Ngày phát hành</label>
             <input
-              className="neo-input"
+              className="cip-input"
               type="date"
               value={form.releaseDate}
               onChange={(e) =>
@@ -153,10 +156,10 @@ export default function CreateIssuePanel() {
               required
             />
           </div>
-          <div className="form-group">
-            <label className="neo-label">Loại</label>
+          <div className="cip-form-group">
+            <label className="cip-label">Loại</label>
             <select
-              className="neo-select"
+              className="cip-select"
               value={form.type}
               onChange={(e) => setForm({ ...form, type: e.target.value })}
             >
@@ -170,24 +173,20 @@ export default function CreateIssuePanel() {
         </div>
 
         {/* CUSTOM MULTI-SELECT DROPDOWN */}
-        <div className="form-group relative mb-8">
-          <label className="neo-label flex justify-between">
-            <span>Danh sách Truyện (Manga)</span>
-            <span className=" ml-1 text-sm font-black text-600">
-              {form.seriesList.length}
-            </span>
-          </label>
+        <div className="cip-form-group cip-multiselect-wrap">
+          <div className="cip-label-row">
+            <label className="cip-label--manga">Danh sách Truyện (Manga)</label>
+            <span className="cip-label-count">{form.seriesList.length} đã chọn</span>
+          </div>
 
           <div
-            className="neo-select flex justify-between items-center cursor-pointer select-none min-h-[44px] h-auto py-2"
+            className="cip-multiselect-trigger"
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
           >
-            <div className="flex-1 overflow-hidden pr-4 flex items-center">
-              {renderSelectedPreview()}
-            </div>
+            {renderSelectedPreview()}
             <ChevronDown
               size={20}
-              className={`transition-transform duration-200 shrink-0 ${isDropdownOpen ? "rotate-180" : ""}`}
+              className={`cip-chevron ${isDropdownOpen ? "cip-chevron--open" : ""}`}
             />
           </div>
 
@@ -195,30 +194,33 @@ export default function CreateIssuePanel() {
             <>
               {/* Overlay vô hình để đóng menu khi click ra ngoài */}
               <div
-                className="fixed inset-0 z-10"
+                className="cip-dropdown-overlay"
                 onClick={() => setIsDropdownOpen(false)}
               />
-              <div className="absolute z-20 w-full mt-2 bg-white border-2 border-black shadow-[4px_4px_0px_rgba(0,0,0,1)] max-h-60 overflow-y-auto rounded-lg">
-                <div className="p-2 flex flex-col gap-1">
+              <div className="cip-dropdown-menu">
+                <div className="cip-dropdown-inner">
+                  {seriesOptions.length > 0 && (
+                    <button
+                      type="button"
+                      className="cip-select-all-btn"
+                      onClick={toggleSelectAll}
+                    >
+                      {isAllSelected ? "✕  Bỏ chọn tất cả" : "✓  Chọn tất cả"}
+                    </button>
+                  )}
                   {seriesOptions.length === 0 && (
-                    <div className="p-3 text-center text-gray-500 font-bold">
+                    <div className="cip-dropdown-empty">
                       Không có dữ liệu truyện
                     </div>
                   )}
                   {seriesOptions.map((s) => (
-                    <label
-                      key={s.id}
-                      className="flex items-center gap-3 p-3 hover:bg-yellow-100 cursor-pointer rounded transition-colors"
-                    >
+                    <label key={s.id} className="cip-checkbox-row">
                       <input
                         type="checkbox"
-                        className="w-5 h-5 cursor-pointer accent-black shrink-0"
                         checked={form.seriesList.includes(s.id)}
                         onChange={() => toggleSeries(s.id)}
                       />
-                      <span className="font-bold text-sm select-none break-words">
-                        {s.name}
-                      </span>
+                      <span>{s.name}</span>
                     </label>
                   ))}
                 </div>
@@ -228,7 +230,7 @@ export default function CreateIssuePanel() {
         </div>
 
         <button
-          className="btn-primary w-full mt-4"
+          className="cip-btn-submit"
           type="submit"
           disabled={isCreating || isFetching}
         >
