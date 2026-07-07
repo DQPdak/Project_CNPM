@@ -107,3 +107,17 @@ export const updateTaskStatusApi = async (taskId, status) => {
     };
   }
 };
+
+export const deleteTaskApi = async (taskId) => {
+  try {
+    return await apiFetch(`/tasks/${taskId}`, {
+      method: "DELETE",
+    });
+  } catch (error) {
+    return {
+      success: false,
+      status: error.status,
+      message: error.message || "Không thể hủy nhiệm vụ.",
+    };
+  }
+};

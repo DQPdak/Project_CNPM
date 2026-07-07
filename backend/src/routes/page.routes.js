@@ -15,6 +15,7 @@ const getPagesByChapter = require("../controllers/page/getPagesByChapter");
 const getPageById = require("../controllers/page/getPageById");
 const upload = require("../middlewares/upload.middleware");
 const getPageVersions = require("../controllers/page/getPageVersions");
+const deletePage = require("../controllers/page/deletePage");
 
 const router = express.Router();
 
@@ -85,6 +86,13 @@ router.get(
   ),
   requirePageScope("page_id", "read"),
   getPageVersions.getPageVersions,
+);
+
+router.delete(
+  "/:page_id",
+  requireRole(ROLES.MANGAKA, ROLES.ADMIN),
+  requirePageScope("page_id", "write"),
+  deletePage.deletePage
 );
 
 module.exports = router;

@@ -58,4 +58,10 @@ router.patch(
   taskController.updateTaskStatus
 );
 
+router.delete(
+  "/:id",
+  requireRole(ROLES.MANGAKA, ROLES.ADMIN),
+  taskController.deleteTask
+);
+
 module.exports = router;

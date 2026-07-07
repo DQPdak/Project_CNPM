@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import approvePage from "../../services/page/approvePageService";
 import getPagesByChapter from "../../services/page/getPagesByChapterService";
+import deletePage from "../../services/page/deletePageService";
 import getChapterById from "../../services/chapter/getChapterByIdService";
 import updatePageVersion from "../../services/page/updatePageVersionService";
 import updateChapterStatus from "../../services/chapter/updateChapterStatusService";
@@ -159,6 +160,24 @@ export default function PageManagementPage() {
     }
   };
 
+  const handleDeletePage = async (pageId) => {
+    if (!window.confirm("Bạn có chắc chắn muốn xóa bản thảo này không? Tất cả phân vùng và nhiệm vụ liên quan sẽ bị xóa.")) return;
+    setIsLoading(true);
+    try {
+      const result = await deletePage(pageId);
+      if (result.success === false) {
+        toast.error(result.message || "Không thể xóa bản thảo");
+      } else {
+        toast.success("Đã xóa bản thảo thành công!");
+        await fetchPagesAndChapterInfo();
+      }
+    } catch (error) {
+      toast.error("Lỗi khi xóa bản thảo: " + error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const lastPageNumber =
     pages.length > 0 ? Math.max(...pages.map((p) => p.page_number || 0)) : 0;
 
@@ -236,6 +255,7 @@ export default function PageManagementPage() {
           pages={pages}
           onChangeStatus={handleStatusChange}
           onUpdateVersion={handleUpdateVersion}
+          onDeletePage={handleDeletePage}
         />
       </div>
     </div>

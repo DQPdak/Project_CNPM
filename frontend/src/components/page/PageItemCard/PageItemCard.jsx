@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import RequirePermission from "../../security/RequirePermission";
 import "./PageItemCard.css";
 
-export default function PageItemCard({ page, onChangeStatus }) {
+export default function PageItemCard({ page, onChangeStatus, onDelete }) {
   const navigate = useNavigate();
 
   const renderStatusBadge = (status) => {
@@ -57,6 +57,14 @@ export default function PageItemCard({ page, onChangeStatus }) {
               >
                 Gửi Kiểm duyệt
               </button>
+              {page.status === "Draft" && (
+                <button
+                  className="btn-action btn-delete-page"
+                  onClick={() => onDelete(page._id)}
+                >
+                  Xóa bản thảo 🗑️
+                </button>
+              )}
             </div>
           )}
         </RequirePermission>
