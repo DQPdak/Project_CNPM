@@ -2,6 +2,7 @@ import { useState } from "react";
 import { FileSpreadsheet, Upload } from "lucide-react";
 import { useToast } from "../../../contexts/ToastContext";
 import importVoteData from "../../../services/issue/importVoteDataService";
+import "./ImportVotesPanel.css";
 
 export default function ImportVotesPanel({ onImportSuccess }) {
   const toast = useToast();
@@ -27,37 +28,37 @@ export default function ImportVotesPanel({ onImportSuccess }) {
   };
 
   return (
-    <section className="neo-panel">
-      <div className="panel-title">
+    <section className="ivp-panel">
+      <div className="ivp-title">
         <FileSpreadsheet size={24} />
         <h2>Nhập bình chọn độc giả</h2>
       </div>
-      <form className="neo-form" onSubmit={handleImport}>
-        <div className="form-group">
-          <label className="neo-label">Mã kỳ phát hành cần nhập</label>
+      <form className="ivp-form" onSubmit={handleImport}>
+        <div className="ivp-form-group">
+          <label className="ivp-label">Mã kỳ phát hành cần nhập</label>
           <input
-            className="neo-input"
+            className="ivp-input"
             value={issueId}
             onChange={(e) => setIssueId(e.target.value)}
             placeholder="VD: ISSUE-2026-01"
             required
           />
         </div>
-        <div className="form-group">
-          <label className="neo-label">Tập tin Excel/CSV</label>
+        <div className="ivp-form-group">
+          <label className="ivp-label">Tập tin Excel/CSV</label>
           <input
-            className="neo-input !p-2 cursor-pointer fallback-bg"
+            className="ivp-input--file"
             type="file"
             accept=".csv,.xlsx,.xls"
             onChange={(e) => setFile(e.target.files?.[0] || null)}
             required
           />
-          <p className="field-tooltip">
+          <p className="ivp-tooltip">
             💡 Cột yêu cầu: seriesId, votes, avgScore, comments, views
           </p>
         </div>
         <button
-          className="btn-primary mt-4"
+          className="ivp-btn-submit"
           type="submit"
           disabled={isImporting}
         >
