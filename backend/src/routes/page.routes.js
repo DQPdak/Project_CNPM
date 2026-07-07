@@ -89,12 +89,16 @@ router.get(
   getPageVersions.getPageVersions,
 );
 
-router.delete("/:page_id", requireRole(ROLES.MANGAKA), deletePage.deletePage);
+router.delete(
+  "/:page_id",
+  requireRole(ROLES.MANGAKA, ROLES.ADMIN),
+  deletePage.deletePage,
+);
 
 // Khôi phục (Dùng PUT vì đây là hành động cập nhật trạng thái)
 router.put(
   "/:page_id/restore",
-  requireRole(ROLES.MANGAKA),
+  requireRole(ROLES.MANGAKA, ROLES.ADMIN),
   restorePage.restorePage,
 );
 

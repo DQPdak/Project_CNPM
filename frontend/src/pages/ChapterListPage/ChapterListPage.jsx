@@ -1,12 +1,15 @@
+// src/pages/ChapterListPage/ChapterListPage.jsx
 import React, { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import getChaptersBySeries from "../../services/chapter/getChaptersBySeriesService";
 import getMySeries from "../../services/series/getMySeriesService";
 import getSeriesById from "../../services/series/getSeriesByIdService";
 import deleteChapter from "../../services/chapter/deleteChapterService";
+import restoreChapter from "../../services/chapter/restoreChapterService"; // Nhớ import service này
 import RequirePermission from "../../components/security/RequirePermission";
 import CreateChapterAction from "../../components/chapter/CreateChapterAction/CreateChapterAction";
 import ChapterTable from "../../components/chapter/ChapterTable/ChapterTable";
+import ConfirmModalDelete from "../../common/ConfirmDeleteModal/ConfirmDeleteModal";
 import { useToast } from "../../contexts/ToastContext";
 import Loading from "../../common/Loading/Loading";
 import { useAuthStore } from "../../stores/authStore";
@@ -23,7 +26,15 @@ export default function ChapterListPage() {
   const [chapters, setChapters] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Hàm xử lý URL quay lại dựa trên Role của user
+  // STATE QUẢN LÝ MODAL XÁC NHẬN
+  const [modalState, setModalState] = useState({
+    isOpen: false,
+    actionType: "", // 'delete' hoặc 'restore'
+    chapterId: null,
+    title: "",
+    message: "",
+  });
+
   const handleGoBack = () => {
     if (!user) {
       navigate("/");
@@ -56,36 +67,31 @@ export default function ChapterListPage() {
       }
       return seriesId;
     }
-
     const result = await getMySeries();
     if (result.success === false) {
       toast.error("Không thể tải danh sách series: " + result.message);
       setResolvedSeriesId(null);
       return null;
     }
-
     const firstSeries = result.series?.[0]?.series;
     if (!firstSeries?._id) {
       setResolvedSeriesId(null);
       return null;
     }
-
     setResolvedSeriesId(firstSeries._id);
     setResolvedSeriesName(firstSeries.title || firstSeries._id);
     navigate(`/chapter-list/${firstSeries._id}`, { replace: true });
     return firstSeries._id;
-  }, [navigate, seriesId, toast]);
+  }, [navigate, seriesId]);
 
   const fetchChaptersList = useCallback(async () => {
     setIsLoading(true);
     const nextSeriesId = await resolveSeriesInfo();
-
     if (!nextSeriesId) {
       setChapters([]);
       setIsLoading(false);
       return;
     }
-
     const result = await getChaptersBySeries(nextSeriesId);
     if (result.success === false) {
       toast.error("Không thể tải danh sách chapter: " + result.message);
@@ -93,40 +99,80 @@ export default function ChapterListPage() {
     } else {
       setChapters(result.chapters || []);
     }
-
     setIsLoading(false);
-  }, [resolveSeriesInfo, toast]);
+  }, [resolveSeriesInfo]);
 
   useEffect(() => {
     fetchChaptersList();
   }, [fetchChaptersList]);
 
-  const handleDeleteChapter = async (chapterId) => {
-    if (!window.confirm("Bạn có chắc chắn muốn hủy chương truyện này không? Tất cả trang bản thảo, phân vùng và task liên quan sẽ bị xóa sạch.")) return;
+  const confirmDelete = (chapterId) => {
+    setModalState({
+      isOpen: true,
+      actionType: "delete",
+      chapterId,
+      title: "Xác nhận đưa vào Thùng rác",
+      message:
+        "Bạn có chắc muốn chuyển chương truyện này vào thùng rác không? Các bản thảo, vùng và công việc liên quan sẽ bị ẩn.",
+    });
+  };
+
+  const confirmRestore = (chapterId) => {
+    setModalState({
+      isOpen: true,
+      actionType: "restore",
+      chapterId,
+      title: "Xác nhận Khôi phục",
+      message:
+        "Bạn muốn khôi phục chương truyện này? Các bản thảo bên trong cũng sẽ được khôi phục trở lại.",
+    });
+  };
+
+  const handleExecuteAction = async () => {
+    const { actionType, chapterId } = modalState;
+    // Đóng modal ngay lập tức
+    setModalState({ ...modalState, isOpen: false });
     setIsLoading(true);
-    try {
-      const result = await deleteChapter(chapterId);
-      if (result.success === false) {
-        toast.error(result.message || "Không thể hủy chương truyện");
-      } else {
-        toast.success("Đã hủy chương truyện thành công!");
-        await fetchChaptersList();
+
+    if (actionType === "delete") {
+      try {
+        const result = await deleteChapter(chapterId);
+        if (result.success === false) {
+          toast.error(result.message || "Không thể hủy chương truyện");
+          console.log("Chi tiết lỗi:", result);
+        } else {
+          toast.success("Đã chuyển chương truyện vào thùng rác!");
+          await fetchChaptersList();
+        }
+      } catch (error) {
+        toast.error("Lỗi khi hủy chương: " + error.message);
+        console.log("Chi tiết lỗi:", error);
       }
-    } catch (error) {
-      toast.error("Lỗi khi hủy chương: " + error.message);
-    } finally {
-      setIsLoading(false);
+    } else if (actionType === "restore") {
+      try {
+        const result = await restoreChapter(chapterId);
+        if (result.success === false) {
+          toast.error(result.message || "Không thể khôi phục chương truyện");
+          console.log("Chi tiết lỗi:", result);
+        } else {
+          toast.success("Khôi phục chương truyện thành công!");
+          await fetchChaptersList();
+        }
+      } catch (error) {
+        toast.error("Lỗi khi khôi phục: " + error.message);
+      }
     }
+
+    setIsLoading(false);
   };
 
   return (
     <div className="clp-wrapper">
-      {isLoading && <Loading text="Đang tải danh sách chapter..." />}
+      {isLoading && <Loading text="Đang xử lý..." />}
 
-      {/* SỬ DỤNG HÀM ĐIỀU HƯỚNG MỚI */}
       <div>
         <button onClick={handleGoBack} className="clp-back-btn">
-          ← Quay lại danh sách
+          Quay lại danh sách
         </button>
       </div>
 
@@ -136,11 +182,10 @@ export default function ChapterListPage() {
           <p className="clp-subtitle">
             Series:{" "}
             <span className="clp-highlight">
-              {resolvedSeriesName || "Chưa có series"}
+              {resolvedSeriesName || "Chưa chọn series"}
             </span>
           </p>
         </div>
-
         {resolvedSeriesId ? (
           <RequirePermission required="CAN_CREATE_CHAPTER">
             <CreateChapterAction
@@ -153,16 +198,28 @@ export default function ChapterListPage() {
       </header>
 
       {!isLoading && !resolvedSeriesId ? (
-        <div className="clp-empty-box">
-          Tài khoản này chưa có series nào để quản lý.
-        </div>
+        <div className="clp-empty-box">Tài khoản này chưa có series nào.</div>
       ) : null}
 
       {!isLoading && resolvedSeriesId ? (
         <div className="clp-table-container">
-          <ChapterTable chapters={chapters} onDelete={handleDeleteChapter} />
+          <ChapterTable
+            chapters={chapters}
+            onDelete={confirmDelete}
+            onRestore={confirmRestore}
+          />
         </div>
       ) : null}
+
+      {modalState.isOpen && (
+        <ConfirmModalDelete
+          isOpen={modalState.isOpen}
+          title={modalState.title}
+          message={modalState.message}
+          onConfirm={handleExecuteAction}
+          onCancel={() => setModalState({ ...modalState, isOpen: false })}
+        />
+      )}
     </div>
   );
 }
