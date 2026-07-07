@@ -67,9 +67,9 @@ export default function ProtectedLayout() {
   const dynamicMenus = ROLE_MENUS[userRole] || [];
 
   return (
-    <div className="flex min-h-screen bg-[#F4F4F0] font-sans text-black selection:bg-[#FF90E8] selection:text-black">
+    <div className="flex min-h-screen flex-col bg-[#F4F4F0] font-sans text-black selection:bg-[#FF90E8] selection:text-black lg:flex-row">
       {/* SIDEBAR BÊN TRÁI - NEO BRUTALISM */}
-      <aside className="w-[260px] bg-white border-r-4 border-black flex flex-col fixed top-0 left-0 h-screen z-50">
+      <aside className="w-full bg-white border-b-4 border-black flex flex-col z-50 lg:fixed lg:top-0 lg:left-0 lg:h-screen lg:w-[260px] lg:border-b-0 lg:border-r-4">
         {/* Logo Hệ thống */}
         <div className="p-5 border-b-4 border-black flex items-center justify-between bg-[#FFD000]">
           <div className="text-xl font-black uppercase tracking-widest text-black">
@@ -91,7 +91,7 @@ export default function ProtectedLayout() {
         </div>
 
         {/* Khu vực danh sách Menu - Đã ẩn hoàn toàn thanh cuộn (Scrollbar) */}
-        <nav className="flex-1 overflow-y-auto p-4 bg-white [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+        <nav className="max-h-[45vh] flex-1 overflow-y-auto p-4 bg-white [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] lg:max-h-none">
           {/* Menu Chung */}
           <div className="mb-6">
             <p className="text-[11px] font-black uppercase tracking-widest text-black mb-2 px-1">
@@ -156,7 +156,7 @@ export default function ProtectedLayout() {
       </aside>
 
       {/* KHU VỰC NỘI DUNG CHÍNH */}
-      <main className="flex-1 ml-[260px] p-8 lg:p-12 min-h-screen">
+      <main className="min-w-0 flex-1 p-4 sm:p-6 lg:ml-[260px] lg:min-h-screen lg:p-12">
         <Outlet />
       </main>
     </div>
