@@ -2,7 +2,14 @@ import React, { useEffect, useState, useCallback } from "react";
 import getMySeries from "../../services/series/getMySeriesService";
 import getChaptersBySeries from "../../services/chapter/getChaptersBySeriesService";
 import getPagesByChapter from "../../services/page/getPagesByChapterService";
-import { getTasksApi, getTaskByIdApi, createTaskApi, reviewTaskApi, getAssistantsApi, deleteTaskApi } from "../../services/task/taskService";
+import {
+  getTasksApi,
+  getTaskByIdApi,
+  createTaskApi,
+  reviewTaskApi,
+  getAssistantsApi,
+  deleteTaskApi,
+} from "../../services/task/taskService";
 import { useToast } from "../../contexts/ToastContext";
 import Loading from "../../common/Loading/Loading";
 import "./MangakaTasksPage.css";
@@ -28,7 +35,7 @@ export default function MangakaTasksPage() {
   const [seriesList, setSeriesList] = useState([]);
   const [chapters, setChapters] = useState([]);
   const [pages, setPages] = useState([]);
-  
+
   const [formData, setFormData] = useState({
     series_id: "",
     chapter_id: "",
@@ -37,7 +44,7 @@ export default function MangakaTasksPage() {
     task_type: "Vẽ background",
     price: 200000,
     deadline: "",
-    description: ""
+    description: "",
   });
   const [assigning, setAssigning] = useState(false);
 
@@ -68,7 +75,7 @@ export default function MangakaTasksPage() {
         const aOver = isOverdue(a) ? 1 : 0;
         const bOver = isOverdue(b) ? 1 : 0;
         if (bOver !== aOver) return bOver - aOver;
-        
+
         const aNear = isNearDeadline(a) ? 1 : 0;
         const bNear = isNearDeadline(b) ? 1 : 0;
         return bNear - aNear;
@@ -76,7 +83,7 @@ export default function MangakaTasksPage() {
       setTasks(sortedTasks);
     }
     setLoading(false);
-  }, [toast]);
+  }, []);
 
   const loadInitialData = useCallback(async () => {
     // Load assistants
@@ -110,7 +117,7 @@ export default function MangakaTasksPage() {
       }
     };
     fetchChapters();
-    setFormData(prev => ({ ...prev, chapter_id: "", page_id: "" }));
+    setFormData((prev) => ({ ...prev, chapter_id: "", page_id: "" }));
   }, [formData.series_id]);
 
   // Load pages when chapter changes
@@ -126,7 +133,7 @@ export default function MangakaTasksPage() {
       }
     };
     fetchPages();
-    setFormData(prev => ({ ...prev, page_id: "" }));
+    setFormData((prev) => ({ ...prev, page_id: "" }));
   }, [formData.chapter_id]);
 
   const handleSelectTask = async (taskId) => {
@@ -157,7 +164,7 @@ export default function MangakaTasksPage() {
       task_type: formData.task_type,
       price: Number(formData.price),
       deadline: formData.deadline,
-      description: formData.description
+      description: formData.description,
     });
 
     if (result.success === false) {
@@ -172,7 +179,7 @@ export default function MangakaTasksPage() {
         task_type: "Vẽ background",
         price: 200000,
         deadline: "",
-        description: ""
+        description: "",
       });
       setActiveTab("list");
       fetchTasks();
@@ -187,7 +194,7 @@ export default function MangakaTasksPage() {
     setReviewing(true);
     const result = await reviewTaskApi(selectedTask.task._id, {
       status: reviewStatus,
-      note: reviewNote
+      note: reviewNote,
     });
 
     if (result.success === false) {
@@ -201,7 +208,12 @@ export default function MangakaTasksPage() {
   };
 
   const handleDeleteTask = async (taskId) => {
-    if (!window.confirm("Bạn có chắc chắn muốn hủy nhiệm vụ này không? Phân vùng liên quan cũng sẽ bị xóa.")) return;
+    if (
+      !window.confirm(
+        "Bạn có chắc chắn muốn hủy nhiệm vụ này không? Phân vùng liên quan cũng sẽ bị xóa.",
+      )
+    )
+      return;
     setLoading(true);
     try {
       const result = await deleteTaskApi(taskId);
@@ -247,7 +259,14 @@ export default function MangakaTasksPage() {
   const isImageFile = (url) => {
     if (!url) return false;
     const lower = url.toLowerCase();
-    return lower.includes("photo-") || lower.includes("unsplash.com") || lower.endsWith(".png") || lower.endsWith(".jpg") || lower.endsWith(".jpeg") || lower.endsWith(".webp");
+    return (
+      lower.includes("photo-") ||
+      lower.includes("unsplash.com") ||
+      lower.endsWith(".png") ||
+      lower.endsWith(".jpg") ||
+      lower.endsWith(".jpeg") ||
+      lower.endsWith(".webp")
+    );
   };
 
   return (
@@ -256,7 +275,10 @@ export default function MangakaTasksPage() {
 
       <header className="mtp-header">
         <h1 className="mtp-title">Quản lý Task Trợ lý</h1>
-        <p className="mtp-subtitle">Giao việc cho trợ lý vẽ kỹ thuật và nghiệm thu bản thảo qua tính năng so sánh trước/sau</p>
+        <p className="mtp-subtitle">
+          Giao việc cho trợ lý vẽ kỹ thuật và nghiệm thu bản thảo qua tính năng
+          so sánh trước/sau
+        </p>
       </header>
 
       <div className="mtp-layout">
@@ -267,46 +289,64 @@ export default function MangakaTasksPage() {
               <h3>Chưa giao việc cho trợ lý</h3>
               <p>Bạn chưa tạo task phân công nào.</p>
             </div>
-            ) : (
-              <div className="mtp-list">
-                {tasks.map((task) => {
-                  const pageNum = task.page_id?.page_number || "?";
-                  const seriesTitle = task.page_id?.chapter_id?.series_id?.title || "Không rõ";
-                  const chapterTitle = task.page_id?.chapter_id?.title || "Không rõ";
-                  const assistantName = task.assigned_to?.name || "Chưa có";
-                  const overdue = isOverdue(task);
-                  const nearDeadline = isNearDeadline(task);
+          ) : (
+            <div className="mtp-list">
+              {tasks.map((task) => {
+                const pageNum = task.page_id?.page_number || "?";
+                const seriesTitle =
+                  task.page_id?.chapter_id?.series_id?.title || "Không rõ";
+                const chapterTitle =
+                  task.page_id?.chapter_id?.title || "Không rõ";
+                const assistantName = task.assigned_to?.name || "Chưa có";
+                const overdue = isOverdue(task);
+                const nearDeadline = isNearDeadline(task);
 
-                  return (
-                    <div
-                      key={task._id}
-                      className={`mtp-card ${selectedTask?.task?._id === task._id ? "selected" : ""} ${overdue ? "overdue" : nearDeadline ? "near-deadline" : ""}`}
-                      onClick={() => handleSelectTask(task._id)}
-                    >
-                      <div className="mtp-card-header">
-                        <span className={`mtp-badge ${getStatusColor(task.status)}`}>
-                          {translateStatus(task.status)}
-                        </span>
-                        {overdue && <span className="mtp-warning-icon">⚠️</span>}
-                        <span className="mtp-card-price">💵 {task.price.toLocaleString()}đ</span>
-                      </div>
-                      <h3 className="mtp-card-tasktype">{task.task_type}</h3>
-                      <p className="mtp-card-meta">
-                        <strong>Trợ lý:</strong> {assistantName} <br />
-                        <strong>Series:</strong> {seriesTitle} <br />
-                        <strong>Chương:</strong> {chapterTitle} - Trang {pageNum}
-                      </p>
-                      <div className="mtp-card-footer">
-                        <span className={overdue ? "text-red-600 font-bold" : nearDeadline ? "text-orange-600 font-bold" : ""}>
-                          {overdue ? "⚠️ QUÁ HẠN: " : nearDeadline ? "⏰ SẮP HẠN: " : "Hạn chót: "}
-                          {new Date(task.deadline).toLocaleDateString("vi-VN")}
-                        </span>
-                      </div>
+                return (
+                  <div
+                    key={task._id}
+                    className={`mtp-card ${selectedTask?.task?._id === task._id ? "selected" : ""} ${overdue ? "overdue" : nearDeadline ? "near-deadline" : ""}`}
+                    onClick={() => handleSelectTask(task._id)}
+                  >
+                    <div className="mtp-card-header">
+                      <span
+                        className={`mtp-badge ${getStatusColor(task.status)}`}
+                      >
+                        {translateStatus(task.status)}
+                      </span>
+                      {overdue && <span className="mtp-warning-icon">⚠️</span>}
+                      <span className="mtp-card-price">
+                        💵 {task.price.toLocaleString()}đ
+                      </span>
                     </div>
-                  );
-                })}
-              </div>
-            )}
+                    <h3 className="mtp-card-tasktype">{task.task_type}</h3>
+                    <p className="mtp-card-meta">
+                      <strong>Trợ lý:</strong> {assistantName} <br />
+                      <strong>Series:</strong> {seriesTitle} <br />
+                      <strong>Chương:</strong> {chapterTitle} - Trang {pageNum}
+                    </p>
+                    <div className="mtp-card-footer">
+                      <span
+                        className={
+                          overdue
+                            ? "text-red-600 font-bold"
+                            : nearDeadline
+                              ? "text-orange-600 font-bold"
+                              : ""
+                        }
+                      >
+                        {overdue
+                          ? "⚠️ QUÁ HẠN: "
+                          : nearDeadline
+                            ? "⏰ SẮP HẠN: "
+                            : "Hạn chót: "}
+                        {new Date(task.deadline).toLocaleDateString("vi-VN")}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </section>
 
         {/* RIGHT COLUMN - REVIEW PANEL */}
@@ -317,98 +357,94 @@ export default function MangakaTasksPage() {
             <div className="mtp-detail-placeholder">
               <span className="placeholder-icon">🔍</span>
               <h3>Chọn một Task để nghiệm thu</h3>
-              <p>Chọn task có trạng thái "Chờ duyệt" từ danh sách bên trái để so sánh ảnh bản thảo Before/After và quyết định duyệt bài hoặc yêu cầu sửa đổi.</p>
+              <p>
+                Chọn task có trạng thái "Chờ duyệt" từ danh sách bên trái để so
+                sánh ảnh bản thảo Before/After và quyết định duyệt bài hoặc yêu
+                cầu sửa đổi.
+              </p>
             </div>
           ) : (
             <div className="mtp-detail-card">
               <div className="mtp-detail-header">
                 <h2>{selectedTask.task.task_type}</h2>
-                <span className={`mtp-badge ${getStatusColor(selectedTask.task.status)}`}>
+                <span
+                  className={`mtp-badge ${getStatusColor(selectedTask.task.status)}`}
+                >
                   {translateStatus(selectedTask.task.status)}
                 </span>
               </div>
 
               <div className="mtp-detail-info-grid">
-                <div><strong>Trợ lý nhận:</strong> {selectedTask.task.assigned_to?.name}</div>
-                <div><strong>Lương giao:</strong> {selectedTask.task.price.toLocaleString()}đ</div>
-                <div><strong>Trang:</strong> Trang {selectedTask.task.page_id?.page_number}</div>
-                <div><strong>Hạn chót:</strong> {new Date(selectedTask.task.deadline).toLocaleDateString("vi-VN")}</div>
+                <div>
+                  <strong>Trợ lý nhận:</strong>{" "}
+                  {selectedTask.task.assigned_to?.name}
+                </div>
+                <div>
+                  <strong>Lương giao:</strong>{" "}
+                  {selectedTask.task.price.toLocaleString()}đ
+                </div>
+                <div>
+                  <strong>Trang:</strong> Trang{" "}
+                  {selectedTask.task.page_id?.page_number}
+                </div>
+                <div>
+                  <strong>Hạn chót:</strong>{" "}
+                  {new Date(selectedTask.task.deadline).toLocaleDateString(
+                    "vi-VN",
+                  )}
+                </div>
               </div>
 
-              {selectedTask.task.status !== "Approved" && selectedTask.task.status !== "Paid" && (
-                <div className="mtp-cancel-task-area">
-                  <button
-                    onClick={() => handleDeleteTask(selectedTask.task._id)}
-                    className="mtp-cancel-task-btn"
-                  >
-                    Hủy nhiệm vụ 🗑️
-                  </button>
-                </div>
-              )}
+              {selectedTask.task.status !== "Approved" &&
+                selectedTask.task.status !== "Paid" && (
+                  <div className="mtp-cancel-task-area">
+                    <button
+                      onClick={() => handleDeleteTask(selectedTask.task._id)}
+                      className="mtp-cancel-task-btn"
+                    >
+                      Hủy nhiệm vụ 🗑️
+                    </button>
+                  </div>
+                )}
 
               {/* IMAGE COMPARISON (BEFORE / AFTER) */}
-              {selectedTask.submissions && selectedTask.submissions.length > 0 ? (
+              {selectedTask.submissions &&
+              selectedTask.submissions.length > 0 ? (
                 (() => {
                   const latestSub = selectedTask.submissions[0];
-                  const beforeUrl = selectedTask.task.page_id?.current_preview_url;
-                  const afterUrl = latestSub.file_url;
+
+                  const previewUrl =
+                    latestSub.primary_preview_url || latestSub.file_url;
 
                   return (
                     <div className="mtp-comparison-container">
-                      <h3>Nghiệm thu bản vẽ (Before vs After)</h3>
-                      <p className="comparison-helper">Kéo thanh trượt ngang để so sánh Before (trái - bản thảo gốc) và After (phải - bài nộp).</p>
-                      
-                      {isImageFile(beforeUrl) && isImageFile(afterUrl) ? (
-                        <div className="slider-wrapper">
-                          {/* Before Image */}
+                      <h3>Nghiệm thu bản vẽ</h3>
+
+                      <div className="mtp-review-preview">
+                        {isImageFile(previewUrl) ? (
                           <img
-                            src={beforeUrl}
-                            alt="Before (Bản thảo gốc)"
-                            className="slider-image before"
+                            src={previewUrl}
+                            alt="Preview bài nộp"
+                            className="mtp-review-image"
                           />
-                          {/* After Image Container (clipped width) */}
-                          <div
-                            className="slider-after-container"
-                            style={{ clipPath: `polygon(0 0, ${sliderPos}% 0, ${sliderPos}% 100%, 0 100%)` }}
-                          >
-                            <img
-                              src={afterUrl}
-                              alt="After (Sản phẩm)"
-                              className="slider-image after"
-                            />
+                        ) : (
+                          <div className="comparison-non-image">
+                            <p>
+                              Không có ảnh preview. Vui lòng tải file để kiểm
+                              tra.
+                            </p>
                           </div>
+                        )}
 
-                          {/* Slider Range Selector */}
-                          <input
-                            type="range"
-                            min="0"
-                            max="100"
-                            value={sliderPos}
-                            onChange={(e) => setSliderPos(Number(e.target.value))}
-                            className="comparison-slider-input"
-                          />
-
-                          {/* Slider Line Indicator */}
-                          <div
-                            className="slider-line"
-                            style={{ left: `${sliderPos}%` }}
-                          >
-                            <div className="slider-handle">↔</div>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="comparison-non-image">
-                          <p>⚠️ Không thể so sánh bằng thanh trượt trực tiếp (tài nguyên không phải là hình ảnh preview).</p>
-                          <div className="non-image-links">
-                            <a href={beforeUrl} target="_blank" rel="noreferrer" className="non-image-btn">
-                              💾 Xem bản gốc
-                            </a>
-                            <a href={afterUrl} target="_blank" rel="noreferrer" className="non-image-btn after">
-                              📥 Tải bài nộp của trợ lý
-                            </a>
-                          </div>
-                        </div>
-                      )}
+                        <a
+                          href={latestSub.file_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="mtp-download-btn"
+                        >
+                          📥 Tải bản nộp
+                        </a>
+                      </div>
 
                       <div className="latest-note-box">
                         <strong>Lời nhắn của trợ lý:</strong>
@@ -439,7 +475,10 @@ export default function MangakaTasksPage() {
                           checked={reviewStatus === "Approved"}
                           onChange={() => setReviewStatus("Approved")}
                         />
-                        <span>Duyệt & Cộng tiền 💸</span>
+                        <span className="radio-title">
+                          💸
+                          <strong>Duyệt & Cộng tiền</strong>
+                        </span>
                       </label>
                       <label className="radio-label revision">
                         <input
@@ -449,7 +488,10 @@ export default function MangakaTasksPage() {
                           checked={reviewStatus === "Revision Requested"}
                           onChange={() => setReviewStatus("Revision Requested")}
                         />
-                        <span>Yêu cầu sửa lại ✏️</span>
+                        <span className="radio-title">
+                          ✏️
+                          <strong>Yêu cầu sửa lại</strong>
+                        </span>
                       </label>
                       <label className="radio-label reject">
                         <input
@@ -459,13 +501,17 @@ export default function MangakaTasksPage() {
                           checked={reviewStatus === "Rejected"}
                           onChange={() => setReviewStatus("Rejected")}
                         />
-                        <span>Từ chối thẳng ❌</span>
+                        <span className="radio-title">
+                          ❌<strong>Từ chối</strong>
+                        </span>
                       </label>
                     </div>
                   </div>
 
                   <div className="form-group">
-                    <label htmlFor="reviewNote">Lời nhắn nhận xét / Yêu cầu chi tiết:</label>
+                    <label htmlFor="reviewNote">
+                      Lời nhắn nhận xét / Yêu cầu chi tiết:
+                    </label>
                     <textarea
                       id="reviewNote"
                       rows={3}
@@ -482,33 +528,49 @@ export default function MangakaTasksPage() {
                     disabled={reviewing}
                     className={`mtp-review-btn ${reviewStatus.toLowerCase().replace(" ", "-")}`}
                   >
-                    {reviewing ? "Đang gửi đánh giá..." : "Xác nhận gửi Nghiệm thu ✔"}
+                    {reviewing
+                      ? "Đang gửi đánh giá..."
+                      : "Xác nhận gửi Nghiệm thu ✔"}
                   </button>
                 </form>
               )}
 
               {/* SUBMISSIONS HISTORY */}
-              {selectedTask.submissions && selectedTask.submissions.length > 0 && (
-                <div className="mtp-history-section">
-                  <h3>Lịch sử tất cả lần nộp bài</h3>
-                  <div className="mtp-history-list">
-                    {selectedTask.submissions.map((sub) => (
-                      <div key={sub._id} className="mtp-history-item">
-                        <div className="mtp-history-header">
-                          <span className="mtp-history-date">{new Date(sub.submitted_at).toLocaleString("vi-VN")}</span>
-                          <span className={`mtp-badge-small ${getStatusColor(sub.status)}`}>
-                            {translateStatus(sub.status)}
-                          </span>
+              {selectedTask.submissions &&
+                selectedTask.submissions.length > 0 && (
+                  <div className="mtp-history-section">
+                    <h3>Lịch sử tất cả lần nộp bài</h3>
+                    <div className="mtp-history-list">
+                      {selectedTask.submissions.map((sub) => (
+                        <div key={sub._id} className="mtp-history-item">
+                          <div className="mtp-history-header">
+                            <span className="mtp-history-date">
+                              {new Date(sub.submitted_at).toLocaleString(
+                                "vi-VN",
+                              )}
+                            </span>
+                            <span
+                              className={`mtp-badge-small ${getStatusColor(sub.status)}`}
+                            >
+                              {translateStatus(sub.status)}
+                            </span>
+                          </div>
+                          <p className="mtp-history-note">
+                            <strong>Nhắn gửi:</strong> {sub.note || "Không"}
+                          </p>
+                          <a
+                            href={sub.file_url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="mtp-history-link"
+                          >
+                            🔗 Mở liên kết file bài nộp
+                          </a>
                         </div>
-                        <p className="mtp-history-note"><strong>Nhắn gửi:</strong> {sub.note || "Không"}</p>
-                        <a href={sub.file_url} target="_blank" rel="noreferrer" className="mtp-history-link">
-                          🔗 Mở liên kết file bài nộp
-                        </a>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
             </div>
           )}
         </section>

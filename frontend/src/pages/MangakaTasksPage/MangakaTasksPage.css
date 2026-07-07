@@ -162,15 +162,27 @@
 }
 
 .form-group label {
-  @apply block font-black uppercase text-xs tracking-wider mb-2;
+  @apply text-sm font-black uppercase mb-3;
 }
 
-.form-select, .form-input, .form-textarea {
-  @apply p-3 border-4 border-black bg-[#F4F4F0] font-bold text-sm outline-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all;
+.form-select,
+.form-input,
+.form-textarea {
+  @apply border-4 border-black
+    bg-white
+    p-4
+    min-h-[140px]
+    text-base
+    font-bold
+    resize-none
+    shadow-[4px_4px_0px_0px_rgba(0,0,0,1)];
 }
 
-.form-select:focus, .form-input:focus, .form-textarea:focus {
-  @apply bg-white shadow-[4px_4px_0px_0px_rgba(35,160,148,1)];
+.form-select:focus,
+.form-input:focus,
+.form-textarea:focus {
+  @apply outline-none
+    shadow-[6px_6px_0px_0px_rgba(35,160,148,1)];
 }
 
 .mtp-assign-submit-btn {
@@ -268,45 +280,64 @@
 
 /* REVIEW FORM */
 .mtp-review-form {
-  @apply border-4 border-black p-5 bg-[#E9FFF9] shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] mb-8;
+  @apply mt-8 border-4 border-black bg-[#F8F8F8] p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)];
 }
 
 .mtp-review-form h3 {
-  @apply text-base font-black uppercase tracking-wide m-0 mb-4 pb-2 border-b-2 border-black;
+  @apply text-2xl font-black uppercase border-b-4 border-black pb-3 mb-6;
 }
 
 .radio-group {
-  @apply flex flex-col sm:flex-row gap-3 mt-1.5;
+  @apply grid grid-cols-3 gap-5 mt-4;
 }
 
 .radio-label {
-  @apply flex-1 flex items-center gap-2 p-3 border-2 border-black bg-white cursor-pointer font-black text-xs uppercase transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)];
+  @apply relative flex flex-col justify-center items-center
+    h-32 p-5
+    border-4 border-black
+    bg-white
+    cursor-pointer
+    transition-all
+    shadow-[4px_4px_0px_0px_rgba(0,0,0,1)];
 }
 
 .radio-label input {
-  @apply cursor-pointer;
+  @apply absolute opacity-0;
 }
 
 .radio-label:hover {
-  @apply -translate-y-0.5 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)];
+  @apply -translate-y-1
+    shadow-[8px_8px_0px_0px_rgba(0,0,0,1)];
 }
 
 .radio-label.approve:has(input:checked) {
-  @apply bg-[#23A094] text-white;
+  @apply bg-[#23A094] text-white
+    shadow-[8px_8px_0px_0px_rgba(35,160,148,1)];
 }
 
 .radio-label.revision:has(input:checked) {
-  @apply bg-[#FF5C00] text-white;
+  @apply bg-[#FFD000]
+    text-black
+    shadow-[8px_8px_0px_0px_rgba(255,208,0,1)];
 }
 
 .radio-label.reject:has(input:checked) {
-  @apply bg-red-500 text-white;
+  @apply bg-[#FF4545]
+    text-white
+    shadow-[8px_8px_0px_0px_rgba(255,69,69,1)];
 }
 
 .mtp-review-btn {
-  @apply w-full py-3 border-4 border-black font-black uppercase tracking-widest text-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all cursor-pointer text-black mt-2;
+  @apply mt-6
+    w-full
+    py-5
+    text-lg
+    font-black
+    uppercase
+    border-4
+    border-black
+    shadow-[6px_6px_0px_0px_rgba(0,0,0,1)];
 }
-
 .mtp-review-btn.approved {
   @apply bg-[#23A094] text-white;
 }
@@ -320,7 +351,8 @@
 }
 
 .mtp-review-btn:hover {
-  @apply -translate-y-0.5 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)];
+  @apply -translate-y-1
+    shadow-[10px_10px_0px_0px_rgba(0,0,0,1)];
 }
 
 .mtp-review-btn:active {
@@ -378,4 +410,45 @@
 
 .mtp-cancel-task-btn {
   @apply px-4 py-2 bg-[#FF4545] border-4 border-black text-black font-black uppercase text-xs tracking-widest shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none cursor-pointer transition-all;
+}
+
+.mtp-review-preview {
+  @apply flex flex-col gap-4;
+}
+
+.mtp-review-image {
+  @apply w-full max-h-[700px]
+         object-contain
+         bg-white
+         border-4 border-black
+         shadow-[4px_4px_0px_0px_rgba(0,0,0,1)];
+}
+
+.mtp-download-btn {
+  @apply inline-flex
+         items-center
+         justify-center
+         px-4
+         py-3
+         bg-[#FFD000]
+         border-4
+         border-black
+         font-black
+         uppercase
+         text-sm
+         no-underline
+         text-black
+         shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]
+         transition-all;
+}
+
+.mtp-download-btn:hover {
+  @apply -translate-y-0.5
+         shadow-[6px_6px_0px_0px_rgba(0,0,0,1)];
+}
+
+.mtp-download-btn:active {
+  @apply translate-x-0.5
+         translate-y-0.5
+         shadow-none;
 }

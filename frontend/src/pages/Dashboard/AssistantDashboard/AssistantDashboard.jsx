@@ -31,7 +31,9 @@ const AssistantDashboard = () => {
     } else {
       // Chỉ lấy tối đa 3 task đang làm / mới giao gần nhất để hiển thị ở trang chủ
       const activeTasks = (taskResult.tasks || [])
-        .filter((t) => ["Assigned", "In Progress", "Revision Requested"].includes(t.status))
+        .filter((t) =>
+          ["Assigned", "In Progress", "Revision Requested"].includes(t.status),
+        )
         .slice(0, 3);
       setTasks(activeTasks);
     }
@@ -49,7 +51,7 @@ const AssistantDashboard = () => {
           paidAmount: 0,
           approvedTasksCount: 0,
           totalTasksCount: 0,
-        }
+        },
       );
     }
     setIsLoadingIncome(false);
@@ -84,7 +86,7 @@ const AssistantDashboard = () => {
       <h1 className="dashboard-title">
         Không gian làm việc Trợ lý (Assistant)
       </h1>
-      
+
       <div className="dashboard-grid-2">
         {/* CỘT TRÁI: NHIỆM VỤ ĐƯỢC GIAO */}
         <div className="task-column">
@@ -104,20 +106,20 @@ const AssistantDashboard = () => {
             <div className="task-loading-box">Đang tải nhiệm vụ...</div>
           ) : tasks.length === 0 ? (
             <div className="empty-tasks-box">
-              <p>🎉 Tuyệt vời! Bạn không còn task nào đang dang dở.</p>
-              <Link to="/assistant/tasks" className="btn-go-tasks">
-                Xem lịch sử công việc
-              </Link>
+              <p> Tuyệt vời! Bạn không còn task nào đang dang dở.</p>
             </div>
           ) : (
             <div className="dashboard-task-list">
               {tasks.map((task) => {
                 const pageNum = task.page_id?.page_number || "?";
-                const seriesTitle = task.page_id?.chapter_id?.series_id?.title || "Không rõ";
+                const seriesTitle =
+                  task.page_id?.chapter_id?.series_id?.title || "Không rõ";
                 return (
                   <div key={task._id} className="dashboard-task-item">
                     <div className="task-item-top">
-                      <span className={`task-item-badge ${getStatusColor(task.status)}`}>
+                      <span
+                        className={`task-item-badge ${getStatusColor(task.status)}`}
+                      >
                         {translateStatus(task.status)}
                       </span>
                       <span className="task-item-price">
@@ -126,13 +128,18 @@ const AssistantDashboard = () => {
                     </div>
                     <h3 className="task-item-title">{task.task_type}</h3>
                     <p className="task-item-meta">
-                      <strong>Series:</strong> {seriesTitle} | <strong>Trang:</strong> {pageNum}
+                      <strong>Series:</strong> {seriesTitle} |{" "}
+                      <strong>Trang:</strong> {pageNum}
                     </p>
                     <div className="task-item-footer">
                       <span>
-                        📅 Hạn: {new Date(task.deadline).toLocaleDateString("vi-VN")}
+                        📅 Hạn:{" "}
+                        {new Date(task.deadline).toLocaleDateString("vi-VN")}
                       </span>
-                      <Link to="/assistant/tasks" className="btn-action-task">
+                      <Link
+                        to={`/assistant/tasks?taskId=${task._id}`}
+                        className="btn-action-task"
+                      >
                         Chi tiết & Nộp bài
                       </Link>
                     </div>
@@ -162,30 +169,34 @@ const AssistantDashboard = () => {
           ) : (
             <div className="income-stats-box">
               <div className="income-amount">
-                {(incomeStats.totalEarned).toLocaleString()} VND
+                {incomeStats.totalEarned.toLocaleString()} VND
               </div>
               <div className="income-detail-rows">
                 <div className="income-detail-row">
                   <span>Đã nhận:</span>
                   <strong className="text-teal-700">
-                    {(incomeStats.paidAmount).toLocaleString()}đ
+                    {incomeStats.paidAmount.toLocaleString()}đ
                   </strong>
                 </div>
                 <div className="income-detail-row">
                   <span>Chờ thanh toán:</span>
                   <strong className="text-orange-600">
-                    {(incomeStats.pendingAmount).toLocaleString()}đ
+                    {incomeStats.pendingAmount.toLocaleString()}đ
                   </strong>
                 </div>
                 <div className="income-detail-row pt-2 border-t-2 border-dashed border-gray-300">
                   <span>Task hoàn thành:</span>
                   <strong>
-                    {incomeStats.approvedTasksCount} / {incomeStats.totalTasksCount}
+                    {incomeStats.approvedTasksCount} /{" "}
+                    {incomeStats.totalTasksCount}
                   </strong>
                 </div>
               </div>
               <div className="income-status mt-4">
-                Trạng thái: {incomeStats.pendingAmount > 0 ? "Có khoản chờ thanh toán" : "Đã thanh toán hết"}
+                Trạng thái:{" "}
+                {incomeStats.pendingAmount > 0
+                  ? "Có khoản chờ thanh toán"
+                  : "Đã thanh toán hết"}
               </div>
             </div>
           )}
