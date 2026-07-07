@@ -241,8 +241,13 @@ export default function EditorSeriesPage() {
                     </span>
                   </div>
 
-                  {/* Nút điều hướng nhanh qua danh sách chương dành cho Editor */}
-                  <Link to={`/chapter-list/${series._id}`}>Xem Chapters</Link>
+                  {/* Điều hướng nhanh: xem chương và vào thẳng tiến độ của series */}
+                  <div className="editor-series-card-links">
+                    <Link to={`/chapter-list/${series._id}`}>Xem Chapters</Link>
+                    <Link to={`/editor/progress?seriesId=${series._id}`}>
+                      Tiến độ
+                    </Link>
+                  </div>
                 </div>
               </article>
             );

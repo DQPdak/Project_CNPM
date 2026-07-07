@@ -20,6 +20,18 @@
   @apply bg-[#FFD000] border-2 border-black px-3 py-1 text-black font-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)];
 }
 
+.series-quick-nav {
+  @apply flex flex-wrap gap-3;
+}
+
+.btn-nav-chapter {
+  @apply inline-block bg-[#FFD000] text-black border-4 border-black px-6 py-3 font-black text-xs uppercase tracking-widest shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:bg-[#FF90E8] transition-all;
+}
+
+.btn-nav-progress {
+  @apply inline-block bg-[#23A094] text-white border-4 border-black px-6 py-3 font-black text-xs uppercase tracking-widest shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:bg-[#1a7f75] transition-all;
+}
+
 .neo-form {
   @apply bg-white border-4 border-black p-5 md:p-7 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex flex-col gap-6;
 }

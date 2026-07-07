@@ -223,6 +223,20 @@ export default function MangakaSeriesFormPage() {
         </p>
       )}
 
+      {isEdit && (
+        <div className="series-quick-nav">
+          <Link to={`/chapter-list/${seriesId}`} className="btn-nav-chapter">
+            Quản lý Chapter
+          </Link>
+          <Link
+            to={`/editor/progress?seriesId=${seriesId}`}
+            className="btn-nav-progress"
+          >
+            Tiến độ Studio
+          </Link>
+        </div>
+      )}
+
       <form onSubmit={handleSave} className="neo-form">
         <section className="form-section">
           <h2 className="section-title">Thông tin series</h2>
