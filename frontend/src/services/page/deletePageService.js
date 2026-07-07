@@ -1,17 +1,9 @@
 import { apiFetch } from "../apiClient";
 
-const deletePage = async (pageId) => {
+export default async function deletePage(pageId) {
   try {
-    return await apiFetch(`/pages/${pageId}`, {
-      method: "DELETE",
-    });
+    return await apiFetch(`/pages/${pageId}`, { method: "DELETE" });
   } catch (error) {
-    return {
-      success: false,
-      status: error.status,
-      message: error.message || "Xóa bản thảo thất bại.",
-    };
+    return { success: false, message: error.message || "Xóa trang thất bại" };
   }
-};
-
-export default deletePage;
+}

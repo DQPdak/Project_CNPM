@@ -35,6 +35,10 @@ const pageSchema = new mongoose.Schema(
       enum: ["Draft", "In Progress", "Ready For Review", "Approved"],
       default: "Draft",
     },
+    is_deleted: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true },
 );

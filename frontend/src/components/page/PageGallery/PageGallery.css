@@ -1,21 +1,11 @@
 @reference "../../../index.css";
 
-.page-gallery-grid {
-  @apply grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-6 mt-8;
+.pg-empty-state {
+  @apply p-8 text-center font-black text-xl border-4 border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] uppercase tracking-tight text-black;
 }
 
-.gallery-empty {
-  @apply text-center p-12 bg-[#FFD000] border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] text-black mt-6;
-}
-
-.gallery-empty .empty-icon {
-  @apply text-5xl mb-4 block;
-}
-
-.gallery-empty h3 {
-  @apply m-0 mb-3 text-2xl font-black uppercase tracking-tight;
-}
-
-.gallery-empty p {
-  @apply m-0 text-sm font-black tracking-widest uppercase bg-white inline-block px-4 py-2 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)];
+/* Sửa class này trong PageGallery.css */
+.pg-grid-container {
+  /* Giảm từ 5 cột xuống 4 cột (lg:grid-cols-4) hoặc 3 cột (lg:grid-cols-3) tùy ý bạn */
+  @apply grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6;
 }

@@ -11,6 +11,9 @@ import UploadPagesDropzone from "../../components/page/UploadPagesDropzone/Uploa
 import PageGallery from "../../components/page/PageGallery/PageGallery";
 import { useToast } from "../../contexts/ToastContext";
 import Loading from "../../common/Loading/Loading";
+import deletePageService from "../../services/page/deletePageService";
+import restorePageService from "../../services/page/restorePageService";
+import { Trash2, ImageIcon } from "lucide-react";
 import "./PageManagementPage.css";
 
 const CHAPTER_STATUS_OPTIONS = [
@@ -63,6 +66,7 @@ export default function PageManagementPage() {
   });
   const [selectedChapterStatus, setSelectedChapterStatus] = useState("");
   const [isUpdatingChapter, setIsUpdatingChapter] = useState(false);
+  const [isTrashView, setIsTrashView] = useState(false);
 
   const fetchPagesAndChapterInfo = useCallback(async () => {
     setIsLoading(true);
@@ -71,6 +75,7 @@ export default function PageManagementPage() {
         getChapterById(chapterId),
         getPagesByChapter(chapterId),
       ]);
+      console.log("Pages Result:", pagesResult);
       if (chapterResult.success === false) {
         toast.error("Khong the tai chapter: " + chapterResult.message);
       } else {
@@ -161,22 +166,28 @@ export default function PageManagementPage() {
   };
 
   const handleDeletePage = async (pageId) => {
-    if (!window.confirm("Bạn có chắc chắn muốn xóa bản thảo này không? Tất cả phân vùng và nhiệm vụ liên quan sẽ bị xóa.")) return;
-    setIsLoading(true);
-    try {
-      const result = await deletePage(pageId);
-      if (result.success === false) {
-        toast.error(result.message || "Không thể xóa bản thảo");
-      } else {
-        toast.success("Đã xóa bản thảo thành công!");
-        await fetchPagesAndChapterInfo();
-      }
-    } catch (error) {
-      toast.error("Lỗi khi xóa bản thảo: " + error.message);
-    } finally {
-      setIsLoading(false);
+    const result = await deletePageService(pageId);
+    if (result.success !== false) {
+      toast.success("Đã xóa trang!");
+      fetchPagesAndChapterInfo();
+    } else {
+      toast.error(result.message);
     }
   };
+
+  const handleRestorePage = async (pageId) => {
+    const result = await restorePageService(pageId);
+    if (result.success !== false) {
+      toast.success("Đã khôi phục trang!");
+      fetchPagesAndChapterInfo();
+    } else {
+      toast.error(result.message);
+    }
+  };
+
+  const activePages = pages.filter((p) => !p.is_deleted);
+  const deletedPages = pages.filter((p) => p.is_deleted);
+  const displayedPages = isTrashView ? deletedPages : activePages;
 
   const lastPageNumber =
     pages.length > 0 ? Math.max(...pages.map((p) => p.page_number || 0)) : 0;
@@ -247,12 +258,33 @@ export default function PageManagementPage() {
           chapterId={chapterId}
           lastPageNumber={lastPageNumber}
           onUploadSuccess={handleUploadSuccess}
+          activeIndex={activePages.length + 1}
         />
       </RequirePermission>
 
+      <div className="pmp-view-toggle-container">
+        <button
+          onClick={() => setIsTrashView(false)}
+          className={`pmp-view-toggle-btn ${!isTrashView ? "active-view" : ""}`}
+        >
+          <ImageIcon size={18} />
+          Đang hiển thị ({activePages.length})
+        </button>
+        <button
+          onClick={() => setIsTrashView(true)}
+          className={`pmp-view-toggle-btn ${isTrashView ? "trash-view" : ""}`}
+        >
+          <Trash2 size={18} />
+          Thùng rác ({deletedPages.length})
+        </button>
+      </div>
+
       <div className="pmp-gallery-container">
         <PageGallery
-          pages={pages}
+          pages={displayedPages}
+          isTrashView={isTrashView}
+          onDelete={handleDeletePage}
+          onRestore={handleRestorePage}
           onChangeStatus={handleStatusChange}
           onUpdateVersion={handleUpdateVersion}
           onDeletePage={handleDeletePage}

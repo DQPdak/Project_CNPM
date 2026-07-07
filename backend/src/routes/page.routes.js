@@ -16,6 +16,7 @@ const getPageById = require("../controllers/page/getPageById");
 const upload = require("../middlewares/upload.middleware");
 const getPageVersions = require("../controllers/page/getPageVersions");
 const deletePage = require("../controllers/page/deletePage");
+const restorePage = require("../controllers/page/restorePage");
 
 const router = express.Router();
 
@@ -30,7 +31,7 @@ router.get(
     ROLES.EDITORIAL_BOARD,
     ROLES.ADMIN,
   ),
-  getPageById.getPageById
+  getPageById.getPageById,
 );
 
 router.get(
@@ -88,11 +89,13 @@ router.get(
   getPageVersions.getPageVersions,
 );
 
-router.delete(
-  "/:page_id",
-  requireRole(ROLES.MANGAKA, ROLES.ADMIN),
-  requirePageScope("page_id", "write"),
-  deletePage.deletePage
+router.delete("/:page_id", requireRole(ROLES.MANGAKA), deletePage.deletePage);
+
+// Khôi phục (Dùng PUT vì đây là hành động cập nhật trạng thái)
+router.put(
+  "/:page_id/restore",
+  requireRole(ROLES.MANGAKA),
+  restorePage.restorePage,
 );
 
 module.exports = router;
