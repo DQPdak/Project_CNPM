@@ -3,7 +3,6 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import createSeries from "../../services/series/createSeriesService";
 import getSeriesById from "../../services/series/getSeriesByIdService";
 import updateSeries from "../../services/series/updateSeriesService";
-import cancelSeries from "../../services/series/cancelSeriesService";
 import getEditors from "../../services/series/getEditorsService";
 import upsertProposal from "../../services/series/upsertProposalService";
 import submitProposal from "../../services/series/submitProposalService";
@@ -106,35 +105,10 @@ export default function MangakaSeriesFormPage() {
   };
 
   const canEdit =
-    !isEdit ||
-    (seriesStatus !== "Cancelled" && editableStatuses.includes(proposalStatus));
+    !isEdit || editableStatuses.includes(proposalStatus);
   const displayCover = previewUrl || coverImage;
-  const isCancelled = isEdit && seriesStatus === "Cancelled";
   const reviewDeadline = getProposalReviewDeadline(proposalInfo);
   const deadlineStatus = formatDeadlineStatus(reviewDeadline);
-
-  const handleCancelSeries = async () => {
-    if (
-      !window.confirm(
-        "Hủy series sẽ đóng series này và không thể chỉnh sửa tiếp. Tiếp tục?",
-      )
-    ) {
-      return;
-    }
-
-    setIsSaving(true);
-    const result = await cancelSeries(seriesId);
-    if (result.success === false) {
-      toast.error(result.message);
-      setIsSaving(false);
-      return;
-    }
-
-    setSeriesStatus(result.series?.status || "Cancelled");
-    setProposalStatus("Rejected");
-    toast.success(result.message || "Đã hủy series.");
-    setIsSaving(false);
-  };
 
   const handleSave = async (event) => {
     event.preventDefault();
@@ -274,21 +248,15 @@ export default function MangakaSeriesFormPage() {
 
       {isEdit && (
         <div className="series-quick-nav">
-          {!isCancelled ? (
-            <>
-              <Link to={`/chapter-list/${seriesId}`} className="btn-nav-chapter">
-                Quản lý Chapter
-              </Link>
-              <Link
-                to={`/editor/progress?seriesId=${seriesId}`}
-                className="btn-nav-progress"
-              >
-                Tiến độ Studio
-              </Link>
-            </>
-          ) : (
-            <span className="upload-hint">Series đã hủy: các thao tác bị khóa.</span>
-          )}
+          <Link to={`/chapter-list/${seriesId}`} className="btn-nav-chapter">
+            Quản lý Chapter
+          </Link>
+          <Link
+            to={`/editor/progress?seriesId=${seriesId}`}
+            className="btn-nav-progress"
+          >
+            Tiến độ Studio
+          </Link>
         </div>
       )}
 
@@ -433,17 +401,6 @@ export default function MangakaSeriesFormPage() {
               Nộp xin duyệt
             </button>
           )}
-
-            {isEdit && canEdit && (
-              <button
-                type="button"
-                onClick={handleCancelSeries}
-                className="btn-danger"
-                disabled={isSaving}
-              >
-                Hủy series
-              </button>
-            )}
         </div>
       </form>
     </div>

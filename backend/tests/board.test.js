@@ -217,68 +217,6 @@ describe("Board review flow Phase 2", () => {
     expect(secondFinalize.status).toBe(400);
   });
 
-  it("allows mangaka to cancel a draft series", async () => {
-    const createRes = await withAuth(
-      request(app).post("/api/series"),
-      mangakaToken,
-    ).send({
-      title: "Draft Series",
-      summary: "Draft summary",
-      characters: "Lead character",
-      art_style: "Sketch",
-    });
-
-    const seriesId = createRes.body.series._id;
-
-    const cancelRes = await withAuth(
-      request(app).patch(`/api/series/${seriesId}/cancel`),
-      mangakaToken,
-    );
-
-    expect(cancelRes.status).toBe(200);
-    expect(cancelRes.body.series.status).toBe("Cancelled");
-
-    const series = await Series.findById(seriesId);
-    expect(series.status).toBe("Cancelled");
-  });
-
-  it("rejects cancel when proposal already submitted", async () => {
-    const seriesId = await createSubmittedSeries();
-
-    const cancelRes = await withAuth(
-      request(app).patch(`/api/series/${seriesId}/cancel`),
-      mangakaToken,
-    );
-
-    expect(cancelRes.status).toBe(400);
-  });
-
-  it("rejects submitting proposal after series cancelled", async () => {
-    const createRes = await withAuth(
-      request(app).post("/api/series"),
-      mangakaToken,
-    ).send({
-      title: "Draft Series 2",
-      summary: "Draft summary",
-      characters: "Lead character",
-      art_style: "Sketch",
-    });
-
-    const seriesId = createRes.body.series._id;
-
-    const cancelRes = await withAuth(
-      request(app).patch(`/api/series/${seriesId}/cancel`),
-      mangakaToken,
-    );
-    expect(cancelRes.status).toBe(200);
-
-    const submitRes = await withAuth(
-      request(app).post(`/api/series/${seriesId}/proposal/submit`),
-      mangakaToken,
-    );
-    expect(submitRes.status).toBe(400);
-  });
-
   it("lists pending series for editorial board", async () => {
     await createSubmittedSeries();
 
