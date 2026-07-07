@@ -63,3 +63,13 @@ latest frontend and backend merge.
 - Workspace navigation should remain a client-side route change.
 - Mobile layout should be checked when changing the board controls.
 - Mongoose deprecation warnings are non-blocking but worth cleaning later.
+
+## Quick Smoke Test
+
+1. Start backend and frontend.
+2. Log in as the seeded Tantou Editor user.
+3. Open the editor series page and confirm the five seeded series are visible.
+4. Open the progress board and switch between at least two series.
+5. Change one task status and then restore the original status.
+6. Open a workspace link and verify the app does not redirect to login.
+7. Confirm there are no new console errors after the route transitions.
