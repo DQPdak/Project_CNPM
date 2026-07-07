@@ -10,22 +10,22 @@ const BoardDashboard = () => {
     <div className="dashboard-wrapper">
       <h1 className="dashboard-title">Bảng Quyết Định Biên Tập</h1>
 
-      <div className="dashboard-grid">
-        <div className="col-span-2">
+      <div className="board-dashboard-stack">
+        <section className="board-dashboard-row">
           <BoardPendingWidget />
-        </div>
+        </section>
 
-        <div>
+        <section className="board-dashboard-row">
           <BoardAtRiskWidget />
-        </div>
+        </section>
 
-        <div className="col-span-full">
+        <section className="board-dashboard-row">
           <SeriesProgressTable />
-        </div>
+        </section>
 
-        <div className="col-span-full">
+        <section className="board-dashboard-row">
           <BoardLeaderboardWidget />
-        </div>
+        </section>
       </div>
     </div>
   );

@@ -7,8 +7,8 @@ const MangakaDashboard = () => {
   return (
     <div className="dashboard-wrapper">
       <h1 className="dashboard-title">Màn hình làm việc Mangaka</h1>
-      <div className="dashboard-grid">
-        <div className="main-column">
+      <div className="mangaka-dashboard-stack">
+        <section className="mangaka-dashboard-row">
           <div className="card">
             <h2 className="card-title">Series của tôi</h2>
             <p className="card-desc">
@@ -23,9 +23,9 @@ const MangakaDashboard = () => {
               </Link>
             </div>
           </div>
+        </section>
 
-        </div>
-        <div className="space-y-6">
+        <section className="mangaka-dashboard-row">
           <div className="widget-mangaka">
             <h2 className="widget-title">Thứ hạng tác phẩm</h2>
             <p className="widget-desc">
@@ -39,9 +39,11 @@ const MangakaDashboard = () => {
               Xem bảng chi tiết
             </Link>
           </div>
+        </section>
 
+        <section className="mangaka-dashboard-row">
           <SeriesProgressTable />
-        </div>
+        </section>
       </div>
     </div>
   );
