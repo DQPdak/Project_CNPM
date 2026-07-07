@@ -4,7 +4,8 @@ const Page = require("../../models/PageModel");
 // 1. Tạo mới PageRegion
 exports.createRegion = async (req, res) => {
   try {
-    const { page_id, coordinates, region_type } = req.body;
+    const page_id = req.body.page_id || req.params.page_id;
+    const { coordinates, region_type } = req.body;
 
     if (!page_id || !coordinates || !region_type) {
       return res.status(400).json({

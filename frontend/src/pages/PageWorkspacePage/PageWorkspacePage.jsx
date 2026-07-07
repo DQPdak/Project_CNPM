@@ -20,10 +20,10 @@ const CATEGORY_LABELS = {
 };
 
 const STATUS_CONFIG = {
-  "Open":        { label: "Chờ sửa",      color: "#FF5C00", bg: "#fff4ee" },
-  "In Progress": { label: "Đang sửa",     color: "#FFD000", bg: "#fffce8" },
-  "Resolved":    { label: "Đã xong",      color: "#23A094", bg: "#edfaf8" },
-  "Reopened":    { label: "Mở lại",       color: "#9b59b6", bg: "#f8eeff" },
+  "Open": { label: "Chờ sửa", color: "#FF5C00", bg: "#fff4ee" },
+  "In Progress": { label: "Đang sửa", color: "#FFD000", bg: "#fffce8" },
+  "Resolved": { label: "Đã xong", color: "#23A094", bg: "#edfaf8" },
+  "Reopened": { label: "Mở lại", color: "#9b59b6", bg: "#f8eeff" },
 };
 
 export default function PageWorkspacePage() {
@@ -410,7 +410,7 @@ export default function PageWorkspacePage() {
               className={`ws-mode-btn ${mode === "draw_region" ? "active bg-[#FFD000] text-black" : ""}`}
               onClick={() => { setMode("draw_region"); setTempPin(null); setShowPinModal(false); }}
             >
-              <Edit3 size={16} /> Phân vùng (Mangaka)
+              <Edit3 size={16} /> Giao nhiệm vụ
             </button>
           )}
         </div>
@@ -421,16 +421,8 @@ export default function PageWorkspacePage() {
 
         {/* ── INTERACTIVE CANVAS ── */}
         <main className="ws-canvas-container shadow-brutal">
-          {mode === "add_pin" && (
-            <div className="ws-mode-banner ann bg-[#FF5C00] text-white border-2 border-black p-2 font-bold mb-4 shadow-[2px_2px_0px_rgba(0,0,0,1)]">
-              📌 Nhấp vào vị trí trên ảnh để cắm ghim góp ý biên tập.
-            </div>
-          )}
-          {mode === "draw_region" && (
-            <div className="ws-mode-banner draw bg-[#FFD000] text-black border-2 border-black p-2 font-bold mb-4 shadow-[2px_2px_0px_rgba(0,0,0,1)]">
-              📐 Kéo giữ chuột trên ảnh để vẽ vùng và giao việc trợ lý.
-            </div>
-          )}
+
+
 
           <div
             className={`ws-canvas-wrapper ${mode}`}
@@ -450,7 +442,7 @@ export default function PageWorkspacePage() {
             {/* SAVED REGIONS */}
             {regions.map((reg) => {
               let coords = {};
-              try { coords = JSON.parse(reg.coordinates); } catch (e) {}
+              try { coords = JSON.parse(reg.coordinates); } catch (e) { }
               const task = getTaskForRegion(reg._id);
               const isSelected = selectedRegion?._id === reg._id;
               return (
@@ -585,9 +577,8 @@ export default function PageWorkspacePage() {
                     <>
                       <button
                         onClick={() => handleToggleAnnotationStatus(selectedAnnotation._id, selectedAnnotation.status)}
-                        className={`ws-btn-small flex-1 text-xs border-2 border-black font-bold p-1.5 shadow-[1px_1px_0px_rgba(0,0,0,1)] ${
-                          selectedAnnotation.status === "Resolved" ? "bg-yellow-300" : "bg-[#23A094] text-white"
-                        }`}
+                        className={`ws-btn-small flex-1 text-xs border-2 border-black font-bold p-1.5 shadow-[1px_1px_0px_rgba(0,0,0,1)] ${selectedAnnotation.status === "Resolved" ? "bg-yellow-300" : "bg-[#23A094] text-white"
+                          }`}
                       >
                         {selectedAnnotation.status === "Resolved" ? "↩ Mở lại" : "✓ Đánh dấu xong"}
                       </button>
@@ -741,9 +732,8 @@ export default function PageWorkspacePage() {
                   return (
                     <div
                       key={ann._id}
-                      className={`ws-list-item border-2 p-2 mb-1.5 transition-all cursor-pointer ${
-                        isResolved ? "border-gray-300 opacity-60" : "border-black"
-                      } ${isSelected ? "bg-pink-50 shadow-[2px_2px_0px_rgba(0,0,0,1)] -translate-y-0.5" : "bg-white hover:bg-gray-50"}`}
+                      className={`ws-list-item border-2 p-2 mb-1.5 transition-all cursor-pointer ${isResolved ? "border-gray-300 opacity-60" : "border-black"
+                        } ${isSelected ? "bg-pink-50 shadow-[2px_2px_0px_rgba(0,0,0,1)] -translate-y-0.5" : "bg-white hover:bg-gray-50"}`}
                       onClick={() => { setSelectedAnnotation(ann); setSelectedRegion(null); setEditingAnnotation(null); }}
                     >
                       <div className="flex justify-between items-center mb-0.5">
@@ -915,7 +905,7 @@ export default function PageWorkspacePage() {
         <div className="ws-modal-overlay">
           <div className="ws-modal border-4 border-black p-6 bg-white shadow-brutal">
             <div className="flex justify-between items-center mb-4 border-b-4 border-black pb-2 bg-[#FFD000] -mx-6 -mt-6 p-4">
-              <h2 className="font-black text-lg uppercase tracking-wide">Phân chia vùng & giao Task trợ lý</h2>
+              <h2 className="font-black text-lg uppercase tracking-wide">Giao nhiệm vụ</h2>
               <button
                 type="button"
                 onClick={() => { setShowTaskModal(false); setTempBox(null); }}
@@ -928,7 +918,7 @@ export default function PageWorkspacePage() {
             <form onSubmit={handleCreateTaskAndRegion} className="ws-modal-form">
               <div className="ws-form-grid">
                 <div className="form-group">
-                  <label htmlFor="regionType">Loại phân vùng vẽ:</label>
+                  <label htmlFor="regionType">Hạng mục vẽ:</label>
                   <select id="regionType" value={regionType} onChange={(e) => setRegionType(e.target.value)} className="ws-select w-full">
                     <option value="panel">Khung tranh (Panel)</option>
                     <option value="background">Bối cảnh (Background)</option>
@@ -973,7 +963,7 @@ export default function PageWorkspacePage() {
                   Hủy vẽ vùng
                 </button>
                 <button type="submit" className="ws-btn bg-[#23A094] text-white border-2 border-black font-black px-6 py-2 shadow-[2px_2px_0px_rgba(0,0,0,1)]">
-                  Giao việc & Vẽ Vùng 🚀
+                  Giao việc
                 </button>
               </div>
             </form>
