@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuthStore } from "../../../stores/authStore";
 import { getNotificationPath } from "../utils/notificationLinks";
 
 const TYPE_CONFIG = {
@@ -28,9 +29,10 @@ function formatRelativeTime(dateString) {
 export default function NotificationItem({ notification, onMarkRead, onDelete, onOpenDetail }) {
   const [deleting, setDeleting] = useState(false);
   const navigate = useNavigate();
+  const userRole = useAuthStore((s) => s.user?.role);
   const config = TYPE_CONFIG[notification.type] || TYPE_CONFIG.System;
   const isUnread = !notification.is_read;
-  const linkPath = getNotificationPath(notification);
+  const linkPath = getNotificationPath(notification, userRole);
 
   const handleDelete = async (e) => {
     e.stopPropagation();
