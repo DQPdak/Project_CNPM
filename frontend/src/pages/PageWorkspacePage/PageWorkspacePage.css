@@ -17,19 +17,9 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  flex-wrap: wrap;
   background-color: #fff;
   padding: 1.25rem 2rem;
   border-radius: 4px;
-  gap: 1rem 1.5rem;
-}
-
-.ws-header-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-  justify-content: flex-end;
 }
 
 .ws-back-link {
@@ -60,194 +50,17 @@
   margin: 0.25rem 0 0 0;
 }
 
-/* ═══════════════════════════════════════════════
-   DROPDOWN CHỌN TRỢ LÝ — compact trên header bar
-═══════════════════════════════════════════════ */
-.ws-assistant-compact {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.55rem 1rem;
-  background-color: #fff;
-  color: #000;
-  border: 2px solid #000;
-  box-shadow: 2px 2px 0px 0px #000;
-  transition: all 0.15s ease;
-  white-space: nowrap;
-}
-
-.ws-assistant-compact:hover:not(.ws-locked) {
-  transform: translate(-1px, -1px);
-  box-shadow: 3px 3px 0px 0px #000;
-}
-
-.ws-assistant-compact.ws-locked {
-  background-color: #888;
-  box-shadow: 1px 1px 0px 0px #000;
-  cursor: not-allowed;
-  opacity: 0.75;
-}
-
-.ws-assistant-compact-select {
-  padding: 0.3rem 1.6rem 0.3rem 0.4rem;
-  font-size: 0.8rem;
-  font-weight: 850;
-  text-transform: uppercase;
-  border: none;
-  background-color: #fff;
-  color: #000;
-  outline: none;
-  cursor: pointer;
-  appearance: none;
-  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='3' stroke-linecap='square' stroke-linejoin='miter'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
-  background-repeat: no-repeat;
-  background-position: right 0.5rem center;
-  background-size: 12px;
-  min-width: 140px;
-  max-width: 200px;
-}
-
-.ws-assistant-compact-select:focus {
-  outline: 2px solid #FFD000;
-  outline-offset: 1px;
-}
-
-.ws-assistant-compact-select:disabled {
-  cursor: not-allowed;
-  background-color: #e5e5e5;
-  color: #555;
-}
-
-/* Disabled button - chống khoanh vùng khi đã duyệt */
-button:disabled.ws-mode-btn,
-button:disabled {
-  opacity: 0.55;
-  cursor: not-allowed !important;
-  filter: grayscale(0.4);
-}
-
-button:disabled.ws-mode-btn:hover {
-  transform: none;
-  box-shadow: 2px 2px 0px 0px #000;
-}
-
-/* ═══════════════════════════════════════════════
-   BANNER "ĐÃ DUYỆT" - nằm ngay dưới header
-═══════════════════════════════════════════════ */
-.ws-approved-banner {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  padding: 0.85rem 1.25rem;
-  background-color: #d4f4dd;
-  color: #0a6b2a;
-  border: 3px solid #0a6b2a;
-  border-radius: 0;
-  margin: 0 1.25rem 0 1.25rem;
-  font-size: 0.95rem;
-  font-weight: 600;
-  letter-spacing: 0.2px;
-  box-shadow: 4px 4px 0px 0px #0a6b2a;
-}
-
-.ws-approved-banner strong {
-  font-weight: 950;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-@media (max-width: 640px) {
-  .ws-approved-banner {
-    margin: 0 0.5rem 0 0.5rem;
-    font-size: 0.85rem;
-    padding: 0.7rem 0.85rem;
-  }
-}
-
 .ws-mode-controls {
   display: flex;
-  gap: 0.6rem;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-.ws-extra-controls {
-  display: flex;
-  gap: 0.6rem;
-  align-items: center;
-  margin-left: 0;
-  padding-left: 0.85rem;
-  border-left: 2px dashed #000;
-}
-
-@media (max-width: 1100px) {
-  .ws-extra-controls {
-    border-left: none;
-    padding-left: 0;
-  }
-  .ws-mode-btn {
-    padding: 0.5rem 0.85rem;
-    font-size: 0.75rem;
-  }
-}
-
-@media (max-width: 768px) {
-  .ws-header {
-    padding: 1rem;
-  }
-  .ws-header-actions {
-    width: 100%;
-    justify-content: flex-start;
-  }
-}
-
-/* Nút "Khoanh vùng + Giao" - vàng nổi bật */
-.ws-assign-task-btn {
-  background-color: #FFD000 !important;
-  border: 2px solid #000 !important;
-  box-shadow: 2px 2px 0px #000;
-  font-weight: 950 !important;
-}
-
-.ws-assign-task-btn:hover {
-  background-color: #fde047 !important;
-  transform: translate(-1px, -1px);
-  box-shadow: 3px 3px 0px #000;
-}
-
-.ws-assign-task-btn.active {
-  background-color: #FFD000 !important;
-  color: #000 !important;
-}
-
-/* Nút "Giao nhiệm vụ cho Assistant" (không vẽ vùng) - teal nổi bật */
-.ws-assign-assistant-btn {
-  background-color: #23A094 !important;
-  color: #fff !important;
-  border: 2px solid #000 !important;
-  box-shadow: 2px 2px 0px #000;
-  font-weight: 950 !important;
-}
-
-.ws-assign-assistant-btn:hover {
-  background-color: #1a8278 !important;
-  color: #fff !important;
-  transform: translate(-1px, -1px);
-  box-shadow: 3px 3px 0px #000;
-}
-
-.ws-assign-assistant-btn.active {
-  background-color: #14665e !important;
-  color: #fff !important;
+  gap: 0.75rem;
 }
 
 .ws-mode-btn {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.55rem 1rem;
-  font-size: 0.8rem;
+  padding: 0.6rem 1.2rem;
+  font-size: 0.85rem;
   font-weight: 850;
   text-transform: uppercase;
   border: 2px solid #000;
@@ -255,7 +68,6 @@ button:disabled.ws-mode-btn:hover {
   cursor: pointer;
   box-shadow: 2px 2px 0px #000;
   transition: all 0.15s ease;
-  white-space: nowrap;
 }
 
 .ws-mode-btn:hover {
@@ -732,8 +544,6 @@ button:disabled.ws-mode-btn:hover {
     transform: scale(1) translateY(0);
   }
 }
-
-/* (Đã xóa CSS cho modal cũ ws-assist-modal* — không còn dùng) */
 
 /* ── DETAIL BOX ──────────────────────────────── */
 .ws-detail-box {
