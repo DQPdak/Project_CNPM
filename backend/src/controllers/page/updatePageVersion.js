@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const Page = require("../../models/PageModel");
 const PageVersionHistory = require("../../models/PageVersionHistoryModel");
+const { buildCloudinaryDownloadUrl } = require("../../helpers/cloudinaryUrl.helper");
 
 exports.updatePageVersion = async (req, res) => {
   // 1. Khởi tạo Transaction để bảo vệ tính toàn vẹn dữ liệu
@@ -40,9 +41,21 @@ exports.updatePageVersion = async (req, res) => {
     }
 
     const sourceFileUrl = req.files.source_file[0].path;
-    const attachedResourceUrl = req.files.attached_resource
-      ? req.files.attached_resource[0].path
-      : null;
+
+    // Chuẩn hoá URL ZIP đính kèm (nếu có) để ép trình duyệt tải xuống.
+    let attachedResourceUrl = null;
+    if (req.files.attached_resource && req.files.attached_resource[0]) {
+      const rawAttachedUrl = req.files.attached_resource[0].path;
+      const originalName = req.files.attached_resource[0].originalname || "";
+      attachedResourceUrl = buildCloudinaryDownloadUrl(rawAttachedUrl, originalName);
+    }
+
+    // File bản thảo gốc (.psd, .clip, ...) cũng cần ép tải xuống.
+    const sourceOriginalName = req.files.source_file[0].originalname || "";
+    const sourceFileDownloadUrl = buildCloudinaryDownloadUrl(
+      sourceFileUrl,
+      sourceOriginalName
+    );
 
     // 4. Ma thuật Cloudinary: Tự động tạo link Preview mới từ file bản thảo
     const previewUrl = sourceFileUrl.replace(/\.[^/.]+$/, ".png");
@@ -52,7 +65,7 @@ exports.updatePageVersion = async (req, res) => {
 
     // 6. Cập nhật dữ liệu mới đè lên bảng Page hiện tại
     existingPage.current_preview_url = previewUrl;
-    existingPage.current_source_file_url = sourceFileUrl;
+    existingPage.current_source_file_url = sourceFileDownloadUrl;
     existingPage.attached_resource_url = attachedResourceUrl;
     existingPage.current_version = newVersion;
 
@@ -68,7 +81,7 @@ exports.updatePageVersion = async (req, res) => {
       page_id: existingPage._id,
       version_number: newVersion,
       preview_url: previewUrl,
-      source_file_url: sourceFileUrl,
+      source_file_url: sourceFileDownloadUrl,
       attached_resource_url: attachedResourceUrl,
       submitted_by: req.user.id,
       commit_note: commit_note || `Cập nhật version ${newVersion}`,

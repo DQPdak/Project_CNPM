@@ -250,6 +250,43 @@ Chúng tôi đã chỉnh sửa logic tại file [PageWorkspacePage.jsx](file:///
 1. **Khóa dependency của `useEffect`**: Đổi dependency của `useEffect` từ `[fetchAllData]` thành `[pageId]`. Điều này đảm bảo dữ liệu chỉ được tải từ API một lần duy nhất khi component mount hoặc khi chuyển đổi trang truyện, ngăn chặn hoàn toàn việc tự động kích hoạt tải lại do thay đổi hàm tham chiếu.
 2. **Đồng bộ thông tin bằng cách Fetch chủ động**: Thay thế lệnh push dữ liệu thủ công bằng cách gọi trực tiếp `await fetchAllData()` ngay sau khi tạo Task thành công trong hàm `handleCreateTaskAndRegion`. Thao tác này giúp tải lại thông tin đã được populate đầy đủ từ Backend (bao gồm tên trợ lý hiển thị đúng là `"System Assistant"`), kết hợp đồng bộ trong cùng một lần xoay vòng trạng thái `isLoading` (chỉ load duy nhất 1 lần).
 
+---
+
+## 12. Sửa Lỗi: Không Tải Được Tài Nguyên ZIP Từ Cloudinary
+
+### Nguyên nhân xảy ra lỗi:
+
+1. **Cloudinary phân loại file theo `resource_type`**: Khi upload file `.zip` lên Cloudinary với `resource_type: "auto"`, Cloudinary tự động xếp file ZIP vào nhóm `raw` (file nhị phân). URL lúc này có dạng `https://res.cloudinary.com/<cloud>/raw/upload/v123/manga_images/<file>.zip`. Khi người dùng nhấp vào link này trên trình duyệt, trình duyệt **không tự động tải file về** mà sẽ hiển thị nội dung nhị phân dưới dạng text dẫn đến lỗi và nút "📦 Tải Tài Nguyên (.ZIP)" coi như không hoạt động.
+
+2. **Cờ `fl_attachment` bị thiếu**: Cloudinary cung cấp cờ `fl_attachment` (ví dụ: `?fl_attachment=true` hoặc `?fl_attachment=tenfile.zip`) để ép trình duyệt phải tải file thay vì hiển thị. Tuy nhiên, các controller upload cũ (`uploadPages.js`, `updatePageVersion.js`, `submitTask` của `taskController.js`) **đều lưu URL thô** mà không chèn cờ này, dẫn đến link ZIP không thể download.
+
+3. **Nhầm lẫn giữa URL gốc và URL có query string**: Ở hàm `reviewTask` (khi Mangaka duyệt ZIP do Assistant nộp), logic cũ kiểm tra đuôi file bằng `originalUrl.toLowerCase().endsWith(".zip")`. Nếu sau này `submission.file_url` chứa query string `?fl_attachment=...`, phép kiểm tra sẽ trả về `false`, khiến **file ZIP bị ghi đè nhầm vào `current_preview_url`** thay vì `attached_resource_url`. Đây là lỗi logic dẫn đến trang hiển thị "Không có tài nguyên đính kèm" dù Mangaka đã duyệt ZIP thành công.
+
+### Cách khắc phục:
+
+1. **Tạo Helper `buildCloudinaryDownloadUrl`** tại [cloudinaryUrl.helper.js](file:///d:/thang/Project_CNPM/backend/src/helpers/cloudinaryUrl.helper.js):
+   - Nhận URL Cloudinary và tên file gốc, tự động kiểm tra phần mở rộng hoặc đoạn `/raw/` trong URL.
+   - Nếu là file raw (zip, psd, rar, 7z, …), chèn `?fl_attachment=<tên_file>` vào URL.
+   - Nếu URL không phải Cloudinary (link S3, link ngoài), trả về nguyên bản (không phá vỡ dữ liệu seed).
+   - Bảo toàn các query string sẵn có và tránh chèn trùng `fl_attachment`.
+
+2. **Cập nhật controller Backend** để áp dụng helper trên mọi URL lưu vào database:
+   - [uploadPages.js](file:///d:/thang/Project_CNPM/backend/src/controllers/page/uploadPages.js): chuẩn hoá `attached_resource_url` (ZIP) và `current_source_file_url` (PSD/CLIP) khi Mangaka upload bản thảo ban đầu.
+   - [updatePageVersion.js](file:///d:/thang/Project_CNPM/backend/src/controllers/page/updatePageVersion.js): chuẩn hoá tương tự khi cập nhật version (upload phiên bản mới có kèm ZIP).
+   - [taskController.js](file:///d:/thang/Project_CNPM/backend/src/controllers/task/taskController.js): chuẩn hoá `file_url` khi Assistant nộp sản phẩm qua `submitTask`.
+
+3. **Sửa lỗi logic kiểm tra ZIP trong `reviewTask`**:
+   - Tách URL bỏ query string (`originalUrl.split("?")[0]`) trước khi `endsWith(".zip")`. Điều này đảm bảo file ZIP được lưu đúng vào `attached_resource_url` thay vì `current_preview_url`/`current_source_file_url`.
+
+4. **Cập nhật Frontend** để tăng cường trải nghiệm tải xuống:
+   - [AssistantTasksPage.jsx](file:///d:/thang/Project_CNPM/frontend/src/pages/AssistantTasksPage/AssistantTasksPage.jsx): thêm thuộc tính `download` cho các thẻ `<a>` của nút "📦 Tải Tài Nguyên (.ZIP)", "💾 Tải File Gốc (.PSD)" và link file trong lịch sử nộp bài.
+   - [MangakaTasksPage.jsx](file:///d:/thang/Project_CNPM/frontend/src/pages/MangakaTasksPage/MangakaTasksPage.jsx): thêm thuộc tính `download` cho các nút liên kết ở khung so sánh trước/sau và lịch sử submission.
+
+Sau khi áp dụng:
+- Mỗi URL Cloudinary chứa file raw (zip, psd, …) được lưu trong MongoDB đều có dạng `https://res.cloudinary.com/.../raw/upload/.../file.zip?fl_attachment=file.zip`.
+- Khi người dùng (Mangaka hoặc Assistant) nhấp vào nút "📦 Tải Tài Nguyên (.ZIP)", trình duyệt sẽ download file về máy thay vì mở nội dung nhị phân bị lỗi.
+- File ZIP nộp từ Assistant khi được duyệt sẽ tự động xuất hiện trên nút "📦 Tải Tài Nguyên (.ZIP)" trong trang chi tiết công việc của Mangaka, khắc phục triệt để lỗi "Không có tài nguyên đính kèm".
+
 
 
 
