@@ -10,7 +10,7 @@ export function getNotificationPath(notification) {
   if (target_type && target_id) {
     switch (target_type) {
       case "Task":
-        return `/workspace/${target_id}`;
+        return `/assistant/tasks`;
       case "Chapter":
         return `/chapter-list/${target_id}`;
       case "Series":
