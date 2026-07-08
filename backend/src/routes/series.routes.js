@@ -87,7 +87,7 @@ router.post(
 );
 router.get(
   "/:id",
-  requireRole(ROLES.MANGAKA, ROLES.TANTOU_EDITOR, ROLES.EDITORIAL_BOARD),
+  requireRole(ROLES.MANGAKA, ROLES.TANTOU_EDITOR, ROLES.EDITORIAL_BOARD, ROLES.ADMIN),
   requireSeriesScope("id", "read"),
   getSeriesById.getSeriesById,
 );

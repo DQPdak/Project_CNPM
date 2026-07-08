@@ -85,7 +85,7 @@ exports.publishChapter = async (req, res) => {
           title: "Chapter đã được xuất bản",
           message: `Chapter "${chapter.title}" của series "${series.title}" đã được xuất bản thành công.`,
           target_type: "Chapter",
-          target_id: chapter._id,
+          target_id: chapter.series_id,
         });
       }
     }
