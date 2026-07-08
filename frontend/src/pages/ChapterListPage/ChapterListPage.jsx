@@ -166,7 +166,6 @@ export default function ChapterListPage() {
     setIsLoading(false);
   };
 
-
   return (
     <div className="clp-wrapper">
       {isLoading && <Loading text="Đang xử lý..." />}

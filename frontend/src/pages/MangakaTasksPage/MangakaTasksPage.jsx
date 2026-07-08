@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { Eye, X, ZoomIn, ZoomOut, Download, FileText, FileArchive, FileImage, ExternalLink } from "lucide-react";
 import getMySeries from "../../services/series/getMySeriesService";
 import getChaptersBySeries from "../../services/chapter/getChaptersBySeriesService";
 import getPagesByChapter from "../../services/page/getPagesByChapterService";
@@ -15,136 +14,6 @@ import { useToast } from "../../contexts/ToastContext";
 import Loading from "../../common/Loading/Loading";
 import "./MangakaTasksPage.css";
 
-// ════════ HELPER: NHẬN DIỆN LOẠI FILE TỪ URL ════════
-// Trả về: { kind: "image" | "pdf" | "unknown", extension: "png" | "pdf" | ... }
-const detectFileKind = (url) => {
-  if (!url) return { kind: "unknown", extension: "" };
-  const cleanUrl = url.split("?")[0].split("#")[0].toLowerCase();
-
-  const imageExts = ["png", "jpg", "jpeg", "webp", "gif", "bmp", "svg", "avif"];
-  for (const ext of imageExts) {
-    if (cleanUrl.endsWith(`.${ext}`)) return { kind: "image", extension: ext };
-  }
-  if (cleanUrl.endsWith(".pdf")) return { kind: "pdf", extension: "pdf" };
-
-  return { kind: "unknown", extension: cleanUrl.split(".").pop() || "" };
-};
-
-// ════════ HELPER: URL để HIỂN THỊ vs URL để TẢI VỀ ════════
-// Cloudinary trả về URL có `?fl_attachment=true` cho file raw (zip/psd/...)
-// để trình duyệt download thay vì render. Khi muốn XEM TRỰC TIẾP ảnh,
-// ta cần bỏ cờ này đi (nhưng chỉ với ảnh).
-const buildDisplayUrl = (url, kind) => {
-  if (!url) return url;
-  // Ảnh / PDF: strip fl_attachment để trình duyệt render nội dung
-  if (kind === "image" || kind === "pdf") {
-    try {
-      const u = new URL(url);
-      u.searchParams.delete("fl_attachment");
-      return u.toString();
-    } catch {
-      // URL không parse được → trả về nguyên
-      return url.replace(/[?&]fl_attachment=[^&]*/g, "").replace(/[?&]$/, "");
-    }
-  }
-  // Unknown / raw: giữ nguyên (để tải về)
-  return url;
-};
-
-const buildDownloadUrl = (url) => {
-  if (!url) return url;
-  try {
-    const u = new URL(url);
-    if (!u.searchParams.has("fl_attachment")) {
-      u.searchParams.set("fl_attachment", "true");
-    }
-    return u.toString();
-  } catch {
-    return url;
-  }
-};
-
-// ════════ COMPONENT CON: KHUNG HIỂN THỊ TRỰC TIẾP THEO LOẠI FILE ════════
-function InlineFilePreview({ url, alt, onPreviewClick, kind, displayUrl }) {
-  const [imgError, setImgError] = useState(false);
-  // displayUrl = url đã strip fl_attachment (để xem trực tiếp)
-  // url gốc = để mở/tải
-  const viewUrl = displayUrl || url;
-
-  if (!url) {
-    return (
-      <div className="mtp-preview-empty">
-        <span>📭</span>
-        <p>Không có file</p>
-      </div>
-    );
-  }
-
-  // ẢNH — render <img>, nếu load lỗi thì fallback
-  if (kind === "image" && !imgError) {
-    return (
-      <img
-        src={viewUrl}
-        alt={alt}
-        className="mtp-preview-image"
-        onClick={onPreviewClick}
-        onError={() => setImgError(true)}
-      />
-    );
-  }
-
-  // ẢNH — load lỗi (URL không thực sự là ảnh dù tên giống)
-  if (kind === "image" && imgError) {
-    return (
-      <div className="mtp-preview-file-card">
-        <FileImage size={36} />
-        <div className="mtp-preview-file-name">{alt}</div>
-        <div className="mtp-preview-file-meta">Trình duyệt không thể hiển thị trực tiếp</div>
-        <div className="mtp-preview-file-actions">
-          <a href={url} target="_blank" rel="noreferrer" className="mtp-preview-file-btn primary">
-            <ExternalLink size={14} /> Mở tab mới
-          </a>
-          <a href={buildDownloadUrl(url)} download className="mtp-preview-file-btn">
-            <Download size={14} /> Tải về
-          </a>
-        </div>
-      </div>
-    );
-  }
-
-  // PDF — render <iframe> (Chrome/Edge/Firefox đều preview PDF)
-  if (kind === "pdf") {
-    return (
-      <div className="mtp-preview-pdf-wrapper">
-        <iframe
-          src={viewUrl}
-          title={alt}
-          className="mtp-preview-pdf"
-        />
-      </div>
-    );
-  }
-
-  // UNKNOWN (PSD/AI/ZIP/RAR/...) — hiển thị card thông tin + nút mở/tải
-  return (
-    <div className="mtp-preview-file-card">
-      <FileArchive size={36} />
-      <div className="mtp-preview-file-name">{alt}</div>
-      <div className="mtp-preview-file-meta">
-        Định dạng file này không xem trực tiếp được trên trình duyệt
-      </div>
-      <div className="mtp-preview-file-actions">
-        <a href={url} target="_blank" rel="noreferrer" className="mtp-preview-file-btn primary">
-          <ExternalLink size={14} /> Mở tab mới
-        </a>
-        <a href={buildDownloadUrl(url)} download className="mtp-preview-file-btn">
-          <Download size={14} /> Tải về
-        </a>
-      </div>
-    </div>
-  );
-}
-
 export default function MangakaTasksPage() {
   const toast = useToast();
   const [activeTab, setActiveTab] = useState("list"); // 'list' or 'create'
@@ -154,10 +23,8 @@ export default function MangakaTasksPage() {
   const [detailLoading, setDetailLoading] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
 
-  // Lightbox preview state (xem ảnh bài nộp full size)
-  const [previewImage, setPreviewImage] = useState(null);
-  const [previewTitle, setPreviewTitle] = useState("");
-  const [previewZoom, setPreviewZoom] = useState(1);
+  // Before/After comparison state
+  const [sliderPos, setSliderPos] = useState(50);
 
   // Review states
   const [reviewStatus, setReviewStatus] = useState("Approved");
@@ -278,6 +145,7 @@ export default function MangakaTasksPage() {
       setSelectedTask(result);
       setReviewStatus("Approved");
       setReviewNote("");
+      setSliderPos(50);
     }
     setDetailLoading(false);
   };
@@ -387,30 +255,19 @@ export default function MangakaTasksPage() {
     return "bg-gray-300";
   };
 
-  // Lightbox helpers (xem ảnh bài nộp full size)
-  const openPreview = (url, title) => {
-    if (!url) return;
-    setPreviewImage(url);
-    setPreviewTitle(title || "Bản vẽ");
-    setPreviewZoom(1);
+  // Helper to determine if submission is image
+  const isImageFile = (url) => {
+    if (!url) return false;
+    const lower = url.toLowerCase();
+    return (
+      lower.includes("photo-") ||
+      lower.includes("unsplash.com") ||
+      lower.endsWith(".png") ||
+      lower.endsWith(".jpg") ||
+      lower.endsWith(".jpeg") ||
+      lower.endsWith(".webp")
+    );
   };
-  const closePreview = () => {
-    setPreviewImage(null);
-    setPreviewTitle("");
-    setPreviewZoom(1);
-  };
-
-  // Đóng lightbox khi bấm ESC
-  useEffect(() => {
-    if (!previewImage) return;
-    const onKey = (e) => {
-      if (e.key === "Escape") closePreview();
-      if (e.key === "+" || e.key === "=") setPreviewZoom((z) => Math.min(z + 0.25, 4));
-      if (e.key === "-") setPreviewZoom((z) => Math.max(z - 0.25, 0.5));
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [previewImage]);
 
   return (
     <div className="mtp-container">
@@ -550,87 +407,43 @@ export default function MangakaTasksPage() {
                   </div>
                 )}
 
-              {/* IMAGE COMPARISON (BEFORE / AFTER) — 2 KHUNG ẢNH TRỰC TIẾP */}
-              {selectedTask.submissions && selectedTask.submissions.length > 0 ? (
+              {/* IMAGE COMPARISON (BEFORE / AFTER) */}
+              {selectedTask.submissions &&
+              selectedTask.submissions.length > 0 ? (
                 (() => {
                   const latestSub = selectedTask.submissions[0];
-                  const beforeUrl = selectedTask.task.page_id?.current_preview_url;
-                  const afterUrl = latestSub.file_url;
-                  const beforeKind = detectFileKind(beforeUrl);
-                  const afterKind = detectFileKind(afterUrl);
-                  const beforeDisplayUrl = buildDisplayUrl(beforeUrl, beforeKind.kind);
-                  const afterDisplayUrl = buildDisplayUrl(afterUrl, afterKind.kind);
+
+                  const previewUrl =
+                    latestSub.primary_preview_url || latestSub.file_url;
 
                   return (
                     <div className="mtp-comparison-container">
-                      <h3>Nghiệm thu bản vẽ (Bản gốc vs Bài nộp)</h3>
+                      <h3>Nghiệm thu bản vẽ</h3>
 
-                      <div className="mtp-preview-grid">
-                        {/* KHUNG 1 — BẢN GỐC */}
-                        <div className="mtp-preview-card">
-                          <div className="mtp-preview-card-header">
-                            <span className="mtp-preview-label before">Before · Bản thảo gốc</span>
+                      <div className="mtp-review-preview">
+                        {isImageFile(previewUrl) ? (
+                          <img
+                            src={previewUrl}
+                            alt="Preview bài nộp"
+                            className="mtp-review-image"
+                          />
+                        ) : (
+                          <div className="comparison-non-image">
+                            <p>
+                              Không có ảnh preview. Vui lòng tải file để kiểm
+                              tra.
+                            </p>
                           </div>
-                          <div className="mtp-preview-frame">
-                            <InlineFilePreview
-                              url={beforeUrl}
-                              displayUrl={beforeDisplayUrl}
-                              alt="Bản thảo gốc"
-                              kind={beforeKind.kind}
-                              onPreviewClick={() => openPreview(beforeDisplayUrl, "Before · Bản thảo gốc")}
-                            />
-                          </div>
-                          <div className="mtp-preview-actions">
-                            {beforeKind.kind === "image" && (
-                              <button
-                                type="button"
-                                className="mtp-preview-btn"
-                                onClick={() => openPreview(beforeDisplayUrl, "Before · Bản thảo gốc")}
-                                disabled={!beforeUrl}
-                              >
-                                <Eye size={14} /> Xem ảnh lớn
-                              </button>
-                            )}
-                            {beforeUrl && (
-                              <a href={beforeUrl} target="_blank" rel="noreferrer" className="mtp-preview-link">
-                                Mở tab mới ↗
-                              </a>
-                            )}
-                          </div>
-                        </div>
+                        )}
 
-                        {/* KHUNG 2 — BÀI NỘP CỦA TRỢ LÝ */}
-                        <div className="mtp-preview-card highlighted">
-                          <div className="mtp-preview-card-header">
-                            <span className="mtp-preview-label after">After · Bài nộp của trợ lý</span>
-                          </div>
-                          <div className="mtp-preview-frame">
-                            <InlineFilePreview
-                              url={afterUrl}
-                              displayUrl={afterDisplayUrl}
-                              alt={`Bài nộp của trợ lý${afterKind.extension ? ` (.${afterKind.extension})` : ""}`}
-                              kind={afterKind.kind}
-                              onPreviewClick={() => openPreview(afterDisplayUrl, "After · Bài nộp của trợ lý")}
-                            />
-                          </div>
-                          <div className="mtp-preview-actions">
-                            {afterKind.kind === "image" && (
-                              <button
-                                type="button"
-                                className="mtp-preview-btn primary"
-                                onClick={() => openPreview(afterDisplayUrl, "After · Bài nộp của trợ lý")}
-                                disabled={!afterUrl}
-                              >
-                                <Eye size={14} /> Xem ảnh lớn
-                              </button>
-                            )}
-                            {afterUrl && (
-                              <a href={buildDownloadUrl(afterUrl)} download className="mtp-preview-link">
-                                Tải về ↓
-                              </a>
-                            )}
-                          </div>
-                        </div>
+                        <a
+                          href={latestSub.file_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="mtp-download-btn"
+                        >
+                          📥 Tải bản nộp
+                        </a>
                       </div>
 
                       <div className="latest-note-box">
@@ -654,47 +467,43 @@ export default function MangakaTasksPage() {
                   <div className="form-group">
                     <label>Quyết định kết quả:</label>
                     <div className="radio-group">
-                      <label
-                        className="radio-label approve"
-                        style={{ paddingTop: '14px', paddingBottom: '14px', paddingLeft: '16px', paddingRight: '16px' }}
-                      >
+                      <label className="radio-label approve">
                         <input
                           type="radio"
                           name="reviewStatus"
                           value="Approved"
                           checked={reviewStatus === "Approved"}
                           onChange={() => setReviewStatus("Approved")}
-                          className="radio-dot"
                         />
-                        <span> Duyệt & Cộng tiền 💸</span>
+                        <span className="radio-title">
+                          💸
+                          <strong>Duyệt & Cộng tiền</strong>
+                        </span>
                       </label>
-                      <label
-                        className="radio-label revision"
-                        style={{ paddingTop: '14px', paddingBottom: '14px', paddingLeft: '16px', paddingRight: '16px' }}
-                      >
+                      <label className="radio-label revision">
                         <input
                           type="radio"
                           name="reviewStatus"
                           value="Revision Requested"
                           checked={reviewStatus === "Revision Requested"}
                           onChange={() => setReviewStatus("Revision Requested")}
-                          className="radio-dot"
                         />
-                        <span> Yêu cầu sửa lại ✏️</span>
+                        <span className="radio-title">
+                          ✏️
+                          <strong>Yêu cầu sửa lại</strong>
+                        </span>
                       </label>
-                      <label
-                        className="radio-label reject"
-                        style={{ paddingTop: '14px', paddingBottom: '14px', paddingLeft: '16px', paddingRight: '16px' }}
-                      >
+                      <label className="radio-label reject">
                         <input
                           type="radio"
                           name="reviewStatus"
                           value="Rejected"
                           checked={reviewStatus === "Rejected"}
                           onChange={() => setReviewStatus("Rejected")}
-                          className="radio-dot"
                         />
-                        <span> Từ chối thẳng ❌</span>
+                        <span className="radio-title">
+                          ❌<strong>Từ chối</strong>
+                        </span>
                       </label>
                     </div>
                   </div>
@@ -718,14 +527,6 @@ export default function MangakaTasksPage() {
                     type="submit"
                     disabled={reviewing}
                     className={`mtp-review-btn ${reviewStatus.toLowerCase().replace(" ", "-")}`}
-                    style={{
-                      boxShadow: 'none',
-                      paddingTop: '20px',
-                      paddingBottom: '20px',
-                      paddingLeft: '32px',
-                      paddingRight: '32px',
-                      letterSpacing: '0.2em'
-                    }}
                   >
                     {reviewing
                       ? "Đang gửi đánh giá..."
@@ -774,75 +575,6 @@ export default function MangakaTasksPage() {
           )}
         </section>
       </div>
-
-      {/* ══ LIGHTBOX XEM ẢNH BÀI NỘP FULL SIZE ══ */}
-      {previewImage && (
-        <div
-          className="mtp-lightbox-overlay"
-          onClick={closePreview}
-          role="dialog"
-          aria-modal="true"
-          aria-label={previewTitle}
-        >
-          <div
-            className="mtp-lightbox-container"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="mtp-lightbox-header">
-              <div className="mtp-lightbox-title">{previewTitle}</div>
-              <div className="mtp-lightbox-toolbar">
-                <button
-                  type="button"
-                  className="mtp-lightbox-iconbtn"
-                  onClick={() => setPreviewZoom((z) => Math.max(z - 0.25, 0.5))}
-                  title="Thu nhỏ (-)"
-                >
-                  <ZoomOut size={18} />
-                </button>
-                <span className="mtp-lightbox-zoom-label">{Math.round(previewZoom * 100)}%</span>
-                <button
-                  type="button"
-                  className="mtp-lightbox-iconbtn"
-                  onClick={() => setPreviewZoom((z) => Math.min(z + 0.25, 4))}
-                  title="Phóng to (+)"
-                >
-                  <ZoomIn size={18} />
-                </button>
-                <a
-                  href={previewImage}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="mtp-lightbox-iconbtn"
-                  title="Mở tab mới"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <Download size={18} />
-                </a>
-                <button
-                  type="button"
-                  className="mtp-lightbox-iconbtn close"
-                  onClick={closePreview}
-                  title="Đóng (ESC)"
-                >
-                  <X size={18} />
-                </button>
-              </div>
-            </div>
-            <div className="mtp-lightbox-viewer">
-              <img
-                src={previewImage}
-                alt={previewTitle}
-                className="mtp-lightbox-image"
-                style={{ transform: `scale(${previewZoom})` }}
-                draggable={false}
-              />
-            </div>
-            <div className="mtp-lightbox-hint">
-              Phím tắt: <strong>+</strong> / <strong>-</strong> để zoom, <strong>ESC</strong> để đóng, click bên ngoài để thoát.
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
