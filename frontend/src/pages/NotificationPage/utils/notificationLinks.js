@@ -2,19 +2,27 @@
  * Ánh xạ notification → đường dẫn deep link
  * target_type: Loại đối tượng (Task, Chapter, Series,...)
  * target_id: ID của đối tượng
+ * userRole: Role của user đăng nhập (phân biệt link theo role)
  */
-export function getNotificationPath(notification) {
+export function getNotificationPath(notification, userRole) {
   const { type, target_type, target_id } = notification;
 
   // Ưu tiên target_type nếu có
   if (target_type && target_id) {
     switch (target_type) {
-      case "Task":
-        return `/assistant/tasks`;
+      case "Task": {
+        if (userRole === "Assistant") return `/assistant/tasks`;
+        if (userRole === "Mangaka") return `/mangaka/tasks`;
+        return `/assistant/tasks`; // fallback
+      }
       case "Chapter":
         return `/chapter-list/${target_id}`;
-      case "Series":
-        return "/board/all-series";
+      case "Series": {
+        if (userRole === "Mangaka") return "/mangaka/series";
+        if (userRole === "Tantou Editor") return "/editor/series";
+        if (userRole === "Editorial Board" || userRole === "Admin") return "/board/all-series";
+        return "/board/all-series"; // fallback
+      }
       default:
         return null;
     }
