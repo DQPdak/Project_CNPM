@@ -91,3 +91,21 @@ export const deleteAnnotation = async (annotationId) => {
     };
   }
 };
+
+/**
+ * Khôi phục annotation đã xóa mềm
+ * @param {string} annotationId
+ */
+export const restoreAnnotation = async (annotationId) => {
+  try {
+    return await apiFetch(`/annotations/${annotationId}/restore`, {
+      method: "PATCH",
+    });
+  } catch (error) {
+    return {
+      success: false,
+      status: error.status,
+      message: error.message || "Không thể khôi phục góp ý.",
+    };
+  }
+};

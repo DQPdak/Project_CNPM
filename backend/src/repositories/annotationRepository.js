@@ -35,10 +35,11 @@ class AnnotationRepository {
    * @returns {Promise<Document[]>}
    */
   async findByPage(pageId) {
-    return await Annotation.find({ page_id: pageId })
-      .populate("created_by", "name email role avatar")
-      .populate("region_id", "coordinates region_type")
-      .sort({ createdAt: 1 });
+    return await Annotation.find({
+      page_id: pageId,
+    })
+      .populate("created_by", "full_name avatar role")
+      .sort({ createdAt: -1 });
   }
 
   /**
@@ -47,7 +48,9 @@ class AnnotationRepository {
    * @returns {Promise<Document[]>}
    */
   async findByChapter(chapterId) {
-    return await Annotation.find({ chapter_id: chapterId })
+    return await Annotation.find({
+      chapter_id: chapterId,
+    })
       .populate("created_by", "name email role avatar")
       .populate("page_id", "page_number current_preview_url")
       .sort({ createdAt: 1 });
@@ -71,7 +74,22 @@ class AnnotationRepository {
    * @returns {Promise<Document|null>} Document vừa bị xóa
    */
   async delete(id) {
-    return await Annotation.findByIdAndDelete(id);
+    // THAY VÌ: return await Annotation.findByIdAndDelete(id);
+    return await Annotation.findByIdAndUpdate(
+      id,
+      { isDeleted: true },
+      { returnDocument: "after" },
+    );
+  }
+
+  async restore(id) {
+    return await Annotation.findByIdAndUpdate(
+      id,
+      { isDeleted: false },
+      { returnDocument: "after" }, // Dùng returnDocument để tránh warning Mongoose
+    )
+      .populate("created_by", "name email role avatar")
+      .populate("page_id", "page_number current_preview_url");
   }
 }
 

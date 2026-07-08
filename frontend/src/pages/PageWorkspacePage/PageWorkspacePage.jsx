@@ -11,6 +11,7 @@ import {
   createAnnotation,
   updateAnnotation,
   deleteAnnotation,
+  restoreAnnotation,
 } from "../../services/annotation/annotationService";
 import {
   getTasksApi,
@@ -34,6 +35,8 @@ import {
 } from "lucide-react";
 import "./PageWorkspacePage.css";
 
+import RequirePermission from "../../components/security/RequirePermission";
+import ConfirmDeleteModal from "../../common/ConfirmDeleteModal/ConfirmDeleteModal";
 const CATEGORY_LABELS = {
   content: "Nội dung",
   script: "Kịch bản",
@@ -58,6 +61,8 @@ export default function PageWorkspacePage() {
   const [page, setPage] = useState(null);
   const [regions, setRegions] = useState([]);
   const [annotations, setAnnotations] = useState([]);
+  const [trashedAnnotations, setTrashedAnnotations] = useState([]);
+
   const [tasks, setTasks] = useState([]);
   const [assistants, setAssistants] = useState([]);
 
@@ -106,6 +111,10 @@ export default function PageWorkspacePage() {
   const isEditor = user?.role === "Tantou Editor" || user?.role === "Admin";
   const isAssistant = user?.role === "Assistant";
 
+  // State quản lý việc xóa mềm Annotation bằng Modal mới
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [annotationToDelete, setAnnotationToDelete] = useState(null);
+
   // ── Data Fetching ─────────────────────────────────────────
   const fetchAllData = useCallback(async () => {
     setIsLoading(true);
@@ -130,7 +139,15 @@ export default function PageWorkspacePage() {
       if (regionsRes.success) setRegions(regionsRes.regions);
       // API mới trả về { success, count, data }
       if (annotationsRes.success) {
-        setAnnotations(annotationsRes.data || annotationsRes.annotations || []);
+        const allAnns = annotationsRes.data || annotationsRes.annotations || [];
+
+        // Tách làm 2 mảng dựa vào cờ isDeleted (hoặc is_deleted tuỳ cách backend trả về)
+        const activeAnns = allAnns.filter((ann) => ann.isDeleted !== true);
+        const trashedAnns = allAnns.filter((ann) => ann.isDeleted === true);
+
+        // Đưa vào 2 state tương ứng
+        setAnnotations(activeAnns);
+        setTrashedAnnotations(trashedAnns);
       }
       if (tasksRes.success) setTasks(tasksRes.tasks);
       if (assistantsRes.success) setAssistants(assistantsRes.assistants);
@@ -260,15 +277,64 @@ export default function PageWorkspacePage() {
   };
 
   // ── Annotation: Xóa ──────────────────────────────────────
-  const handleDeleteAnnotation = async (annId) => {
-    if (!window.confirm("Bạn có chắc chắn muốn xóa góp ý này?")) return;
-    const res = await deleteAnnotation(annId);
-    if (res.success) {
-      toast.success("Đã xóa góp ý!");
-      setAnnotations((prev) => prev.filter((a) => a._id !== annId));
-      if (selectedAnnotation?._id === annId) setSelectedAnnotation(null);
-    } else {
-      toast.error(res.message);
+  // 1. Hàm kích hoạt mở Modal xác nhận xóa
+  const handleOpenDeleteModal = (ann) => {
+    setAnnotationToDelete(ann);
+    setIsDeleteModalOpen(true);
+  };
+
+  // 2. Hàm thực thi xóa khi bấm nút xác nhận trong ConfirmDeleteModal
+  // 2. Hàm thực thi xóa khi bấm nút xác nhận trong ConfirmDeleteModal
+  const handleConfirmDeleteAnnotation = async () => {
+    if (!annotationToDelete) return;
+
+    setIsLoading(true);
+    try {
+      const res = await deleteAnnotation(annotationToDelete._id);
+      if (res.success) {
+        toast.success("Đã xóa góp ý thành công!");
+
+        // --- XÓA KHỎI LIST CHÍNH VÀ ĐẨY VÀO THÙNG RÁC ---
+        setAnnotations((prev) =>
+          prev.filter((a) => a._id !== annotationToDelete._id),
+        );
+        setTrashedAnnotations((prev) => [...prev, annotationToDelete]);
+
+        if (selectedAnnotation?._id === annotationToDelete._id)
+          setSelectedAnnotation(null);
+
+        setIsDeleteModalOpen(false);
+        setAnnotationToDelete(null);
+      } else {
+        toast.error(res.message);
+      }
+    } catch (err) {
+      toast.error("Lỗi khi xóa góp ý: " + err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // ── Annotation: Khôi phục ────────────────────────────────
+  const handleRestoreAnnotation = async (ann) => {
+    setIsLoading(true);
+    try {
+      const res = await restoreAnnotation(ann._id);
+      if (res.success) {
+        toast.success("Đã khôi phục góp ý!");
+        const restoredAnn = res.data || res.annotation || ann;
+
+        // Xóa khỏi thùng rác và đưa lại vào danh sách chính
+        setTrashedAnnotations((prev) => prev.filter((a) => a._id !== ann._id));
+        setAnnotations((prev) => [...prev, { ...restoredAnn, status: "Open" }]);
+      } else {
+        toast.error(res.message);
+      }
+    } catch (err) {
+      toast.error("Lỗi khi khôi phục: " + err.message);
+      console.error("Chi tiết lỗi khôi phục góp ý:", err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -592,7 +658,9 @@ export default function PageWorkspacePage() {
               const pinY = ann.y ?? 0;
               const isResolved = ann.status === "Resolved";
               const isSelected = selectedAnnotation?._id === ann._id;
-
+              if (isResolved && !isSelected) {
+                return null;
+              }
               return (
                 <button
                   key={ann._id}
@@ -726,20 +794,20 @@ export default function PageWorkspacePage() {
                           ? "↩ Mở lại"
                           : "✓ Đánh dấu xong"}
                       </button>
-                      <button
-                        onClick={() => handleStartEdit(selectedAnnotation)}
-                        className="ws-btn-small text-xs bg-blue-100 text-blue-700 border-2 border-blue-500 p-1.5 font-bold"
-                      >
-                        <Edit3 size={11} className="inline" /> Sửa
-                      </button>
+                      <RequirePermission required="CAN_EDIT_ANNOTATION">
+                        <button
+                          onClick={() => handleStartEdit(selectedAnnotation)}
+                          className="ws-btn-small text-xs bg-blue-100 text-blue-700 border-2 border-blue-500 p-1.5 font-bold"
+                        >
+                          <Edit3 size={11} className="inline" /> Sửa
+                        </button>
+                      </RequirePermission>
                     </>
                   )}
                   {(isEditor ||
                     selectedAnnotation.created_by?._id === user?.id) && (
                     <button
-                      onClick={() =>
-                        handleDeleteAnnotation(selectedAnnotation._id)
-                      }
+                      onClick={() => handleOpenDeleteModal(selectedAnnotation)}
                       className="ws-btn-small text-xs bg-red-100 text-red-600 border-2 border-red-400 p-1.5 font-bold"
                     >
                       <Trash2 size={11} />
@@ -882,6 +950,39 @@ export default function PageWorkspacePage() {
                 chi tiết.
               </div>
             )}
+            <RequirePermission required="CAN_EDIT_ANNOTATION">
+              {trashedAnnotations.length > 0 && (
+                <div className="mt-4 pt-3 border-t-2 border-dashed border-gray-400">
+                  <div className="text-[11px] font-black text-gray-500 mb-2 uppercase">
+                    🗑️ Đã xóa gần đây ({trashedAnnotations.length})
+                  </div>
+                  {trashedAnnotations.map((ann) => (
+                    <div
+                      key={ann._id}
+                      className="ws-list-item border-2 border-gray-300 p-2 mb-1.5 bg-gray-50 flex justify-between items-center"
+                    >
+                      <div className="overflow-hidden flex-1 pr-2 opacity-60">
+                        <span className="font-bold text-[10px] text-gray-500 line-through">
+                          {CATEGORY_LABELS[ann.category] || "Góp ý"}
+                        </span>
+                        <p className="text-[11px] text-gray-500 truncate">
+                          {ann.content}
+                        </p>
+                      </div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRestoreAnnotation(ann);
+                        }}
+                        className="ws-btn-small text-[10px] bg-green-100 text-green-700 border-2 border-green-500 px-2 py-1 font-bold whitespace-nowrap"
+                      >
+                        ↩ Khôi phục
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </RequirePermission>
           </div>
 
           <hr className="border-t-2 border-black my-1" />
@@ -1242,6 +1343,19 @@ export default function PageWorkspacePage() {
           </div>
         </div>
       )}
+      <ConfirmDeleteModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => {
+          setIsDeleteModalOpen(false);
+          setAnnotationToDelete(null);
+        }}
+        onConfirm={handleConfirmDeleteAnnotation}
+        itemName={
+          annotationToDelete
+            ? `Góp ý #${annotations.findIndex((a) => a._id === annotationToDelete._id) + 1}: "${annotationToDelete.content}"`
+            : ""
+        }
+      />
     </div>
   );
 }
