@@ -22,6 +22,14 @@ exports.createRegion = async (req, res) => {
       });
     }
 
+    // Guard: không cho tạo vùng mới trên trang đã được duyệt
+    if (page.status === "Approved") {
+      return res.status(403).json({
+        success: false,
+        message: "Trang truyện đã được duyệt, không thể tạo thêm vùng phân vùng!",
+      });
+    }
+
     const newRegion = new PageRegion({
       page_id,
       coordinates: typeof coordinates === "string" ? coordinates : JSON.stringify(coordinates),
