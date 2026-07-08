@@ -18,8 +18,12 @@ export function getNotificationPath(notification, userRole) {
       }
       case "Chapter":
         return `/chapter-list/${target_id}`;
-      case "Series":
-        return "/board/all-series";
+      case "Series": {
+        if (userRole === "Tantou Editor") return "/editor/series";
+        if (userRole === "Mangaka") return "/mangaka/series";
+        if (userRole === "Editorial Board" || userRole === "Admin") return "/board/all-series";
+        return "/board/all-series"; // fallback
+      }
       default:
         return null;
     }
