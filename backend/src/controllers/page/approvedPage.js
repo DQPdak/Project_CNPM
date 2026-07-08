@@ -10,7 +10,10 @@ exports.approvePage = async (req, res) => {
       "Draft",
       "In Progress",
       "Ready For Review",
+      "Submitted",
       "Approved",
+      "Rejected",
+      "Locked",
     ];
 
     if (!validStatuses.includes(status)) {

@@ -26,6 +26,7 @@ import AssistantIncomePage from "../pages/AssistantIncomePage/AssistantIncomePag
 import MangakaTasksPage from "../pages/MangakaTasksPage/MangakaTasksPage";
 import PageWorkspacePage from "../pages/PageWorkspacePage/PageWorkspacePage";
 import StudioProgressPage from "../pages/StudioProgressPage/StudioProgressPage";
+import EditorFeedbackPage from "../pages/EditorFeedbackPage/EditorFeedbackPage";
 import NotificationPage from "../pages/NotificationPage/NotificationPage";
 
 export default function AppRoutes() {
@@ -129,7 +130,11 @@ export default function AppRoutes() {
           />
           <Route
             path="/editor/feedbacks"
-            element={<Navigate to="/editor/progress" replace />}
+            element={
+              <RequireRole allowedRoles={["Tantou Editor", "Admin"]}>
+                <EditorFeedbackPage />
+              </RequireRole>
+            }
           />
 
           <Route

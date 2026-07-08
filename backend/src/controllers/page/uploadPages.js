@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const Page = require("../../models/PageModel");
+const Chapter = require("../../models/ChapterModel");
 const PageVersionHistory = require("../../models/PageVersionHistoryModel");
 
 exports.uploadPages = async (req, res) => {
@@ -38,7 +39,7 @@ exports.uploadPages = async (req, res) => {
       current_source_file_url: sourceFileUrl,
       attached_resource_url: attachedResourceUrl,
       current_version: 1,
-      status: "Draft",
+      status: "Ready For Review",
     });
 
     // Dùng { session } để báo cho Mongoose biết thao tác này nằm trong Transaction
@@ -57,7 +58,14 @@ exports.uploadPages = async (req, res) => {
 
     await newHistory.save({ session });
 
-    // 6. Nếu cả 2 bước trên đều ổn -> Chốt lưu vào Database thực sự
+    // 6. Tự động cập nhật chapter → "Waiting Review" nếu đang ở Draft/In Production
+    const chapter = await Chapter.findById(chapter_id).session(session);
+    if (chapter && ["Draft", "In Production"].includes(chapter.status)) {
+      chapter.status = "Waiting Review";
+      await chapter.save({ session });
+    }
+
+    // 7. Nếu cả 2 bước trên đều ổn -> Chốt lưu vào Database thực sự
     await session.commitTransaction();
     session.endSession();
 

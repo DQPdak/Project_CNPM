@@ -27,7 +27,11 @@ const router = express.Router();
 router.use(requireAuth);
 
 router.post("/", requireRole(ROLES.MANGAKA), createSeries.createSeries);
-router.get("/mine", requireRole(ROLES.MANGAKA), getMySeries.getMySeries);
+router.get(
+  "/mine",
+  requireRole(ROLES.MANGAKA, ROLES.ADMIN),
+  getMySeries.getMySeries,
+);
 router.get(
   "/mine/:author_id",
   requireRole(ROLES.ADMIN),

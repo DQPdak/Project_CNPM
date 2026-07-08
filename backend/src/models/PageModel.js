@@ -32,7 +32,7 @@ const pageSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["Draft", "In Progress", "Ready For Review", "Approved"],
+      enum: ["Draft", "In Progress", "Ready For Review", "Submitted", "Approved", "Rejected", "Locked"],
       default: "Draft",
     },
     is_deleted: {
@@ -42,5 +42,24 @@ const pageSchema = new mongoose.Schema(
   },
   { timestamps: true },
 );
+
+// Transform field names cho frontend dễ dùng
+pageSchema.set("toJSON", {
+  transform(doc, ret) {
+    ret.thumbnail_url = ret.current_preview_url;
+    ret.version = ret.current_version;
+    ret.updated_at = ret.updatedAt;
+    return ret;
+  },
+});
+
+pageSchema.set("toObject", {
+  transform(doc, ret) {
+    ret.thumbnail_url = ret.current_preview_url;
+    ret.version = ret.current_version;
+    ret.updated_at = ret.updatedAt;
+    return ret;
+  },
+});
 
 module.exports = mongoose.model("Page", pageSchema);
