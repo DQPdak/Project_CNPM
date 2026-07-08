@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const Page = require("../../models/PageModel");
 const PageVersionHistory = require("../../models/PageVersionHistoryModel");
+const { buildCloudinaryDownloadUrl } = require("../../helpers/cloudinaryUrl.helper");
 
 exports.uploadPages = async (req, res) => {
   // 1. Khởi tạo Transaction
@@ -22,20 +23,31 @@ exports.uploadPages = async (req, res) => {
     const sourceFileUrl = req.files.source_file[0].path;
 
     // Nếu có file ZIP đính kèm thì lấy link, không thì để null
-    const attachedResourceUrl = req.files.attached_resource
-      ? req.files.attached_resource[0].path
-      : null;
+    // Đồng thời chuẩn hoá URL để trình duyệt tải xuống thay vì mở nội dung.
+    let attachedResourceUrl = null;
+    if (req.files.attached_resource && req.files.attached_resource[0]) {
+      const rawAttachedUrl = req.files.attached_resource[0].path;
+      const originalName = req.files.attached_resource[0].originalname || "";
+      attachedResourceUrl = buildCloudinaryDownloadUrl(rawAttachedUrl, originalName);
+    }
 
     // 3. Ma thuật Cloudinary: Tự động tạo link Preview (Ép đuôi file thành .png)
     // Thay thế phần mở rộng cuối cùng (ví dụ: .psd, .clip) thành .png
     const previewUrl = sourceFileUrl.replace(/\.[^/.]+$/, ".png");
+
+    // File bản thảo gốc (.psd, .clip, ...) cũng cần ép tải xuống.
+    const sourceOriginalName = req.files.source_file[0].originalname || "";
+    const sourceFileDownloadUrl = buildCloudinaryDownloadUrl(
+      sourceFileUrl,
+      sourceOriginalName
+    );
 
     // 4. Lưu vào bảng Page
     const newPage = new Page({
       chapter_id,
       page_number: page_number || 1,
       current_preview_url: previewUrl,
-      current_source_file_url: sourceFileUrl,
+      current_source_file_url: sourceFileDownloadUrl,
       attached_resource_url: attachedResourceUrl,
       current_version: 1,
       status: "Draft",
@@ -49,7 +61,7 @@ exports.uploadPages = async (req, res) => {
       page_id: savedPage._id,
       version_number: 1,
       preview_url: previewUrl,
-      source_file_url: sourceFileUrl,
+      source_file_url: sourceFileDownloadUrl,
       attached_resource_url: attachedResourceUrl,
       submitted_by: req.user.id, // Lấy ID người up từ token
       commit_note: "Upload bản thảo gốc lần đầu",

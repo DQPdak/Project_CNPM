@@ -198,72 +198,169 @@
 }
 
 /* =========================================
-   BEFORE / AFTER IMAGE COMPARISON SLIDER
+   KHUNG ẢNH BEFORE / AFTER — HIỂN THỊ TRỰC TIẾP
 ========================================= */
 .mtp-comparison-container {
   @apply mb-8 border-t-4 border-dashed border-black pt-6;
 }
 
 .mtp-comparison-container h3 {
-  @apply text-sm font-black uppercase tracking-wide mb-1;
+  @apply text-sm font-black uppercase tracking-wide mb-4;
 }
 
-.comparison-helper {
-  @apply text-[10px] font-bold text-gray-500 m-0 mb-4;
+.mtp-preview-grid {
+  @apply grid grid-cols-1 md:grid-cols-2 gap-5;
 }
 
-.slider-wrapper {
-  @apply relative w-full h-[400px] border-4 border-black overflow-hidden bg-gray-100 select-none;
+.mtp-preview-card {
+  @apply bg-white border-4 border-black p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all flex flex-col;
 }
 
-.slider-image {
-  @apply absolute top-0 left-0 w-full h-full object-contain pointer-events-none;
+.mtp-preview-card:hover {
+  @apply -translate-y-1 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)];
 }
 
-.slider-image.before {
-  @apply bg-white;
+.mtp-preview-card.highlighted {
+  @apply border-[#23A094] bg-[#F9FDFB];
+  box-shadow: 4px 4px 0px 0px #23A094;
 }
 
-.slider-after-container {
-  @apply absolute top-0 left-0 w-full h-full pointer-events-none bg-white;
+.mtp-preview-card.highlighted:hover {
+  box-shadow: 6px 6px 0px 0px #23A094;
 }
 
-.slider-image.after {
-  @apply object-contain;
+.mtp-preview-card-header {
+  @apply flex items-center justify-between mb-3 pb-3 border-b-2 border-dashed border-gray-300;
 }
 
-/* Drag line Splitting Indicator */
-.slider-line {
-  @apply absolute top-0 w-1 bg-black h-full pointer-events-none flex items-center justify-center -translate-x-[2px];
+.mtp-preview-label {
+  @apply inline-block px-2.5 py-1 border-2 border-black text-[10px] font-black uppercase tracking-widest;
 }
 
-.slider-handle {
-  @apply w-8 h-8 rounded-full border-2 border-black bg-[#FFD000] flex items-center justify-center font-black text-black text-xs shadow-[2px_2px_0px_0px_rgba(0,0,0,1)];
+.mtp-preview-label.before {
+  @apply bg-white text-black;
 }
 
-/* Transparent Overlay Range input */
-.comparison-slider-input {
-  @apply absolute top-0 left-0 w-full h-full cursor-ew-resize opacity-0 z-30 m-0 p-0;
+.mtp-preview-label.after {
+  @apply bg-[#23A094] text-white border-black;
 }
 
-.comparison-non-image {
-  @apply bg-[#F4F4F0] border-2 border-black p-6 text-center text-xs font-bold mb-4;
+/* KHUNG ẢNH - phần chính */
+.mtp-preview-frame {
+  @apply relative w-full bg-[#F4F4F0] border-4 border-black overflow-hidden;
+  aspect-ratio: 4 / 5;
+  min-height: 360px;
 }
 
-.non-image-links {
-  @apply flex justify-center gap-4 mt-4;
+.mtp-preview-frame.mtp-preview-fallback::before {
+  content: "⚠️ Định dạng không hiển thị trực tiếp được";
+  @apply absolute inset-0 flex items-center justify-center text-xs font-bold text-gray-600 text-center p-4;
 }
 
-.non-image-btn {
-  @apply px-4 py-2 border-2 border-black bg-white font-black text-xs uppercase text-black no-underline shadow-[2px_2px_0px_0px_rgba(0,0,0,1)];
+.mtp-preview-image {
+  @apply block w-full h-full object-contain bg-[#F4F4F0] cursor-zoom-in transition-transform duration-200;
 }
 
-.non-image-btn.after {
-  @apply bg-[#FFD000];
+.mtp-preview-image:hover {
+  transform: scale(1.02);
+}
+
+/* PDF — chiếm full khung */
+.mtp-preview-pdf-wrapper {
+  @apply absolute inset-0 w-full h-full bg-gray-200;
+}
+
+.mtp-preview-pdf {
+  @apply block w-full h-full border-0;
+}
+
+/* Card fallback cho file không preview được (PSD/AI/ZIP) */
+.mtp-preview-file-card {
+  @apply absolute inset-0 flex flex-col items-center justify-center gap-2 p-4 text-center bg-[#FFFEEB];
+}
+
+.mtp-preview-file-card svg {
+  @apply text-[#23A094];
+}
+
+.mtp-preview-file-name {
+  @apply font-black text-xs uppercase tracking-wider text-black;
+}
+
+.mtp-preview-file-meta {
+  @apply text-[10px] font-bold text-gray-600 leading-snug;
+}
+
+.mtp-preview-file-actions {
+  @apply flex flex-wrap gap-2 mt-1 justify-center;
+}
+
+.mtp-preview-file-btn {
+  @apply inline-flex items-center gap-1 px-2.5 py-1.5 border-2 border-black bg-white text-black font-black uppercase text-[10px] tracking-wider no-underline shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all cursor-pointer;
+}
+
+.mtp-preview-file-btn:hover {
+  @apply bg-[#FFD000] -translate-y-0.5 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)];
+}
+
+.mtp-preview-file-btn.primary {
+  @apply bg-[#23A094] text-white;
+}
+
+.mtp-preview-file-btn.primary:hover {
+  @apply bg-[#1a8878];
+}
+
+.mtp-preview-empty {
+  @apply absolute inset-0 flex flex-col items-center justify-center text-gray-500 text-sm font-bold gap-2;
+}
+
+.mtp-preview-empty span {
+  @apply text-4xl;
+}
+
+.mtp-preview-empty p {
+  @apply m-0 text-xs uppercase tracking-wider;
+}
+
+/* Actions dưới ảnh */
+.mtp-preview-actions {
+  @apply flex items-center justify-center gap-2 mt-3;
+}
+
+.mtp-preview-btn {
+  @apply inline-flex items-center gap-1.5 px-3 py-1.5 border-2 border-black bg-white text-black font-black uppercase text-[10px] tracking-wider cursor-pointer shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all;
+}
+
+.mtp-preview-btn:hover:not(:disabled) {
+  @apply bg-[#FFD000] -translate-y-0.5 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)];
+}
+
+.mtp-preview-btn.primary {
+  @apply bg-[#23A094] text-white;
+}
+
+.mtp-preview-btn.primary:hover:not(:disabled) {
+  @apply bg-[#1a8878];
+}
+
+.mtp-preview-btn:disabled {
+  @apply opacity-40 cursor-not-allowed;
+}
+
+.mtp-preview-btn:disabled:hover {
+  transform: none;
+  box-shadow: 2px 2px 0px 0px rgba(0,0,0,1);
+}
+
+@media (max-width: 640px) {
+  .mtp-preview-frame {
+    aspect-ratio: 3 / 4;
+  }
 }
 
 .latest-note-box {
-  @apply bg-[#FFFEEB] border-2 border-black p-4 mt-4 text-xs font-bold;
+  @apply bg-[#FFFEEB] border-2 border-black p-4 mt-6 text-xs font-bold;
 }
 
 .latest-note-box strong {
@@ -288,55 +385,112 @@
 }
 
 .radio-group {
-  @apply grid grid-cols-3 gap-5 mt-4;
+  @apply flex flex-col gap-3 mt-2;
 }
 
 .radio-label {
-  @apply relative flex flex-col justify-center items-center
-    h-32 p-5
-    border-4 border-black
-    bg-white
-    cursor-pointer
-    transition-all
-    shadow-[4px_4px_0px_0px_rgba(0,0,0,1)];
+  @apply flex items-center justify-start gap-3 py-3.5 px-4 border-2 border-black bg-white cursor-pointer font-black text-xs uppercase transition-transform whitespace-nowrap relative overflow-hidden leading-none;
+  box-shadow: none !important;
+  outline: none !important;
 }
 
-.radio-label input {
-  @apply absolute opacity-0;
+.radio-label input[type="radio"] {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  width: 10px !important;
+  height: 10px !important;
+  min-width: 10px !important;
+  min-height: 10px !important;
+  max-width: 10px !important;
+  max-height: 10px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 1px solid #000 !important;
+  border-radius: 50% !important;
+  background: #fff !important;
+  cursor: pointer !important;
+  flex-shrink: 0 !important;
+  vertical-align: middle !important;
+  box-sizing: border-box !important;
+  display: inline-block !important;
+  box-shadow: none !important;
+}
+
+.radio-dot {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  width: 10px !important;
+  height: 10px !important;
+  min-width: 10px !important;
+  min-height: 10px !important;
+  max-width: 10px !important;
+  max-height: 10px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 1px solid #000 !important;
+  border-radius: 50% !important;
+  background: #fff !important;
+  cursor: pointer !important;
+  flex-shrink: 0 !important;
+  vertical-align: middle !important;
+  box-sizing: border-box !important;
+  display: inline-block !important;
+  box-shadow: none !important;
+}
+
+.radio-label input[type="radio"]:checked {
+  background: #000 !important;
+  box-shadow: inset 0 0 0 2px #ffffff !important;
+}
+
+.radio-dot:checked {
+  background: #000 !important;
+  box-shadow: inset 0 0 0 2px #ffffff !important;
+}
+
+.radio-label > span {
+  @apply flex-1 text-center leading-none tracking-wider;
 }
 
 .radio-label:hover {
-  @apply -translate-y-1
-    shadow-[8px_8px_0px_0px_rgba(0,0,0,1)];
+  @apply -translate-y-0.5;
 }
 
 .radio-label.approve:has(input:checked) {
-  @apply bg-[#23A094] text-white
-    shadow-[8px_8px_0px_0px_rgba(35,160,148,1)];
+  @apply bg-[#23A094] text-white border-[#23A094];
+}
+
+.radio-label.approve:has(input:checked) input[type="radio"] {
+  background: #ffffff !important;
+  border-color: #ffffff !important;
+  box-shadow: inset 0 0 0 2px #23A094 !important;
 }
 
 .radio-label.revision:has(input:checked) {
-  @apply bg-[#FFD000]
-    text-black
-    shadow-[8px_8px_0px_0px_rgba(255,208,0,1)];
+  @apply bg-[#FF5C00] text-white border-[#FF5C00];
+}
+
+.radio-label.revision:has(input:checked) input[type="radio"] {
+  background: #ffffff !important;
+  border-color: #ffffff !important;
+  box-shadow: inset 0 0 0 2px #FF5C00 !important;
 }
 
 .radio-label.reject:has(input:checked) {
-  @apply bg-[#FF4545]
-    text-white
-    shadow-[8px_8px_0px_0px_rgba(255,69,69,1)];
+  @apply bg-red-500 text-white border-red-500;
+}
+
+.radio-label.reject:has(input:checked) input[type="radio"] {
+  background: #ffffff !important;
+  border-color: #ffffff !important;
+  box-shadow: inset 0 0 0 2px #ef4444 !important;
 }
 
 .mtp-review-btn {
-  @apply mt-6
-    w-full
-    py-5
-    text-lg
-    font-black
-    uppercase
-    border-4
-    border-black
-    shadow-[6px_6px_0px_0px_rgba(0,0,0,1)];
+  @apply w-full py-4 px-7 border-4 border-black font-black uppercase tracking-[0.2em] text-sm cursor-pointer bg-white text-black mt-2 transition-transform;
+  box-shadow: none !important;
 }
 .mtp-review-btn.approved {
   @apply bg-[#23A094] text-white;
@@ -351,12 +505,11 @@
 }
 
 .mtp-review-btn:hover {
-  @apply -translate-y-1
-    shadow-[10px_10px_0px_0px_rgba(0,0,0,1)];
+  @apply -translate-y-0.5;
 }
 
 .mtp-review-btn:active {
-  @apply translate-x-0.5 translate-y-0.5 shadow-none;
+  @apply translate-y-0;
 }
 
 /* HISTORY */
@@ -451,4 +604,72 @@
   @apply translate-x-0.5
          translate-y-0.5
          shadow-none;
+}
+
+/* ═══════════════════════════════════════════════
+   KHUNG ẢNH BÀI NỘP — render trực tiếp (đã có ở .mtp-preview-* ở trên)
+═══════════════════════════════════════════════ */
+
+/* ═══════════════════════════════════════════════
+   LIGHTBOX XEM ẢNH FULL SIZE
+═══════════════════════════════════════════════ */
+.mtp-lightbox-overlay {
+  @apply fixed inset-0 z-[9999] bg-black/85 flex items-center justify-center p-4;
+  animation: mtp-lightbox-fade 0.18s ease-out;
+}
+
+@keyframes mtp-lightbox-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.mtp-lightbox-container {
+  @apply relative w-full h-full max-w-[92vw] max-h-[92vh] flex flex-col bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)];
+}
+
+.mtp-lightbox-header {
+  @apply flex items-center justify-between gap-3 px-4 py-3 border-b-4 border-black bg-[#FFD000];
+}
+
+.mtp-lightbox-title {
+  @apply font-black uppercase text-xs tracking-widest text-black truncate;
+}
+
+.mtp-lightbox-toolbar {
+  @apply flex items-center gap-2 shrink-0;
+}
+
+.mtp-lightbox-iconbtn {
+  @apply inline-flex items-center justify-center w-8 h-8 border-2 border-black bg-white text-black cursor-pointer transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)];
+}
+
+.mtp-lightbox-iconbtn:hover {
+  @apply bg-[#FF90E8] -translate-y-0.5 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)];
+}
+
+.mtp-lightbox-iconbtn.close {
+  @apply bg-[#FF4545] text-white;
+}
+
+.mtp-lightbox-zoom-label {
+  @apply inline-block px-2 py-1 border-2 border-black bg-white text-black font-black text-[10px] min-w-[48px] text-center;
+}
+
+.mtp-lightbox-viewer {
+  @apply flex-1 overflow-auto p-4 bg-[#1a1a1a] flex items-center justify-center;
+}
+
+.mtp-lightbox-image {
+  @apply max-w-full max-h-full object-contain select-none;
+  transform-origin: center center;
+  transition: transform 0.18s ease;
+  cursor: zoom-in;
+}
+
+.mtp-lightbox-hint {
+  @apply px-4 py-2 text-[10px] font-bold text-gray-600 bg-[#F4F4F0] border-t-2 border-dashed border-black text-center;
+}
+
+.mtp-lightbox-hint strong {
+  @apply inline-block px-1.5 py-0.5 border-2 border-black bg-white text-black mx-0.5;
 }
