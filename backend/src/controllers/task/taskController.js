@@ -5,6 +5,7 @@ const Page = require("../../models/PageModel");
 const PageVersionHistory = require("../../models/PageVersionHistoryModel");
 const PageRegion = require("../../models/PageRegionModel");
 const NotificationService = require("../../services/notificationService");
+const { buildCloudinaryDownloadUrl } = require("../../helpers/cloudinaryUrl.helper");
 
 // Get list of tasks
 exports.getTasks = async (req, res) => {
@@ -139,6 +140,14 @@ exports.createTask = async (req, res) => {
         .json({ success: false, message: "Không tìm thấy trang truyện" });
     }
 
+    // Guard: không cho tạo task mới trên trang đã được duyệt
+    if (page.status === "Approved") {
+      return res.status(403).json({
+        success: false,
+        message: "Trang truyện đã được duyệt, không thể giao thêm nhiệm vụ!",
+      });
+    }
+
     // If region_id is provided, check if region exists; else create a default region
     let finalRegionId = region_id;
     if (region_id) {
@@ -237,10 +246,14 @@ exports.submitTask = async (req, res) => {
       });
     }
 
-    const fileUrl = req.file.path;
+    // Chuẩn hoá URL: nếu trợ lý nộp file ZIP (raw), thêm cờ fl_attachment để
+    // trình duyệt tải xuống thay vì mở nội dung nhị phân.
+    const rawFileUrl = req.file.path || req.file.url;
+    const submittedFileName = req.file.originalname || "";
+    const fileUrl = buildCloudinaryDownloadUrl(rawFileUrl, submittedFileName);
 
-    // Mặc định preview chính là file gốc
-    let primaryPreviewUrl = fileUrl.replace(/\.[^/.]+$/, ".png");
+    // Mặc định preview chính là file gốc (đổi đuôi sang .png để trình duyệt hiển thị)
+    const primaryPreviewUrl = fileUrl.replace(/\.[^/.]+$/, ".png");
 
     const submission = new TaskSubmission({
       task_id: task._id,
@@ -325,6 +338,13 @@ exports.reviewTask = async (req, res) => {
         const page = await Page.findById(task.page_id);
         if (page) {
           const newVersion = page.current_version + 1;
+          // Loại bỏ query string (ví dụ: ?fl_attachment=...) trước khi
+          // kiểm tra đuôi file, vì URL tải về đã được Cloudinary helper
+          // chuẩn hoá và có thể kèm tham số ở cuối.
+          const originalUrl = latestSubmission.file_url;
+          // Loại bỏ query string (ví dụ: ?fl_attachment=...) trước khi
+          // kiểm tra đuôi file, vì URL tải về đã được Cloudinary helper
+          // chuẩn hoá và có thể kèm tham số ở cuối.
           const originalUrl = latestSubmission.file_url;
           const lowerUrl = originalUrl.toLowerCase().split("?")[0];
 
