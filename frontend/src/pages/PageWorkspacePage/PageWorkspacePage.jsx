@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import getPageById from "../../services/page/getPageByIdService";
 import {
   getRegionsByPage,
@@ -55,6 +55,7 @@ const STATUS_CONFIG = {
 
 export default function PageWorkspacePage() {
   const { pageId } = useParams();
+  const navigate = useNavigate();
   const toast = useToast();
   const user = useAuthStore((state) => state.user);
 
@@ -501,12 +502,12 @@ export default function PageWorkspacePage() {
       {/* ── WORKSPACE HEADER ── */}
       <header className="ws-header shadow-brutal">
         <div className="ws-header-info">
-          <Link
-            to={`/page-management/${page.chapter_id._id}`}
-            className="ws-back-link"
+          <button
+            onClick={() => navigate(-1)}
+            className="ws-back-link font-bold text-sm bg-transparent border-none cursor-pointer p-0 text-gray-700 hover:text-black hover:underline"
           >
-            ← Quay lại trang duyệt
-          </Link>
+            ← Quay lại
+          </button>
           <h1 className="ws-title">
             {page.chapter_id.title} — Trang {page.page_number}
           </h1>
