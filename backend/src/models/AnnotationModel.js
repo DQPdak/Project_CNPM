@@ -84,6 +84,7 @@ const annotationSchema = new mongoose.Schema(
       type: String,
       default: "",
     }, // Phân loại lỗi: dialogue, drawing, layout...
+    isDeleted: { type: Boolean, default: false },
   },
   {
     timestamps: true,
@@ -92,7 +93,8 @@ const annotationSchema = new mongoose.Schema(
   }, // Tự động tạo createdAt và updatedAt
 );
 
-annotationSchema.virtual("comment")
+annotationSchema
+  .virtual("comment")
   .get(function () {
     return this.content;
   })
@@ -100,7 +102,8 @@ annotationSchema.virtual("comment")
     this.content = value;
   });
 
-annotationSchema.virtual("coordinates")
+annotationSchema
+  .virtual("coordinates")
   .get(function () {
     return JSON.stringify({ x: this.x, y: this.y });
   })

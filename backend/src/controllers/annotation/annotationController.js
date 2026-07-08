@@ -52,8 +52,18 @@ exports.createAnnotation = async (req, res) => {
     const page_id = req.params.page_id || req.body.page_id;
 
     const annotation = await annotationService.createAnnotation(
-      { page_id, region_id, coordinates, x, y, content, status, deadline, category },
-      req.user
+      {
+        page_id,
+        region_id,
+        coordinates,
+        x,
+        y,
+        content,
+        status,
+        deadline,
+        category,
+      },
+      req.user,
     );
 
     return res.status(201).json({
@@ -82,6 +92,8 @@ exports.createAnnotation = async (req, res) => {
 exports.getAnnotationsByPage = async (req, res) => {
   try {
     const { page_id } = req.params;
+
+    // Đổi lại thành gọi qua service (Service sẽ gọi xuống Repository đã được lọc isDeleted ở Bước 1)
     const annotations = await annotationService.getAnnotationsByPage(page_id);
 
     return res.status(200).json({
@@ -110,7 +122,8 @@ exports.getAnnotationsByPage = async (req, res) => {
 exports.getAnnotationsByChapter = async (req, res) => {
   try {
     const { chapter_id } = req.params;
-    const annotations = await annotationService.getAnnotationsByChapter(chapter_id);
+    const annotations =
+      await annotationService.getAnnotationsByChapter(chapter_id);
 
     return res.status(200).json({
       success: true,
@@ -152,7 +165,7 @@ exports.updateAnnotation = async (req, res) => {
     const annotation = await annotationService.updateAnnotation(
       id,
       { status, content, category, deadline, x, y },
-      req.user
+      req.user,
     );
 
     return res.status(200).json({
@@ -181,14 +194,44 @@ exports.updateAnnotation = async (req, res) => {
 exports.deleteAnnotation = async (req, res) => {
   try {
     const { id } = req.params;
-    await annotationService.deleteAnnotation(id, req.user);
+
+    const updatedAnnotation = await annotationService.deleteAnnotation(
+      id,
+      req.user,
+    );
+
+    if (!updatedAnnotation) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy góp ý",
+      });
+    }
 
     return res.status(200).json({
       success: true,
-      message: "Xóa góp ý thành công",
+      message: "Đã xóa góp ý thành công",
     });
   } catch (error) {
-    return res.status(resolveErrorStatus(error.message)).json({
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+exports.restoreAnnotation = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const annotation = await annotationService.restoreAnnotation(id, req.user);
+
+    return res.status(200).json({
+      success: true,
+      message: "Khôi phục góp ý thành công",
+      data: annotation,
+    });
+  } catch (error) {
+    return res.status(500).json({
       success: false,
       message: error.message,
     });

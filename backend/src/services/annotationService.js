@@ -15,7 +15,8 @@ class AnnotationService {
   parseCoordinates(coordinates) {
     if (!coordinates) return {};
     try {
-      const parsed = typeof coordinates === "string" ? JSON.parse(coordinates) : coordinates;
+      const parsed =
+        typeof coordinates === "string" ? JSON.parse(coordinates) : coordinates;
       return {
         x: parsed.x !== undefined ? Number(parsed.x) : undefined,
         y: parsed.y !== undefined ? Number(parsed.y) : undefined,
@@ -47,7 +48,15 @@ class AnnotationService {
    * @returns {Promise<Document>} Annotation vừa tạo (đã populate)
    */
   async createAnnotation(data, currentUser) {
-    const { page_id, region_id, coordinates, content, status, deadline, category } = data;
+    const {
+      page_id,
+      region_id,
+      coordinates,
+      content,
+      status,
+      deadline,
+      category,
+    } = data;
     const parsedCoordinates = this.parseCoordinates(coordinates);
     const x = data.x ?? parsedCoordinates.x;
     const y = data.y ?? parsedCoordinates.y;
@@ -75,11 +84,13 @@ class AnnotationService {
     // Validate status nếu có
     const validStatuses = ["Open", "In Progress", "Resolved", "Reopened"];
     if (status && !validStatuses.includes(status)) {
-      throw new Error(`Trạng thái không hợp lệ. Chỉ chấp nhận: ${validStatuses.join(", ")}`);
+      throw new Error(
+        `Trạng thái không hợp lệ. Chỉ chấp nhận: ${validStatuses.join(", ")}`,
+      );
     }
 
     const newAnnotation = await annotationRepository.create({
-      chapter_id: page.chapter_id,   // Tự động lấy chapter_id từ page
+      chapter_id: page.chapter_id, // Tự động lấy chapter_id từ page
       page_id,
       x: Number(x),
       y: Number(y),
@@ -139,7 +150,9 @@ class AnnotationService {
     // Kiểm tra quyền: chủ sở hữu hoặc có role được phép
     const ownerId = String(annotation.created_by._id || annotation.created_by);
     const isOwner = ownerId === String(currentUser.id);
-    const isAllowedRole = ["Tantou Editor", "Mangaka", "Admin"].includes(currentUser.role);
+    const isAllowedRole = ["Tantou Editor", "Mangaka", "Admin"].includes(
+      currentUser.role,
+    );
 
     if (!isOwner && !isAllowedRole) {
       throw new Error("Bạn không có quyền chỉnh sửa góp ý này");
@@ -159,14 +172,18 @@ class AnnotationService {
     if (updateData.status !== undefined) {
       const validStatuses = ["Open", "In Progress", "Resolved", "Reopened"];
       if (!validStatuses.includes(updateData.status)) {
-        throw new Error(`Trạng thái không hợp lệ. Chỉ chấp nhận: ${validStatuses.join(", ")}`);
+        throw new Error(
+          `Trạng thái không hợp lệ. Chỉ chấp nhận: ${validStatuses.join(", ")}`,
+        );
       }
       payload.status = updateData.status;
     }
 
     // Cập nhật deadline
     if (updateData.deadline !== undefined) {
-      payload.deadline = updateData.deadline ? new Date(updateData.deadline) : null;
+      payload.deadline = updateData.deadline
+        ? new Date(updateData.deadline)
+        : null;
     }
 
     // Cập nhật tọa độ
@@ -196,19 +213,43 @@ class AnnotationService {
    */
   async deleteAnnotation(id, currentUser) {
     const annotation = await annotationRepository.findById(id);
+
     if (!annotation) {
       throw new Error("Không tìm thấy annotation");
     }
 
     const ownerId = String(annotation.created_by._id || annotation.created_by);
     const isOwner = ownerId === String(currentUser.id);
-    const isAllowedRole = ["Tantou Editor", "Mangaka", "Admin"].includes(currentUser.role);
+    const isAllowedRole = ["Tantou Editor", "Mangaka", "Admin"].includes(
+      currentUser.role,
+    );
 
     if (!isOwner && !isAllowedRole) {
       throw new Error("Bạn không có quyền xóa góp ý này");
     }
 
-    await annotationRepository.delete(id);
+    return await annotationRepository.delete(id);
+  }
+
+  async restoreAnnotation(id, currentUser) {
+    const annotation = await annotationRepository.findById(id);
+
+    if (!annotation) {
+      throw new Error("Không tìm thấy annotation");
+    }
+
+    const ownerId = String(annotation.created_by._id || annotation.created_by);
+
+    const isOwner = ownerId === String(currentUser.id);
+    const isAllowedRole = ["Tantou Editor", "Mangaka", "Admin"].includes(
+      currentUser.role,
+    );
+
+    if (!isOwner && !isAllowedRole) {
+      throw new Error("Bạn không có quyền khôi phục góp ý này");
+    }
+
+    return await annotationRepository.restore(id);
   }
 }
 

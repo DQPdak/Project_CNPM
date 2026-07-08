@@ -1,8 +1,12 @@
 const express = require("express");
 const { ROLES } = require("../constants/roles");
 const { requireAuth } = require("../modules/auth/middlewares/requireAuth");
-const { requireRole } = require("../modules/authorization/middlewares/requireRole");
-const { requirePageScope } = require("../modules/authorization/middlewares/scope");
+const {
+  requireRole,
+} = require("../modules/authorization/middlewares/requireRole");
+const {
+  requirePageScope,
+} = require("../modules/authorization/middlewares/scope");
 const annotationController = require("../controllers/annotation/annotationController");
 
 /**
@@ -33,9 +37,9 @@ router.get(
     ROLES.TANTOU_EDITOR,
     ROLES.EDITORIAL_BOARD,
     ROLES.ADMIN,
-    ROLES.ASSISTANT
+    ROLES.ASSISTANT,
   ),
-  annotationController.getAnnotationsByPage
+  annotationController.getAnnotationsByPage,
 );
 
 // ─────────────────────────────────────────────────────────────
@@ -49,9 +53,9 @@ router.get(
     ROLES.TANTOU_EDITOR,
     ROLES.EDITORIAL_BOARD,
     ROLES.ADMIN,
-    ROLES.ASSISTANT
+    ROLES.ASSISTANT,
   ),
-  annotationController.getAnnotationsByChapter
+  annotationController.getAnnotationsByChapter,
 );
 
 // ─────────────────────────────────────────────────────────────
@@ -62,7 +66,7 @@ router.post(
   "/page/:page_id",
   requireRole(ROLES.MANGAKA, ROLES.TANTOU_EDITOR, ROLES.ADMIN),
   requirePageScope("page_id", "write"),
-  annotationController.createAnnotation
+  annotationController.createAnnotation,
 );
 
 // ─────────────────────────────────────────────────────────────
@@ -72,7 +76,7 @@ router.post(
 router.patch(
   "/:id",
   requireRole(ROLES.MANGAKA, ROLES.TANTOU_EDITOR, ROLES.ADMIN),
-  annotationController.updateAnnotation
+  annotationController.updateAnnotation,
 );
 
 // ─────────────────────────────────────────────────────────────
@@ -81,8 +85,14 @@ router.patch(
 // ─────────────────────────────────────────────────────────────
 router.delete(
   "/:id",
-  requireRole(ROLES.MANGAKA, ROLES.TANTOU_EDITOR, ROLES.ADMIN),
-  annotationController.deleteAnnotation
+  requireRole(ROLES.TANTOU_EDITOR, ROLES.ADMIN),
+  annotationController.deleteAnnotation,
+);
+
+router.patch(
+  "/:id/restore",
+  requireRole(ROLES.TANTOU_EDITOR, ROLES.ADMIN),
+  annotationController.restoreAnnotation,
 );
 
 module.exports = router;

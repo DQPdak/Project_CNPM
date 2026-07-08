@@ -12,6 +12,7 @@ const PERMISSION_ROLE_MAP = {
   CAN_VIEW_RANKING: ["Editorial Board", "Mangaka", "Tantou Editor", "Admin"],
   CAN_UPDATE_PAGE_STATUS: ["Mangaka", "Tantou Editor", "Admin"],
   CAN_DELETE_RESTORE_CHAPTER_PAGE: ["Mangaka", "Admin"],
+  CAN_EDIT_ANNOTATION: ["Tantou Editor", "Admin"],
 };
 
 export default function RequirePermission({ required, children }) {
