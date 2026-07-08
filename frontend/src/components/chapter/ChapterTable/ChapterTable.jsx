@@ -14,7 +14,7 @@ const translateStatus = (status) => {
   return status;
 };
 
-export default function ChapterTable({ chapters, onDelete }) {
+export default function ChapterTable({ chapters }) {
   if (!chapters || chapters.length === 0) {
     return (
       <div className="empty-state">
@@ -59,14 +59,6 @@ export default function ChapterTable({ chapters, onDelete }) {
                   >
                     Quản lý bản thảo
                   </Link>
-                  {chap.status === "Draft" && (
-                    <button
-                      onClick={() => onDelete(chap._id)}
-                      className="btn-delete-chapter"
-                    >
-                      Hủy chương 🗑️
-                    </button>
-                  )}
                   <RequirePermission required="CAN_PUBLISH_CHAPTER">
                     <Link
                       to={`/publish-approval/${chap._id}`}

@@ -7,7 +7,7 @@ import { getTasksApi, createTaskApi, getAssistantsApi } from "../../services/tas
 import { useAuthStore } from "../../stores/authStore";
 import { useToast } from "../../contexts/ToastContext";
 import Loading from "../../common/Loading/Loading";
-import { Send, Plus, X, Trash2, CheckCircle, AlertTriangle, Eye, Edit3, MapPin, MessageSquare } from "lucide-react";
+import { Send, Plus, X, Trash2, CheckCircle, AlertTriangle, Eye, Edit3, MapPin, MessageSquare, UserCheck } from "lucide-react";
 import "./PageWorkspacePage.css";
 
 const CATEGORY_LABELS = {
@@ -287,8 +287,21 @@ export default function PageWorkspacePage() {
   // ── Create Region & Task (Mangaka only) ──────────────────
   const handleCreateTaskAndRegion = async (e) => {
     e.preventDefault();
-    if (!tempBox || !assignedTo || !taskType || !taskDeadline) {
-      toast.error("Vui lòng điền đủ thông tin để giao việc!");
+    if (!tempBox) {
+      toast.error("Vui lòng khoanh vùng trên ảnh trước!");
+      return;
+    }
+    // Guard frontend: chặn giao việc khi page đã được duyệt (defense in depth)
+    if (page?.status === "Approved") {
+      toast.error("Trang truyện đã được duyệt, không thể giao thêm nhiệm vụ!");
+      return;
+    }
+    if (!assignedTo) {
+      toast.error("Vui lòng chọn Trợ lý ở dropdown phía trên trước khi giao!");
+      return;
+    }
+    if (!taskType || !taskDeadline) {
+      toast.error("Vui lòng điền loại công việc và hạn chót!");
       return;
     }
     setIsLoading(true);
@@ -388,33 +401,84 @@ export default function PageWorkspacePage() {
           </p>
         </div>
 
-        <div className="ws-mode-controls">
-          <button
-            className={`ws-mode-btn ${mode === "view" ? "active bg-[#23A094] text-white" : ""}`}
-            onClick={() => { setMode("view"); setTempPin(null); setTempBox(null); }}
-          >
-            <Eye size={16} /> Chế độ xem
-          </button>
-
-          {isEditor && (
+        {/* CỤM NÚT BÊN PHẢI HEADER */}
+        <div className="ws-header-actions">
+          <div className="ws-mode-controls">
             <button
-              className={`ws-mode-btn ${mode === "add_pin" ? "active bg-[#FF5C00] text-white" : ""}`}
-              onClick={() => { setMode("add_pin"); setTempBox(null); setTempPin(null); setShowPinModal(false); }}
+              className={`ws-mode-btn ${mode === "view" ? "active bg-[#23A094] text-white" : ""}`}
+              onClick={() => { setMode("view"); setTempPin(null); setTempBox(null); }}
             >
-              <MapPin size={16} /> Góp ý biên tập
+              <Eye size={16} /> Chế độ xem
             </button>
-          )}
 
-          {isMangaka && (
-            <button
-              className={`ws-mode-btn ${mode === "draw_region" ? "active bg-[#FFD000] text-black" : ""}`}
-              onClick={() => { setMode("draw_region"); setTempPin(null); setShowPinModal(false); }}
-            >
-              <Edit3 size={16} /> Giao nhiệm vụ
-            </button>
-          )}
+            {/* DROPDOWN CHỌN TRỢ LÝ - compact, ngay sau "Chế độ xem" */}
+            {isMangaka && (
+              <div className={`ws-assistant-compact ${page?.status === "Approved" ? "ws-locked" : ""}`}>
+                <UserCheck size={16} />
+                <select
+                  id="header-assigned-to"
+                  value={assignedTo}
+                  onChange={(e) => setAssignedTo(e.target.value)}
+                  disabled={page?.status === "Approved"}
+                  className="ws-assistant-compact-select"
+                  title={page?.status === "Approved" ? "Bản thảo đã duyệt — không thể giao thêm" : "Trợ lý được giao"}
+                >
+                  <option value="">-- Chọn trợ lý --</option>
+                  {assistants.map((as) => (
+                    <option key={as._id} value={as._id}>{as.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {/* NÚT KHOANH VÙNG + GIAO */}
+            {isMangaka && (
+              <button
+                className={`ws-mode-btn ws-assign-task-btn ${mode === "draw_region" ? "active" : ""}`}
+                onClick={() => {
+                  if (page?.status === "Approved") {
+                    toast.error("Trang truyện đã được duyệt, không thể khoanh vùng + giao thêm!");
+                    return;
+                  }
+                  setMode("draw_region");
+                  setTempPin(null);
+                  setShowTaskModal(false);
+                }}
+                disabled={page?.status === "Approved"}
+                title={
+                  page?.status === "Approved"
+                    ? "Bản thảo đã duyệt — không thể giao thêm nhiệm vụ"
+                    : "Khoanh vùng trên ảnh rồi giao cho trợ lý đã chọn"
+                }
+              >
+                <Plus size={16} /> GIAO NHIỆM VỤ
+              </button>
+            )}
+          </div>
+
+          {/* CỤM NÚT PHỤ - TÁCH RA BỞI ĐƯỜNG NÉT ĐỨT */}
+          <div className="ws-extra-controls">
+            {isEditor && (
+              <button
+                className={`ws-mode-btn ${mode === "add_pin" ? "active bg-[#FF5C00] text-white" : ""}`}
+                onClick={() => { setMode("add_pin"); setTempBox(null); setTempPin(null); }}
+              >
+                <MapPin size={16} /> Góp ý biên tập
+              </button>
+            )}
+          </div>
         </div>
       </header>
+
+      {/* BANNER CẢNH BÁO - Bản thảo đã duyệt */}
+      {page?.status === "Approved" && (
+        <div className="ws-approved-banner">
+          <CheckCircle size={18} />
+          <span>
+            <strong>Bản thảo đã được duyệt chốt.</strong> Không thể khoanh vùng hoặc giao thêm nhiệm vụ mới cho trang này.
+          </span>
+        </div>
+      )}
 
       {/* ── MAIN WORKSPACE ── */}
       <div className="ws-layout">
@@ -904,8 +968,8 @@ export default function PageWorkspacePage() {
       {showTaskModal && (
         <div className="ws-modal-overlay">
           <div className="ws-modal border-4 border-black p-6 bg-white shadow-brutal">
-            <div className="flex justify-between items-center mb-4 border-b-4 border-black pb-2 bg-[#FFD000] -mx-6 -mt-6 p-4">
-              <h2 className="font-black text-lg uppercase tracking-wide">Giao nhiệm vụ</h2>
+            <div className="flex justify-between items-center mb-4 border-b-4 border-black pb-2 bg-white -mx-6 -mt-6 p-4 shadow-[2px_2px_0px_0px_#000]">
+              <h2 className="font-black text-lg uppercase tracking-wide text-black">Giao nhiệm vụ</h2>
               <button
                 type="button"
                 onClick={() => { setShowTaskModal(false); setTempBox(null); }}
@@ -937,15 +1001,6 @@ export default function PageWorkspacePage() {
                   />
                 </div>
                 <div className="form-group">
-                  <label htmlFor="assignedTo">Giao cho Trợ lý (Assistant):</label>
-                  <select id="assignedTo" value={assignedTo} onChange={(e) => setAssignedTo(e.target.value)} required className="ws-select w-full">
-                    <option value="">-- Chọn Trợ lý --</option>
-                    {assistants.map((as) => (
-                      <option key={as._id} value={as._id}>{as.name} ({as.email})</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="form-group">
                   <label htmlFor="taskPrice">Tiền công (VNĐ):</label>
                   <input id="taskPrice" type="number" value={taskPrice} onChange={(e) => setTaskPrice(Number(e.target.value))} min={0} className="ws-input w-full" />
                 </div>
@@ -962,8 +1017,8 @@ export default function PageWorkspacePage() {
                 <button type="button" onClick={() => { setShowTaskModal(false); setTempBox(null); }} className="ws-btn bg-gray-200 border-2 border-black font-bold px-4 py-2 hover:bg-gray-300 shadow-[2px_2px_0px_rgba(0,0,0,1)]">
                   Hủy vẽ vùng
                 </button>
-                <button type="submit" className="ws-btn bg-[#23A094] text-white border-2 border-black font-black px-6 py-2 shadow-[2px_2px_0px_rgba(0,0,0,1)]">
-                  Giao việc
+                <button type="submit" className="ws-btn bg-[#FFD000] text-black border-2 border-black font-black uppercase tracking-wider px-6 py-2 shadow-[2px_2px_0px_rgba(0,0,0,1)] hover:bg-[#FFC900]">
+                  Giao nhiệm vụ
                 </button>
               </div>
             </form>
