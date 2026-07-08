@@ -579,6 +579,14 @@ export default function PageWorkspacePage() {
         </div>
       </header>
 
+      {/* ── Hướng dẫn chế độ ── */}
+      {mode === "add_pin" && (
+        <div className="ws-mode-banner" style={{ backgroundColor: "#FF5C00", color: "#fff", padding: "8px 16px", border: "3px solid #000", marginBottom: "8px", fontWeight: 800, fontSize: "0.85rem", textAlign: "center" }}>
+          <MapPin size={14} style={{ display: "inline", marginRight: 6 }} />
+          Chế độ Góp ý: Click trực tiếp vào <strong>vùng trống trên ảnh</strong> để đặt ghim và nhập góp ý biên tập.
+        </div>
+      )}
+
       {/* ── MAIN WORKSPACE ── */}
       <div className="ws-layout">
         {/* ── INTERACTIVE CANVAS ── */}
@@ -588,6 +596,21 @@ export default function PageWorkspacePage() {
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
+            onClick={(e) => {
+              // Fallback: nếu click trúng wrapper (không trúng img, region hay pin)
+              // thì vẫn xử lý đặt pin ở chế độ add_pin
+              if (mode === "add_pin" && e.target === e.currentTarget) {
+                const rect = imageRef.current?.getBoundingClientRect();
+                if (!rect) return;
+                const x = ((e.clientX - rect.left) / rect.width) * 100;
+                const y = ((e.clientY - rect.top) / rect.height) * 100;
+                setTempPin({ x: Math.min(100, Math.max(0, x)), y: Math.min(100, Math.max(0, y)) });
+                setPinContent("");
+                setPinCategory("drawing");
+                setPinDeadline("");
+                setShowPinModal(true);
+              }
+            }}
           >
             <img
               ref={imageRef}

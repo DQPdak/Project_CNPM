@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const Page = require("../../models/PageModel");
+const Chapter = require("../../models/ChapterModel");
 const PageVersionHistory = require("../../models/PageVersionHistoryModel");
 
 exports.updatePageVersion = async (req, res) => {
@@ -56,14 +57,21 @@ exports.updatePageVersion = async (req, res) => {
     existingPage.attached_resource_url = attachedResourceUrl;
     existingPage.current_version = newVersion;
 
-    // Tiện ích: Nếu trang đang được vẽ (In Progress), nộp bài xong tự động chuyển sang chờ duyệt (Review)
-    if (existingPage.status === "In Progress") {
-      existingPage.status = "Review";
+    // Khi nộp bản mới: chuyển về chờ duyệt để Editor review lại (trừ Approved/Locked)
+    if (existingPage.status !== "Approved" && existingPage.status !== "Locked") {
+      existingPage.status = "Ready For Review";
     }
 
     await existingPage.save({ session });
 
-    // 7. Lưu 1 bản ghi mới vào bảng Lịch sử để không làm mất file cũ
+    // 7. Cập nhật chapter → "Waiting Review" nếu đã Approved/Published
+    const chapter = await Chapter.findById(existingPage.chapter_id).session(session);
+    if (chapter && (chapter.status === "Approved" || chapter.status === "Published")) {
+      chapter.status = "Waiting Review";
+      await chapter.save({ session });
+    }
+
+    // 8. Lưu 1 bản ghi mới vào bảng Lịch sử để không làm mất file cũ
     const newHistory = new PageVersionHistory({
       page_id: existingPage._id,
       version_number: newVersion,
