@@ -42,7 +42,7 @@ exports.Chapter = async (req, res) => {
         title: "Chapter mới được tạo",
         message: `Chapter ${chapter_number}: "${title}" vừa được tạo cho series "${series.title}".`,
         target_type: "Chapter",
-        target_id: newChapter._id,
+        target_id: series_id,
       });
     }
 

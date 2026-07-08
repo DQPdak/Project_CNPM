@@ -3,6 +3,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import getChaptersBySeries from "../../services/chapter/getChaptersBySeriesService";
 import getMySeries from "../../services/series/getMySeriesService";
+import { getEditorSeries, getAllSeries, getAssistantSeries } from "../../services/series/getSeriesByRoleService";
 import getSeriesById from "../../services/series/getSeriesByIdService";
 import deleteChapter from "../../services/chapter/deleteChapterService";
 import restoreChapter from "../../services/chapter/restoreChapterService"; // Nhớ import service này
@@ -67,13 +68,33 @@ export default function ChapterListPage() {
       }
       return seriesId;
     }
-    const result = await getMySeries();
+
+    // Không có seriesId trên URL → lấy series theo role
+    let result;
+    switch (user?.role) {
+      case "Mangaka":
+        result = await getMySeries();
+        break;
+      case "Tantou Editor":
+        result = await getEditorSeries();
+        break;
+      case "Assistant":
+        result = await getAssistantSeries();
+        break;
+      case "Editorial Board":
+      case "Admin":
+        result = await getAllSeries();
+        break;
+      default:
+        result = await getMySeries();
+    }
+
     if (result.success === false) {
       toast.error("Không thể tải danh sách series: " + result.message);
       setResolvedSeriesId(null);
       return null;
     }
-    const firstSeries = result.series?.[0]?.series;
+    const firstSeries = result.series?.[0]?.series || result.series?.[0];
     if (!firstSeries?._id) {
       setResolvedSeriesId(null);
       return null;
@@ -82,7 +103,7 @@ export default function ChapterListPage() {
     setResolvedSeriesName(firstSeries.title || firstSeries._id);
     navigate(`/chapter-list/${firstSeries._id}`, { replace: true });
     return firstSeries._id;
-  }, [navigate, seriesId]);
+  }, [navigate, seriesId, user?.role]);
 
   const fetchChaptersList = useCallback(async () => {
     setIsLoading(true);

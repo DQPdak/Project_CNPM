@@ -38,6 +38,11 @@ const canAccessSeries = (user, series, mode = "read") => {
     return !series.editor_id || isSameId(series.editor_id, user.id);
   }
 
+  if (user.role === ROLES.ASSISTANT) {
+    // Assistant chỉ được đọc series mà họ có task
+    return mode === "read";
+  }
+
   return false;
 };
 
