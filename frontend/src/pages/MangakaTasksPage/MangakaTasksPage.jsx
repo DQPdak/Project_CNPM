@@ -315,7 +315,7 @@ export default function MangakaTasksPage() {
                       </span>
                       {overdue && <span className="mtp-warning-icon">⚠️</span>}
                       <span className="mtp-card-price">
-                        💵 {task.price.toLocaleString()}đ
+                        💵 {task.price.toLocaleString()}VNĐ
                       </span>
                     </div>
                     <h3 className="mtp-card-tasktype">{task.task_type}</h3>

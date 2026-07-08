@@ -1,13 +1,37 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import getPageById from "../../services/page/getPageByIdService";
-import { getRegionsByPage, createRegion, deleteRegion } from "../../services/region/regionService";
-import { getAnnotationsByPage, createAnnotation, updateAnnotation, deleteAnnotation } from "../../services/annotation/annotationService";
-import { getTasksApi, createTaskApi, getAssistantsApi } from "../../services/task/taskService";
+import {
+  getRegionsByPage,
+  createRegion,
+  deleteRegion,
+} from "../../services/region/regionService";
+import {
+  getAnnotationsByPage,
+  createAnnotation,
+  updateAnnotation,
+  deleteAnnotation,
+} from "../../services/annotation/annotationService";
+import {
+  getTasksApi,
+  createTaskApi,
+  getAssistantsApi,
+} from "../../services/task/taskService";
 import { useAuthStore } from "../../stores/authStore";
 import { useToast } from "../../contexts/ToastContext";
 import Loading from "../../common/Loading/Loading";
-import { Send, Plus, X, Trash2, CheckCircle, AlertTriangle, Eye, Edit3, MapPin, MessageSquare } from "lucide-react";
+import {
+  Send,
+  Plus,
+  X,
+  Trash2,
+  CheckCircle,
+  AlertTriangle,
+  Eye,
+  Edit3,
+  MapPin,
+  MessageSquare,
+} from "lucide-react";
 import "./PageWorkspacePage.css";
 
 const CATEGORY_LABELS = {
@@ -16,14 +40,14 @@ const CATEGORY_LABELS = {
   dialogue: "Thoại",
   drawing: "Nét vẽ",
   sfx: "SFX/Hiệu ứng",
-  layout: "Bố cục"
+  layout: "Bố cục",
 };
 
 const STATUS_CONFIG = {
-  "Open": { label: "Chờ sửa", color: "#FF5C00", bg: "#fff4ee" },
+  Open: { label: "Chờ sửa", color: "#FF5C00", bg: "#fff4ee" },
   "In Progress": { label: "Đang sửa", color: "#FFD000", bg: "#fffce8" },
-  "Resolved": { label: "Đã xong", color: "#23A094", bg: "#edfaf8" },
-  "Reopened": { label: "Mở lại", color: "#9b59b6", bg: "#f8eeff" },
+  Resolved: { label: "Đã xong", color: "#23A094", bg: "#edfaf8" },
+  Reopened: { label: "Mở lại", color: "#9b59b6", bg: "#f8eeff" },
 };
 
 export default function PageWorkspacePage() {
@@ -74,7 +98,7 @@ export default function PageWorkspacePage() {
   const [assignedTo, setAssignedTo] = useState("");
   const [taskDesc, setTaskDesc] = useState("");
   const [taskDeadline, setTaskDeadline] = useState("");
-  const [taskPrice, setTaskPrice] = useState(0);
+  const [taskPrice, setTaskPrice] = useState("");
   const [regionType, setRegionType] = useState("panel");
   const [showTaskModal, setShowTaskModal] = useState(false);
 
@@ -86,13 +110,16 @@ export default function PageWorkspacePage() {
   const fetchAllData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const [pageRes, regionsRes, annotationsRes, tasksRes, assistantsRes] = await Promise.all([
-        getPageById(pageId),
-        getRegionsByPage(pageId),
-        getAnnotationsByPage(pageId),
-        getTasksApi({ page_id: pageId }),
-        isMangaka ? getAssistantsApi() : Promise.resolve({ success: true, assistants: [] })
-      ]);
+      const [pageRes, regionsRes, annotationsRes, tasksRes, assistantsRes] =
+        await Promise.all([
+          getPageById(pageId),
+          getRegionsByPage(pageId),
+          getAnnotationsByPage(pageId),
+          getTasksApi({ page_id: pageId }),
+          isMangaka
+            ? getAssistantsApi()
+            : Promise.resolve({ success: true, assistants: [] }),
+        ]);
 
       if (pageRes.success) {
         setPage(pageRes.page);
@@ -185,8 +212,12 @@ export default function PageWorkspacePage() {
     const res = await updateAnnotation(annId, { status: nextStatus });
     if (res.success) {
       const updated = res.data || res.annotation;
-      toast.success(`Đã đánh dấu: ${STATUS_CONFIG[nextStatus]?.label || nextStatus}`);
-      setAnnotations((prev) => prev.map((a) => (a._id === annId ? updated : a)));
+      toast.success(
+        `Đã đánh dấu: ${STATUS_CONFIG[nextStatus]?.label || nextStatus}`,
+      );
+      setAnnotations((prev) =>
+        prev.map((a) => (a._id === annId ? updated : a)),
+      );
       if (selectedAnnotation?._id === annId) setSelectedAnnotation(updated);
     } else {
       toast.error(res.message);
@@ -199,7 +230,7 @@ export default function PageWorkspacePage() {
     setEditContent(ann.content || "");
     setEditStatus(ann.status || "Open");
     setEditDeadline(
-      ann.deadline ? new Date(ann.deadline).toISOString().slice(0, 10) : ""
+      ann.deadline ? new Date(ann.deadline).toISOString().slice(0, 10) : "",
     );
   };
 
@@ -215,7 +246,9 @@ export default function PageWorkspacePage() {
       if (res.success) {
         const updated = res.data || res.annotation;
         toast.success("Đã cập nhật góp ý!");
-        setAnnotations((prev) => prev.map((a) => (a._id === annId ? updated : a)));
+        setAnnotations((prev) =>
+          prev.map((a) => (a._id === annId ? updated : a)),
+        );
         if (selectedAnnotation?._id === annId) setSelectedAnnotation(updated);
         setEditingAnnotation(null);
       } else {
@@ -252,7 +285,7 @@ export default function PageWorkspacePage() {
       x: (startX / rect.width) * 100,
       y: (startY / rect.height) * 100,
       width: 0,
-      height: 0
+      height: 0,
     });
   };
 
@@ -269,7 +302,7 @@ export default function PageWorkspacePage() {
       x: (x / rect.width) * 100,
       y: (y / rect.height) * 100,
       width: (width / rect.width) * 100,
-      height: (height / rect.height) * 100
+      height: (height / rect.height) * 100,
     });
   };
 
@@ -287,7 +320,14 @@ export default function PageWorkspacePage() {
   // ── Create Region & Task (Mangaka only) ──────────────────
   const handleCreateTaskAndRegion = async (e) => {
     e.preventDefault();
-    if (!tempBox || !assignedTo || !taskType || !taskDeadline) {
+    if (!assignedTo) {
+      toast.error(
+        "Vui lòng chọn Trợ lý ở thanh công cụ phía trên trước khi giao việc!",
+      );
+      return;
+    }
+
+    if (!tempBox || !taskType || !taskDeadline) {
       toast.error("Vui lòng điền đủ thông tin để giao việc!");
       return;
     }
@@ -295,9 +335,10 @@ export default function PageWorkspacePage() {
     try {
       const regionRes = await createRegion(pageId, {
         coordinates: JSON.stringify(tempBox),
-        region_type: regionType
+        region_type: regionType,
       });
-      if (!regionRes.success) throw new Error(regionRes.message || "Lỗi tạo vùng vẽ");
+      if (!regionRes.success)
+        throw new Error(regionRes.message || "Lỗi tạo vùng vẽ");
 
       const taskRes = await createTaskApi({
         page_id: pageId,
@@ -306,7 +347,7 @@ export default function PageWorkspacePage() {
         task_type: taskType,
         description: taskDesc,
         deadline: taskDeadline,
-        price: taskPrice
+        price: Number(taskPrice) || 0,
       });
       if (!taskRes.success) {
         await deleteRegion(regionRes.region._id);
@@ -317,8 +358,10 @@ export default function PageWorkspacePage() {
       setShowTaskModal(false);
       setTempBox(null);
       setMode("view");
-      setTaskType(""); setAssignedTo(""); setTaskDesc("");
-      setTaskDeadline(""); setTaskPrice(0);
+      setTaskType("");
+      setTaskDesc("");
+      setTaskDeadline("");
+      setTaskPrice("");
     } catch (err) {
       toast.error(err.message);
     } finally {
@@ -328,7 +371,9 @@ export default function PageWorkspacePage() {
 
   // ── Helpers ───────────────────────────────────────────────
   const getTaskForRegion = (regionId) =>
-    tasks.find((t) => String(t.region_id?._id || t.region_id) === String(regionId));
+    tasks.find(
+      (t) => String(t.region_id?._id || t.region_id) === String(regionId),
+    );
 
   const translateTaskStatus = (status) => {
     const s = (status || "").toLowerCase().trim();
@@ -344,11 +389,13 @@ export default function PageWorkspacePage() {
 
   const getTaskStatusColor = (status) => {
     const s = (status || "").toLowerCase().trim();
-    if (s === "assigned") return "text-yellow-600 bg-yellow-100 border-yellow-400";
+    if (s === "assigned")
+      return "text-yellow-600 bg-yellow-100 border-yellow-400";
     if (s === "in progress") return "text-teal-600 bg-teal-100 border-teal-400";
     if (s === "submitted") return "text-pink-600 bg-pink-100 border-pink-400";
     if (s === "approved") return "text-green-600 bg-green-100 border-green-400";
-    if (s === "revision requested") return "text-orange-600 bg-orange-100 border-orange-400";
+    if (s === "revision requested")
+      return "text-orange-600 bg-orange-100 border-orange-400";
     return "text-gray-600 bg-gray-100 border-gray-400";
   };
 
@@ -357,7 +404,11 @@ export default function PageWorkspacePage() {
     return (
       <span
         className="ann-status-badge"
-        style={{ color: cfg.color, backgroundColor: cfg.bg, border: `1px solid ${cfg.color}` }}
+        style={{
+          color: cfg.color,
+          backgroundColor: cfg.bg,
+          border: `1px solid ${cfg.color}`,
+        }}
       >
         {cfg.label}
       </span>
@@ -365,10 +416,17 @@ export default function PageWorkspacePage() {
   };
 
   if (isLoading && !page) return <Loading text="Đang tải Workspace..." />;
-  if (!page) return <div className="p-8 text-center">Không tìm thấy dữ liệu trang truyện.</div>;
+  if (!page)
+    return (
+      <div className="p-8 text-center">
+        Không tìm thấy dữ liệu trang truyện.
+      </div>
+    );
 
   const openAnnotations = annotations.filter((a) => a.status !== "Resolved");
-  const resolvedAnnotations = annotations.filter((a) => a.status === "Resolved");
+  const resolvedAnnotations = annotations.filter(
+    (a) => a.status === "Resolved",
+  );
 
   return (
     <div className="ws-container">
@@ -377,21 +435,50 @@ export default function PageWorkspacePage() {
       {/* ── WORKSPACE HEADER ── */}
       <header className="ws-header shadow-brutal">
         <div className="ws-header-info">
-          <Link to={`/page-management/${page.chapter_id._id}`} className="ws-back-link">
+          <Link
+            to={`/page-management/${page.chapter_id._id}`}
+            className="ws-back-link"
+          >
             ← Quay lại trang duyệt
           </Link>
           <h1 className="ws-title">
             {page.chapter_id.title} — Trang {page.page_number}
           </h1>
           <p className="ws-subtitle">
-            Truyện: <strong>{page.chapter_id.series_id.title}</strong> | Phiên bản: <strong>V{page.current_version}</strong>
+            Truyện: <strong>{page.chapter_id.series_id.title}</strong> | Phiên
+            bản: <strong>V{page.current_version}</strong>
           </p>
         </div>
 
         <div className="ws-mode-controls">
+          {/* THÊM MỚI: Khu vực chọn Trợ lý dùng chung cho cả trang */}
+          {isMangaka && (
+            <div className="flex items-center mr-4 gap-2 border-r-2 border-gray-300 pr-4">
+              <label className="text-xs font-black uppercase whitespace-nowrap">
+                Trợ lý:
+              </label>
+              <select
+                value={assignedTo}
+                onChange={(e) => setAssignedTo(e.target.value)}
+                className="ws-select text-xs py-1.5"
+              >
+                <option value="">-- Chọn Trợ lý --</option>
+                {assistants.map((as) => (
+                  <option key={as._id} value={as._id}>
+                    {as.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
           <button
             className={`ws-mode-btn ${mode === "view" ? "active bg-[#23A094] text-white" : ""}`}
-            onClick={() => { setMode("view"); setTempPin(null); setTempBox(null); }}
+            onClick={() => {
+              setMode("view");
+              setTempPin(null);
+              setTempBox(null);
+            }}
           >
             <Eye size={16} /> Chế độ xem
           </button>
@@ -399,7 +486,12 @@ export default function PageWorkspacePage() {
           {isEditor && (
             <button
               className={`ws-mode-btn ${mode === "add_pin" ? "active bg-[#FF5C00] text-white" : ""}`}
-              onClick={() => { setMode("add_pin"); setTempBox(null); setTempPin(null); setShowPinModal(false); }}
+              onClick={() => {
+                setMode("add_pin");
+                setTempBox(null);
+                setTempPin(null);
+                setShowPinModal(false);
+              }}
             >
               <MapPin size={16} /> Góp ý biên tập
             </button>
@@ -408,7 +500,11 @@ export default function PageWorkspacePage() {
           {isMangaka && (
             <button
               className={`ws-mode-btn ${mode === "draw_region" ? "active bg-[#FFD000] text-black" : ""}`}
-              onClick={() => { setMode("draw_region"); setTempPin(null); setShowPinModal(false); }}
+              onClick={() => {
+                setMode("draw_region");
+                setTempPin(null);
+                setShowPinModal(false);
+              }}
             >
               <Edit3 size={16} /> Giao nhiệm vụ
             </button>
@@ -418,12 +514,8 @@ export default function PageWorkspacePage() {
 
       {/* ── MAIN WORKSPACE ── */}
       <div className="ws-layout">
-
         {/* ── INTERACTIVE CANVAS ── */}
         <main className="ws-canvas-container shadow-brutal">
-
-
-
           <div
             className={`ws-canvas-wrapper ${mode}`}
             onMouseDown={handleMouseDown}
@@ -442,21 +534,40 @@ export default function PageWorkspacePage() {
             {/* SAVED REGIONS */}
             {regions.map((reg) => {
               let coords = {};
-              try { coords = JSON.parse(reg.coordinates); } catch (e) { }
+              try {
+                coords = JSON.parse(reg.coordinates);
+              } catch (e) {}
               const task = getTaskForRegion(reg._id);
               const isSelected = selectedRegion?._id === reg._id;
+              const isCompleted =
+                task && ["Approved", "Paid"].includes(task.status);
+
+              // Nếu task đã xong VÀ người dùng đang không bấm chọn nó ở Sidebar -> Ẩn vùng này đi
+              if (isCompleted && !isSelected) {
+                return null;
+              }
               return (
                 <div
                   key={reg._id}
                   className={`ws-canvas-region ${isSelected ? "selected" : ""}`}
                   style={{
-                    left: `${coords.x}%`, top: `${coords.y}%`,
-                    width: `${coords.width}%`, height: `${coords.height}%`
+                    left: `${coords.x}%`,
+                    top: `${coords.y}%`,
+                    width: `${coords.width}%`,
+                    height: `${coords.height}%`,
                   }}
-                  onClick={(e) => { e.stopPropagation(); setSelectedRegion(reg); setSelectedAnnotation(null); }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedRegion(reg);
+                    setSelectedAnnotation(null);
+                  }}
                 >
                   <span className="ws-region-badge">{reg.region_type}</span>
-                  {task && <span className="ws-region-task-badge">{translateTaskStatus(task.status)}</span>}
+                  {task && (
+                    <span className="ws-region-task-badge">
+                      {translateTaskStatus(task.status)}
+                    </span>
+                  )}
                 </div>
               );
             })}
@@ -466,8 +577,10 @@ export default function PageWorkspacePage() {
               <div
                 className="ws-canvas-region drawing"
                 style={{
-                  left: `${tempBox.x}%`, top: `${tempBox.y}%`,
-                  width: `${tempBox.width}%`, height: `${tempBox.height}%`
+                  left: `${tempBox.x}%`,
+                  top: `${tempBox.y}%`,
+                  width: `${tempBox.width}%`,
+                  height: `${tempBox.height}%`,
                 }}
               />
             )}
@@ -498,7 +611,9 @@ export default function PageWorkspacePage() {
                   {/* Tooltip khi hover */}
                   <span className="ws-pin-tooltip">
                     <span className="ws-pin-tooltip-number">#{idx + 1}</span>
-                    <span className="ws-pin-tooltip-content">{ann.content}</span>
+                    <span className="ws-pin-tooltip-content">
+                      {ann.content}
+                    </span>
                     {ann.category && (
                       <span className="ws-pin-tooltip-category">
                         [{CATEGORY_LABELS[ann.category] || ann.category}]
@@ -533,7 +648,6 @@ export default function PageWorkspacePage() {
 
         {/* ── SIDEBAR ── */}
         <aside className="ws-sidebar shadow-brutal bg-white border-4 border-black p-4 flex flex-col gap-4">
-
           {/* Detail Panel */}
           <div className="ws-sidebar-section">
             <h2 className="ws-section-title">Thông tin chi tiết</h2>
@@ -543,27 +657,47 @@ export default function PageWorkspacePage() {
               <div className="ws-detail-box border-2 border-black p-3 bg-pink-50">
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-xs font-black bg-[#FF90E8] border border-black px-2 py-0.5 shadow-[1px_1px_0px_rgba(0,0,0,1)]">
-                    Góp ý #{annotations.findIndex((a) => a._id === selectedAnnotation._id) + 1}
+                    Góp ý #
+                    {annotations.findIndex(
+                      (a) => a._id === selectedAnnotation._id,
+                    ) + 1}
                   </span>
-                  <button onClick={() => setSelectedAnnotation(null)} className="text-black"><X size={16} /></button>
+                  <button
+                    onClick={() => setSelectedAnnotation(null)}
+                    className="text-black"
+                  >
+                    <X size={16} />
+                  </button>
                 </div>
 
                 <div className="mb-2 flex items-center gap-2">
                   {getAnnotationStatusBadge(selectedAnnotation.status)}
                   <span className="text-xs text-gray-500 italic">
-                    {CATEGORY_LABELS[selectedAnnotation.category] || selectedAnnotation.category || "—"}
+                    {CATEGORY_LABELS[selectedAnnotation.category] ||
+                      selectedAnnotation.category ||
+                      "—"}
                   </span>
                 </div>
 
                 <p className="text-xs text-gray-600 mb-1">
-                  <strong>Biên tập:</strong> {selectedAnnotation.created_by?.name || "BTV"} ({selectedAnnotation.role || "—"})
+                  <strong>Biên tập:</strong>{" "}
+                  {selectedAnnotation.created_by?.name || "BTV"} (
+                  {selectedAnnotation.role || "—"})
                 </p>
 
                 {selectedAnnotation.deadline && (
                   <p className="text-xs text-gray-600 mb-2">
                     <strong>Hạn:</strong>{" "}
-                    <span className={new Date(selectedAnnotation.deadline) < new Date() ? "text-red-500 font-bold" : ""}>
-                      {new Date(selectedAnnotation.deadline).toLocaleDateString("vi-VN")}
+                    <span
+                      className={
+                        new Date(selectedAnnotation.deadline) < new Date()
+                          ? "text-red-500 font-bold"
+                          : ""
+                      }
+                    >
+                      {new Date(selectedAnnotation.deadline).toLocaleDateString(
+                        "vi-VN",
+                      )}
                     </span>
                   </p>
                 )}
@@ -576,11 +710,21 @@ export default function PageWorkspacePage() {
                   {(isEditor || isMangaka) && (
                     <>
                       <button
-                        onClick={() => handleToggleAnnotationStatus(selectedAnnotation._id, selectedAnnotation.status)}
-                        className={`ws-btn-small flex-1 text-xs border-2 border-black font-bold p-1.5 shadow-[1px_1px_0px_rgba(0,0,0,1)] ${selectedAnnotation.status === "Resolved" ? "bg-yellow-300" : "bg-[#23A094] text-white"
-                          }`}
+                        onClick={() =>
+                          handleToggleAnnotationStatus(
+                            selectedAnnotation._id,
+                            selectedAnnotation.status,
+                          )
+                        }
+                        className={`ws-btn-small flex-1 text-xs border-2 border-black font-bold p-1.5 shadow-[1px_1px_0px_rgba(0,0,0,1)] ${
+                          selectedAnnotation.status === "Resolved"
+                            ? "bg-yellow-300"
+                            : "bg-[#23A094] text-white"
+                        }`}
                       >
-                        {selectedAnnotation.status === "Resolved" ? "↩ Mở lại" : "✓ Đánh dấu xong"}
+                        {selectedAnnotation.status === "Resolved"
+                          ? "↩ Mở lại"
+                          : "✓ Đánh dấu xong"}
                       </button>
                       <button
                         onClick={() => handleStartEdit(selectedAnnotation)}
@@ -590,9 +734,12 @@ export default function PageWorkspacePage() {
                       </button>
                     </>
                   )}
-                  {(isEditor || selectedAnnotation.created_by?._id === user?.id) && (
+                  {(isEditor ||
+                    selectedAnnotation.created_by?._id === user?.id) && (
                     <button
-                      onClick={() => handleDeleteAnnotation(selectedAnnotation._id)}
+                      onClick={() =>
+                        handleDeleteAnnotation(selectedAnnotation._id)
+                      }
                       className="ws-btn-small text-xs bg-red-100 text-red-600 border-2 border-red-400 p-1.5 font-bold"
                     >
                       <Trash2 size={11} />
@@ -606,8 +753,15 @@ export default function PageWorkspacePage() {
             {editingAnnotation && (
               <div className="ws-detail-box border-2 border-black p-3 bg-blue-50">
                 <div className="flex justify-between items-center mb-2">
-                  <h3 className="text-xs font-black uppercase">Chỉnh sửa góp ý</h3>
-                  <button onClick={() => setEditingAnnotation(null)} className="text-black"><X size={14} /></button>
+                  <h3 className="text-xs font-black uppercase">
+                    Chỉnh sửa góp ý
+                  </h3>
+                  <button
+                    onClick={() => setEditingAnnotation(null)}
+                    className="text-black"
+                  >
+                    <X size={14} />
+                  </button>
                 </div>
 
                 <div className="form-group mb-2">
@@ -628,7 +782,9 @@ export default function PageWorkspacePage() {
                     className="ws-select text-xs w-full mt-1"
                   >
                     {Object.entries(STATUS_CONFIG).map(([val, cfg]) => (
-                      <option key={val} value={val}>{cfg.label}</option>
+                      <option key={val} value={val}>
+                        {cfg.label}
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -649,7 +805,8 @@ export default function PageWorkspacePage() {
                     disabled={isSaving}
                     className="ws-side-submit-btn flex-1 text-xs flex items-center justify-center gap-1"
                   >
-                    <Send size={11} /> {isSaving ? "Đang lưu..." : "Lưu thay đổi"}
+                    <Send size={11} />{" "}
+                    {isSaving ? "Đang lưu..." : "Lưu thay đổi"}
                   </button>
                   <button
                     onClick={() => setEditingAnnotation(null)}
@@ -662,45 +819,67 @@ export default function PageWorkspacePage() {
             )}
 
             {/* Case: Selected Region */}
-            {selectedRegion && (() => {
-              const task = getTaskForRegion(selectedRegion._id);
-              return (
-                <div className="ws-detail-box border-2 border-black p-3 bg-teal-50">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-xs font-black bg-[#23A094] text-white border border-black px-2 py-0.5 shadow-[1px_1px_0px_rgba(0,0,0,1)]">
-                      Vùng {selectedRegion.region_type}
-                    </span>
-                    <button onClick={() => setSelectedRegion(null)} className="text-black"><X size={16} /></button>
-                  </div>
-                  {task ? (
-                    <div className="text-xs">
-                      <p className="mb-1"><strong>Task:</strong> {task.task_type}</p>
-                      <p className="mb-1"><strong>Người phụ trách:</strong> {task.assigned_to?.name || "Chưa rõ"}</p>
-                      <p className="mb-1"><strong>Chi phí:</strong> {task.price?.toLocaleString()}đ</p>
-                      <p className="mb-2"><strong>Hạn chót:</strong> {new Date(task.deadline).toLocaleDateString("vi-VN")}</p>
-                      <div className="form-group mb-1">
-                        <span className="font-bold mr-2">Trạng thái:</span>
-                        <span className={`px-2 py-0.5 border text-[10px] font-black rounded ${getTaskStatusColor(task.status)}`}>
-                          {translateTaskStatus(task.status)}
-                        </span>
-                      </div>
-                      {task.description && (
-                        <div className="bg-white border border-black p-1.5 mt-2 font-mono text-[11px]">
-                          <strong>Giao việc:</strong> {task.description}
-                        </div>
-                      )}
+            {selectedRegion &&
+              (() => {
+                const task = getTaskForRegion(selectedRegion._id);
+                return (
+                  <div className="ws-detail-box border-2 border-black p-3 bg-teal-50">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-xs font-black bg-[#23A094] text-white border border-black px-2 py-0.5 shadow-[1px_1px_0px_rgba(0,0,0,1)]">
+                        Vùng {selectedRegion.region_type}
+                      </span>
+                      <button
+                        onClick={() => setSelectedRegion(null)}
+                        className="text-black"
+                      >
+                        <X size={16} />
+                      </button>
                     </div>
-                  ) : (
-                    <div className="text-xs text-gray-500">Vùng này chưa được giao nhiệm vụ.</div>
-                  )}
-                </div>
-              );
-            })()}
+                    {task ? (
+                      <div className="text-xs">
+                        <p className="mb-1">
+                          <strong>Task:</strong> {task.task_type}
+                        </p>
+                        <p className="mb-1">
+                          <strong>Người phụ trách:</strong>{" "}
+                          {task.assigned_to?.name || "Chưa rõ"}
+                        </p>
+                        <p className="mb-1">
+                          <strong>Chi phí:</strong>{" "}
+                          {task.price?.toLocaleString()}đ
+                        </p>
+                        <p className="mb-2">
+                          <strong>Hạn chót:</strong>{" "}
+                          {new Date(task.deadline).toLocaleDateString("vi-VN")}
+                        </p>
+                        <div className="form-group mb-1">
+                          <span className="font-bold mr-2">Trạng thái:</span>
+                          <span
+                            className={`px-2 py-0.5 border text-[10px] font-black rounded ${getTaskStatusColor(task.status)}`}
+                          >
+                            {translateTaskStatus(task.status)}
+                          </span>
+                        </div>
+                        {task.description && (
+                          <div className="bg-white border border-black p-1.5 mt-2 font-mono text-[11px]">
+                            <strong>Giao việc:</strong> {task.description}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="text-xs text-gray-500">
+                        Vùng này chưa được giao nhiệm vụ.
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
 
             {/* Default placeholder */}
             {!selectedAnnotation && !editingAnnotation && !selectedRegion && (
               <div className="text-xs text-gray-500 text-center py-4 bg-gray-50 border border-dashed border-gray-400">
-                Nhấp chọn ghim góp ý 📌 hoặc vùng phân công trên bản thảo để xem chi tiết.
+                Nhấp chọn ghim góp ý 📌 hoặc vùng phân công trên bản thảo để xem
+                chi tiết.
               </div>
             )}
           </div>
@@ -728,24 +907,46 @@ export default function PageWorkspacePage() {
                 {annotations.map((ann, idx) => {
                   const isResolved = ann.status === "Resolved";
                   const isSelected = selectedAnnotation?._id === ann._id;
-                  const cfg = STATUS_CONFIG[ann.status] || STATUS_CONFIG["Open"];
+                  const cfg =
+                    STATUS_CONFIG[ann.status] || STATUS_CONFIG["Open"];
                   return (
                     <div
                       key={ann._id}
-                      className={`ws-list-item border-2 p-2 mb-1.5 transition-all cursor-pointer ${isResolved ? "border-gray-300 opacity-60" : "border-black"
-                        } ${isSelected ? "bg-pink-50 shadow-[2px_2px_0px_rgba(0,0,0,1)] -translate-y-0.5" : "bg-white hover:bg-gray-50"}`}
-                      onClick={() => { setSelectedAnnotation(ann); setSelectedRegion(null); setEditingAnnotation(null); }}
+                      className={`ws-list-item border-2 p-2 mb-1.5 transition-all cursor-pointer ${
+                        isResolved
+                          ? "border-gray-300 opacity-60"
+                          : "border-black"
+                      } ${isSelected ? "bg-pink-50 shadow-[2px_2px_0px_rgba(0,0,0,1)] -translate-y-0.5" : "bg-white hover:bg-gray-50"}`}
+                      onClick={() => {
+                        setSelectedAnnotation(ann);
+                        setSelectedRegion(null);
+                        setEditingAnnotation(null);
+                      }}
                     >
                       <div className="flex justify-between items-center mb-0.5">
-                        <span className="font-bold text-[11px]">#{idx + 1} {CATEGORY_LABELS[ann.category] || ""}</span>
-                        <span className="ann-status-badge text-[9px]" style={{ color: cfg.color, backgroundColor: cfg.bg, border: `1px solid ${cfg.color}` }}>
+                        <span className="font-bold text-[11px]">
+                          #{idx + 1} {CATEGORY_LABELS[ann.category] || ""}
+                        </span>
+                        <span
+                          className="ann-status-badge text-[9px]"
+                          style={{
+                            color: cfg.color,
+                            backgroundColor: cfg.bg,
+                            border: `1px solid ${cfg.color}`,
+                          }}
+                        >
                           {cfg.label}
                         </span>
                       </div>
-                      <p className="text-[11px] text-gray-600 truncate">{ann.content}</p>
+                      <p className="text-[11px] text-gray-600 truncate">
+                        {ann.content}
+                      </p>
                       {ann.deadline && (
-                        <p className={`text-[10px] mt-0.5 ${new Date(ann.deadline) < new Date() && !isResolved ? "text-red-500 font-bold" : "text-gray-400"}`}>
-                          Hạn: {new Date(ann.deadline).toLocaleDateString("vi-VN")}
+                        <p
+                          className={`text-[10px] mt-0.5 ${new Date(ann.deadline) < new Date() && !isResolved ? "text-red-500 font-bold" : "text-gray-400"}`}
+                        >
+                          Hạn:{" "}
+                          {new Date(ann.deadline).toLocaleDateString("vi-VN")}
                         </p>
                       )}
                     </div>
@@ -759,9 +960,13 @@ export default function PageWorkspacePage() {
 
           {/* TASKS LIST */}
           <div className="ws-sidebar-section">
-            <h2 className="ws-section-title">Nhiệm vụ trợ lý ({tasks.length})</h2>
+            <h2 className="ws-section-title">
+              Nhiệm vụ trợ lý ({tasks.length})
+            </h2>
             {tasks.length === 0 ? (
-              <div className="text-xs italic text-gray-500 py-2">Chưa giao nhiệm vụ trợ lý nào.</div>
+              <div className="text-xs italic text-gray-500 py-2">
+                Chưa giao nhiệm vụ trợ lý nào.
+              </div>
             ) : (
               <div className="ws-sidebar-list">
                 {tasks.map((task) => (
@@ -769,19 +974,30 @@ export default function PageWorkspacePage() {
                     key={task._id}
                     className="ws-list-item border-2 border-black bg-white p-2 mb-1.5 cursor-pointer hover:bg-gray-50"
                     onClick={() => {
-                      const reg = regions.find((r) => String(r._id) === String(task.region_id?._id || task.region_id));
-                      if (reg) { setSelectedRegion(reg); setSelectedAnnotation(null); }
-                      else toast.error("Không tìm thấy tọa độ vùng vẽ.");
+                      const reg = regions.find(
+                        (r) =>
+                          String(r._id) ===
+                          String(task.region_id?._id || task.region_id),
+                      );
+                      if (reg) {
+                        setSelectedRegion(reg);
+                        setSelectedAnnotation(null);
+                      } else toast.error("Không tìm thấy tọa độ vùng vẽ.");
                     }}
                   >
                     <div className="flex justify-between items-center mb-0.5">
-                      <span className="font-bold text-[11px]">{task.task_type}</span>
-                      <span className={`text-[9px] px-1 font-black uppercase border ${getTaskStatusColor(task.status)}`}>
+                      <span className="font-bold text-[11px]">
+                        {task.task_type}
+                      </span>
+                      <span
+                        className={`text-[9px] px-1 font-black uppercase border ${getTaskStatusColor(task.status)}`}
+                      >
                         {translateTaskStatus(task.status)}
                       </span>
                     </div>
                     <p className="text-[11px] text-gray-500">
-                      Vẽ bởi: <strong>{task.assigned_to?.name || "Chưa giao"}</strong>
+                      Vẽ bởi:{" "}
+                      <strong>{task.assigned_to?.name || "Chưa giao"}</strong>
                     </p>
                   </div>
                 ))}
@@ -824,11 +1040,16 @@ export default function PageWorkspacePage() {
             </div>
 
             {/* Form */}
-            <form onSubmit={handleSaveAnnotation} className="p-5 flex flex-col gap-4">
-
+            <form
+              onSubmit={handleSaveAnnotation}
+              className="p-5 flex flex-col gap-4"
+            >
               {/* Phân loại */}
               <div className="form-group">
-                <label htmlFor="pin-category" className="text-xs font-black uppercase block mb-1">
+                <label
+                  htmlFor="pin-category"
+                  className="text-xs font-black uppercase block mb-1"
+                >
                   Phân loại lỗi
                 </label>
                 <select
@@ -838,14 +1059,19 @@ export default function PageWorkspacePage() {
                   className="ws-select w-full text-sm"
                 >
                   {Object.entries(CATEGORY_LABELS).map(([val, label]) => (
-                    <option key={val} value={val}>{label}</option>
+                    <option key={val} value={val}>
+                      {label}
+                    </option>
                   ))}
                 </select>
               </div>
 
               {/* Nội dung góp ý */}
               <div className="form-group">
-                <label htmlFor="pin-content" className="text-xs font-black uppercase block mb-1">
+                <label
+                  htmlFor="pin-content"
+                  className="text-xs font-black uppercase block mb-1"
+                >
                   Nội dung góp ý <span className="text-red-500">*</span>
                 </label>
                 <textarea
@@ -862,7 +1088,10 @@ export default function PageWorkspacePage() {
 
               {/* Hạn chót */}
               <div className="form-group">
-                <label htmlFor="pin-deadline" className="text-xs font-black uppercase block mb-1">
+                <label
+                  htmlFor="pin-deadline"
+                  className="text-xs font-black uppercase block mb-1"
+                >
                   Hạn chót xử lý (tuỳ chọn)
                 </label>
                 <input
@@ -905,21 +1134,34 @@ export default function PageWorkspacePage() {
         <div className="ws-modal-overlay">
           <div className="ws-modal border-4 border-black p-6 bg-white shadow-brutal">
             <div className="flex justify-between items-center mb-4 border-b-4 border-black pb-2 bg-[#FFD000] -mx-6 -mt-6 p-4">
-              <h2 className="font-black text-lg uppercase tracking-wide">Giao nhiệm vụ</h2>
+              <h2 className="font-black text-lg uppercase tracking-wide">
+                Giao nhiệm vụ
+              </h2>
               <button
                 type="button"
-                onClick={() => { setShowTaskModal(false); setTempBox(null); }}
+                onClick={() => {
+                  setShowTaskModal(false);
+                  setTempBox(null);
+                }}
                 className="text-black border-2 border-black bg-white p-1 hover:bg-gray-100"
               >
                 <X size={16} />
               </button>
             </div>
 
-            <form onSubmit={handleCreateTaskAndRegion} className="ws-modal-form">
+            <form
+              onSubmit={handleCreateTaskAndRegion}
+              className="ws-modal-form"
+            >
               <div className="ws-form-grid">
                 <div className="form-group">
                   <label htmlFor="regionType">Hạng mục vẽ:</label>
-                  <select id="regionType" value={regionType} onChange={(e) => setRegionType(e.target.value)} className="ws-select w-full">
+                  <select
+                    id="regionType"
+                    value={regionType}
+                    onChange={(e) => setRegionType(e.target.value)}
+                    className="ws-select w-full"
+                  >
                     <option value="panel">Khung tranh (Panel)</option>
                     <option value="background">Bối cảnh (Background)</option>
                     <option value="sfx">Hiệu ứng (SFX)</option>
@@ -930,39 +1172,69 @@ export default function PageWorkspacePage() {
                 <div className="form-group">
                   <label htmlFor="taskType">Loại công việc giao vẽ:</label>
                   <input
-                    id="taskType" type="text" value={taskType}
+                    id="taskType"
+                    type="text"
+                    value={taskType}
                     onChange={(e) => setTaskType(e.target.value)}
                     placeholder="VD: Tô xám bóng, Đi nét background..."
-                    required className="ws-input w-full"
+                    required
+                    className="ws-input w-full"
                   />
                 </div>
                 <div className="form-group">
-                  <label htmlFor="assignedTo">Giao cho Trợ lý (Assistant):</label>
-                  <select id="assignedTo" value={assignedTo} onChange={(e) => setAssignedTo(e.target.value)} required className="ws-select w-full">
-                    <option value="">-- Chọn Trợ lý --</option>
-                    {assistants.map((as) => (
-                      <option key={as._id} value={as._id}>{as.name} ({as.email})</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="form-group">
                   <label htmlFor="taskPrice">Tiền công (VNĐ):</label>
-                  <input id="taskPrice" type="number" value={taskPrice} onChange={(e) => setTaskPrice(Number(e.target.value))} min={0} className="ws-input w-full" />
+                  <input
+                    id="taskPrice"
+                    type="number"
+                    value={taskPrice}
+                    onChange={(e) =>
+                      setTaskPrice(
+                        e.target.value === "" ? "" : Number(e.target.value),
+                      )
+                    }
+                    min={0}
+                    placeholder="0"
+                    className="ws-input w-full"
+                  />
                 </div>
                 <div className="form-group">
                   <label htmlFor="taskDeadline">Hạn chót nộp sản phẩm:</label>
-                  <input id="taskDeadline" type="datetime-local" value={taskDeadline} onChange={(e) => setTaskDeadline(e.target.value)} required className="ws-input w-full" />
+                  <input
+                    id="taskDeadline"
+                    type="datetime-local"
+                    value={taskDeadline}
+                    onChange={(e) => setTaskDeadline(e.target.value)}
+                    required
+                    className="ws-input w-full"
+                  />
                 </div>
               </div>
               <div className="form-group mt-3">
                 <label htmlFor="taskDesc">Mô tả hướng dẫn chi tiết:</label>
-                <textarea id="taskDesc" rows={3} value={taskDesc} onChange={(e) => setTaskDesc(e.target.value)} placeholder="Ghi chú layer PSD, phong cách tô vẽ nét..." className="ws-textarea w-full" />
+                <textarea
+                  id="taskDesc"
+                  rows={3}
+                  value={taskDesc}
+                  onChange={(e) => setTaskDesc(e.target.value)}
+                  placeholder="Ghi chú layer PSD, phong cách tô vẽ nét..."
+                  className="ws-textarea w-full"
+                />
               </div>
               <div className="flex gap-4 mt-6 border-t-2 border-black pt-4 justify-end">
-                <button type="button" onClick={() => { setShowTaskModal(false); setTempBox(null); }} className="ws-btn bg-gray-200 border-2 border-black font-bold px-4 py-2 hover:bg-gray-300 shadow-[2px_2px_0px_rgba(0,0,0,1)]">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowTaskModal(false);
+                    setTempBox(null);
+                  }}
+                  className="ws-btn bg-gray-200 border-2 border-black font-bold px-4 py-2 hover:bg-gray-300 shadow-[2px_2px_0px_rgba(0,0,0,1)]"
+                >
                   Hủy vẽ vùng
                 </button>
-                <button type="submit" className="ws-btn bg-[#23A094] text-white border-2 border-black font-black px-6 py-2 shadow-[2px_2px_0px_rgba(0,0,0,1)]">
+                <button
+                  type="submit"
+                  className="ws-btn bg-[#23A094] text-white border-2 border-black font-black px-6 py-2 shadow-[2px_2px_0px_rgba(0,0,0,1)]"
+                >
                   Giao việc
                 </button>
               </div>
